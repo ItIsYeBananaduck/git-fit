@@ -1,6 +1,7 @@
 <script lang="ts">
         import { createEventDispatcher } from 'svelte';
         import { getEquipmentRecommendations } from '$lib/data/equipment';
+        import EquipmentIcon from './EquipmentIcon.svelte';
 
         export let exerciseName: string = '';
         export let primaryEquipment: string = '';
@@ -41,17 +42,17 @@
                 }
         }
 
-        function getEquipmentIcon(equipment: string): string {
+        function getEquipmentIconType(equipment: string): string {
                 const lower = equipment.toLowerCase();
-                if (lower.includes('dumbbell')) return '🏋️';
-                if (lower.includes('barbell')) return '🏋️‍♂️';
-                if (lower.includes('machine')) return '⚙️';
-                if (lower.includes('cable')) return '🔗';
-                if (lower.includes('kettlebell')) return '⚖️';
-                if (lower.includes('band')) return '🔴';
-                if (lower.includes('ball')) return '⚽';
-                if (lower.includes('bar') && lower.includes('pull')) return '🤸';
-                return '💪';
+                if (lower.includes('dumbbell')) return 'dumbbell';
+                if (lower.includes('barbell')) return 'barbell';
+                if (lower.includes('machine')) return 'machine';
+                if (lower.includes('cable')) return 'cable';
+                if (lower.includes('kettlebell')) return 'weights';
+                if (lower.includes('band')) return 'band';
+                if (lower.includes('ball')) return 'ball';
+                if (lower.includes('bar') && lower.includes('pull')) return 'pullup';
+                return 'weights';
         }
 
         function getEquipmentBadgeColor(equipment: string): string {
@@ -86,7 +87,7 @@
                                                         ? 'border-primary bg-primary/5 ring-2 ring-primary/20' 
                                                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}"
                                         >
-                                                <span class="text-lg mr-2">{getEquipmentIcon(machine)}</span>
+                                                <div class="mr-2"><EquipmentIcon type={getEquipmentIconType(machine)} size="20" /></div>
                                                 <div class="text-left">
                                                         <div class="font-medium text-gray-900 text-sm">{machine}</div>
                                                         {#if userPreferences.some(pref => machine.toLowerCase().includes(pref.toLowerCase()))}
@@ -118,7 +119,7 @@
                                                                 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
                                                                 : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}"
                                                 >
-                                                        <span class="text-lg mr-2">{getEquipmentIcon(alternative)}</span>
+                                                        <div class="mr-2"><EquipmentIcon type={getEquipmentIconType(alternative)} size="20" /></div>
                                                         <div class="text-left">
                                                                 <div class="font-medium text-gray-900 text-sm">{alternative}</div>
                                                                 <div class="text-xs text-blue-600">Alternative</div>
@@ -161,7 +162,7 @@
                 <div class="mt-4 pt-4 border-t border-gray-200">
                         <div class="flex items-center justify-between">
                                 <div class="flex items-center">
-                                        <span class="text-lg mr-2">{getEquipmentIcon(selectedEquipment)}</span>
+                                        <div class="mr-2"><EquipmentIcon type={getEquipmentIconType(selectedEquipment)} size="20" /></div>
                                         <div>
                                                 <div class="font-medium text-gray-900">Selected: {selectedEquipment}</div>
                                                 <div class="text-sm text-gray-600">

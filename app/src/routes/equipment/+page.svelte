@@ -1,5 +1,6 @@
 <script lang="ts">
         import { equipmentData, equipmentCategories, getEquipmentByCategory } from '$lib/data/equipment';
+        import EquipmentIcon from '$lib/components/EquipmentIcon.svelte';
 
         let selectedCategory = 'all';
         let searchQuery = '';
@@ -19,19 +20,19 @@
                 return acc;
         }, {} as Record<string, typeof equipmentData>);
 
-        function getEquipmentIcon(equipmentName: string): string {
+        function getEquipmentIconType(equipmentName: string): string {
                 const name = equipmentName.toLowerCase();
-                if (name.includes('barbell')) return '🏋️‍♂️';
-                if (name.includes('dumbbell')) return '🏋️';
-                if (name.includes('kettlebell')) return '⚖️';
-                if (name.includes('machine')) return '⚙️';
-                if (name.includes('cable') || name.includes('pulldown') || name.includes('row')) return '🔗';
-                if (name.includes('pull-up') || name.includes('dip')) return '🤸';
-                if (name.includes('band')) return '🔴';
-                if (name.includes('ball')) return '⚽';
-                if (name.includes('treadmill') || name.includes('bike') || name.includes('elliptical')) return '🏃';
-                if (name.includes('wheel')) return '⭕';
-                return '💪';
+                if (name.includes('barbell')) return 'barbell';
+                if (name.includes('dumbbell')) return 'dumbbell';
+                if (name.includes('kettlebell')) return 'weights';
+                if (name.includes('machine')) return 'machine';
+                if (name.includes('cable') || name.includes('pulldown') || name.includes('row')) return 'cable';
+                if (name.includes('pull-up') || name.includes('dip')) return 'pullup';
+                if (name.includes('band')) return 'band';
+                if (name.includes('ball')) return 'ball';
+                if (name.includes('treadmill') || name.includes('bike') || name.includes('elliptical')) return 'treadmill';
+                if (name.includes('wheel')) return 'functional';
+                return 'weights';
         }
 
         function getCategoryBadgeColor(category: string): string {
@@ -109,7 +110,7 @@
                         {#if categoryEquipment.length > 0}
                                 <div class="space-y-4">
                                         <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                                                <span class="text-2xl">{category.icon}</span>
+                                                <EquipmentIcon type={category.icon} size="24" className="text-gray-600" />
                                                 {category.name}
                                                 <span class="text-sm font-normal text-gray-500">({categoryEquipment.length})</span>
                                         </h2>
@@ -117,7 +118,7 @@
                                                 {#each categoryEquipment as equipment}
                                                         <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
                                                                 <div class="flex items-start justify-between mb-3">
-                                                                        <div class="text-3xl">{getEquipmentIcon(equipment.name)}</div>
+                                                                        <div class="text-gray-600"><EquipmentIcon type={getEquipmentIconType(equipment.name)} size="32" /></div>
                                                                         <span class="px-2 py-1 rounded-full text-xs font-medium border {getCategoryBadgeColor(equipment.category)}">
                                                                                 {equipment.category.replace('-', ' ')}
                                                                         </span>
@@ -134,7 +135,7 @@
                         {#each filteredEquipment as equipment}
                                 <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
                                         <div class="flex items-start justify-between mb-3">
-                                                <div class="text-3xl">{getEquipmentIcon(equipment.name)}</div>
+                                                <div class="text-gray-600"><EquipmentIcon type={getEquipmentIconType(equipment.name)} size="32" /></div>
                                                 <span class="px-2 py-1 rounded-full text-xs font-medium border {getCategoryBadgeColor(equipment.category)}">
                                                         {equipment.category.replace('-', ' ')}
                                                 </span>
@@ -161,7 +162,7 @@
                                 {@const categoryCount = getEquipmentByCategory(category.slug).length}
                                 <div class="bg-white rounded-lg p-4 shadow-sm">
                                         <div class="flex items-center gap-3 mb-2">
-                                                <span class="text-2xl">{category.icon}</span>
+                                                <EquipmentIcon type={category.icon} size="24" className="text-gray-600" />
                                                 <div>
                                                         <h3 class="font-medium text-gray-900">{category.name}</h3>
                                                         <p class="text-sm text-gray-600">{categoryCount} items</p>

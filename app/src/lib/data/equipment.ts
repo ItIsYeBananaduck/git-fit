@@ -38,11 +38,11 @@ export const equipmentData = [
 
 // Equipment categories for filtering
 export const equipmentCategories = [
-  { name: "Free Weights", slug: "free-weights", icon: "🏋️" },
-  { name: "Bodyweight", slug: "bodyweight", icon: "🤸" },
-  { name: "Functional", slug: "functional", icon: "⚽" },
-  { name: "Machines", slug: "machines", icon: "⚙️" },
-  { name: "Cardio", slug: "cardio", icon: "🏃" }
+  { name: "Free Weights", slug: "free-weights", icon: "weights" },
+  { name: "Bodyweight", slug: "bodyweight", icon: "body" },
+  { name: "Functional", slug: "functional", icon: "functional" },
+  { name: "Machines", slug: "machines", icon: "machine" },
+  { name: "Cardio", slug: "cardio", icon: "cardio" }
 ];
 
 // Enhanced equipment mapping for better recommendations
