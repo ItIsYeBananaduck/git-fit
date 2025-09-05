@@ -1,4 +1,4 @@
-import { mutation } from "convex/server";
+import { mutation, query } from "convex/server";
 
 export const addTrainingProgram = mutation(async ({ db }, { name, description, price }) => {
   const program = {
