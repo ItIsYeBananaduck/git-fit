@@ -1,5 +1,16 @@
 <script lang="ts">
         import { page } from '$app/stores';
+        import { 
+                Home, 
+                Target, 
+                Dumbbell, 
+                BarChart3, 
+                Settings, 
+                Plus, 
+                Users, 
+                Shield, 
+                User 
+        } from 'lucide-svelte';
         
         // Mock user state - in real app this would come from auth
         let currentUser = {
@@ -11,16 +22,16 @@
         let mobileMenuOpen = false;
 
         const navItems = [
-                { href: '/', label: 'Dashboard', roles: ['client', 'trainer', 'admin'] },
-                { href: '/programs', label: 'Programs', roles: ['client', 'trainer', 'admin'] },
-                { href: '/workouts', label: 'Workouts', roles: ['client', 'trainer'] },
-                { href: '/fitness-data', label: 'Fitness Data', roles: ['client'] },
-                { href: '/exercise-demo', label: 'Equipment Demo', roles: ['client', 'trainer', 'admin'] },
-                { href: '/equipment-clean', label: 'Equipment', roles: ['client', 'trainer', 'admin'] },
-                { href: '/create-program', label: 'Create Program', roles: ['trainer'] },
-                { href: '/clients', label: 'My Clients', roles: ['trainer'] },
-                { href: '/admin', label: 'Admin', roles: ['admin'] },
-                { href: '/profile', label: 'Profile', roles: ['client', 'trainer', 'admin'] }
+                { href: '/', label: 'Dashboard', icon: Home, roles: ['client', 'trainer', 'admin'] },
+                { href: '/programs', label: 'Programs', icon: Target, roles: ['client', 'trainer', 'admin'] },
+                { href: '/workouts', label: 'Workouts', icon: Dumbbell, roles: ['client', 'trainer'] },
+                { href: '/fitness-data', label: 'Fitness Data', icon: BarChart3, roles: ['client'] },
+                { href: '/exercise-demo', label: 'Equipment Demo', icon: Settings, roles: ['client', 'trainer', 'admin'] },
+                { href: '/equipment-clean', label: 'Equipment', icon: Dumbbell, roles: ['client', 'trainer', 'admin'] },
+                { href: '/create-program', label: 'Create Program', icon: Plus, roles: ['trainer'] },
+                { href: '/clients', label: 'My Clients', icon: Users, roles: ['trainer'] },
+                { href: '/admin', label: 'Admin', icon: Shield, roles: ['admin'] },
+                { href: '/profile', label: 'Profile', icon: User, roles: ['client', 'trainer', 'admin'] }
         ];
 
         $: filteredNavItems = navItems.filter(item => item.roles.includes(currentUser.role));
@@ -45,6 +56,7 @@
                                                                 ? 'bg-primary text-white' 
                                                                 : 'text-gray-700 hover:bg-gray-100'}"
                                         >
+                                                <svelte:component this={item.icon} size={18} />
                                                 <span>{item.label}</span>
                                         </a>
                                 {/each}
@@ -90,6 +102,7 @@
                                                                         : 'text-gray-700 hover:bg-gray-100'}"
                                                         on:click={() => mobileMenuOpen = false}
                                                 >
+                                                        <svelte:component this={item.icon} size={20} />
                                                         <span>{item.label}</span>
                                                 </a>
                                         {/each}

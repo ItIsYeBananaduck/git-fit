@@ -1,28 +1,34 @@
 <script lang="ts">
+        import { Activity, Heart, Zap, Dumbbell } from 'lucide-svelte';
+        
         export let fitnessData: any;
         
         const stats = [
                 {
                         label: 'Steps Today',
                         value: fitnessData.todaySteps.toLocaleString(),
+                        icon: Activity,
                         color: 'text-blue-600',
                         bgColor: 'bg-blue-50'
                 },
                 {
                         label: 'Avg Heart Rate',
                         value: `${fitnessData.avgHeartRate} bpm`,
+                        icon: Heart,
                         color: 'text-red-600',
                         bgColor: 'bg-red-50'
                 },
                 {
                         label: 'Calories Burned',
                         value: fitnessData.caloriesBurned.toLocaleString(),
+                        icon: Zap,
                         color: 'text-orange-600',
                         bgColor: 'bg-orange-50'
                 },
                 {
                         label: 'Last Workout',
                         value: new Date(fitnessData.lastWorkout).toLocaleDateString(),
+                        icon: Dumbbell,
                         color: 'text-green-600',
                         bgColor: 'bg-green-50'
                 }
@@ -35,7 +41,7 @@
                         <div class="flex items-center">
                                 <div class="flex-shrink-0">
                                         <div class="w-12 h-12 {stat.bgColor} rounded-lg flex items-center justify-center">
-                                                <div class="w-6 h-6 rounded-full {stat.color.replace('text-', 'bg-')}"></div>
+                                                <svelte:component this={stat.icon} size={24} class={stat.color} />
                                         </div>
                                 </div>
                                 <div class="ml-4">
