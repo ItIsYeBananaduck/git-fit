@@ -35,7 +35,10 @@ export default defineSchema({
       v.literal("sleep"), 
       v.literal("calories"),
       v.literal("distance"),
-      v.literal("activeMinutes")
+      v.literal("activeMinutes"),
+      v.literal("strain"),
+      v.literal("recovery"),
+      v.literal("hrv")
     ),
     value: v.number(),
     unit: v.string(), // steps, bpm, hours, kcal, km, minutes

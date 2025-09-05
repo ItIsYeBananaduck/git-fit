@@ -21,6 +21,12 @@
                         dataTypes: ['steps', 'heart_rate', 'sleep', 'calories']
                 },
                 {
+                        name: 'WHOOP',
+                        connected: false,
+                        lastSync: null,
+                        dataTypes: ['heart_rate', 'strain', 'recovery', 'hrv', 'sleep', 'calories']
+                },
+                {
                         name: 'Fitbit',
                         connected: false,
                         lastSync: null,

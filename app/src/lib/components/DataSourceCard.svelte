@@ -1,5 +1,5 @@
 <script lang="ts">
-        import { Smartphone, Watch, Activity, Wifi, Bluetooth } from 'lucide-svelte';
+        import { Smartphone, Watch, Activity, Wifi, Bluetooth, Zap } from 'lucide-svelte';
         
         export let source: any;
 
@@ -9,6 +9,7 @@
                         case 'fitbit': return { icon: Watch, color: 'text-blue-600', bg: 'bg-blue-100' };
                         case 'garmin': return { icon: Activity, color: 'text-red-600', bg: 'bg-red-100' };
                         case 'google fit': return { icon: Activity, color: 'text-green-600', bg: 'bg-green-100' };
+                        case 'whoop': return { icon: Zap, color: 'text-yellow-600', bg: 'bg-yellow-100' };
                         default: return { icon: Bluetooth, color: 'text-purple-600', bg: 'bg-purple-100' };
                 }
         }

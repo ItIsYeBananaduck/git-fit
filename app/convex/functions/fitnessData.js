@@ -11,7 +11,10 @@ export const addFitnessData = mutation({
       v.literal("sleep"), 
       v.literal("calories"),
       v.literal("distance"),
-      v.literal("activeMinutes")
+      v.literal("activeMinutes"),
+      v.literal("strain"),
+      v.literal("recovery"),
+      v.literal("hrv")
     ),
     value: v.number(),
     unit: v.string(),
@@ -37,7 +40,10 @@ export const getFitnessData = query({
       v.literal("sleep"), 
       v.literal("calories"),
       v.literal("distance"),
-      v.literal("activeMinutes")
+      v.literal("activeMinutes"),
+      v.literal("strain"),
+      v.literal("recovery"),
+      v.literal("hrv")
     )),
     startDate: v.optional(v.string()),
     endDate: v.optional(v.string()),
@@ -76,7 +82,10 @@ export const getLatestFitnessData = query({
       v.literal("sleep"), 
       v.literal("calories"),
       v.literal("distance"),
-      v.literal("activeMinutes")
+      v.literal("activeMinutes"),
+      v.literal("strain"),
+      v.literal("recovery"),
+      v.literal("hrv")
     ),
   },
   handler: async (ctx, args) => {
@@ -101,7 +110,10 @@ export const bulkAddFitnessData = mutation({
         v.literal("sleep"), 
         v.literal("calories"),
         v.literal("distance"),
-        v.literal("activeMinutes")
+        v.literal("activeMinutes"),
+        v.literal("strain"),
+        v.literal("recovery"),
+        v.literal("hrv")
       ),
       value: v.number(),
       unit: v.string(),
