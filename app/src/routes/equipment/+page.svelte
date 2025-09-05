@@ -118,7 +118,6 @@
                                                 {#each categoryEquipment as equipment}
                                                         <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
                                                                 <div class="flex items-start justify-between mb-3">
-                                                                        <div class="text-gray-600"><EquipmentIcon type={getEquipmentIconType(equipment.name)} size="32" /></div>
                                                                         <span class="px-2 py-1 rounded-full text-xs font-medium border {getCategoryBadgeColor(equipment.category)}">
                                                                                 {equipment.category.replace('-', ' ')}
                                                                         </span>

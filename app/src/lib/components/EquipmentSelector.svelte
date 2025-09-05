@@ -87,8 +87,7 @@
                                                         ? 'border-primary bg-primary/5 ring-2 ring-primary/20' 
                                                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}"
                                         >
-                                                <div class="mr-2"><EquipmentIcon type={getEquipmentIconType(machine)} size="20" /></div>
-                                                <div class="text-left">
+                                                                <div class="text-left">
                                                         <div class="font-medium text-gray-900 text-sm">{machine}</div>
                                                         {#if userPreferences.some(pref => machine.toLowerCase().includes(pref.toLowerCase()))}
                                                                 <div class="text-xs text-green-600">Your preference</div>
@@ -119,8 +118,7 @@
                                                                 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
                                                                 : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}"
                                                 >
-                                                        <div class="mr-2"><EquipmentIcon type={getEquipmentIconType(alternative)} size="20" /></div>
-                                                        <div class="text-left">
+                                                                        <div class="text-left">
                                                                 <div class="font-medium text-gray-900 text-sm">{alternative}</div>
                                                                 <div class="text-xs text-blue-600">Alternative</div>
                                                         </div>
@@ -162,8 +160,7 @@
                 <div class="mt-4 pt-4 border-t border-gray-200">
                         <div class="flex items-center justify-between">
                                 <div class="flex items-center">
-                                        <div class="mr-2"><EquipmentIcon type={getEquipmentIconType(selectedEquipment)} size="20" /></div>
-                                        <div>
+                                                        <div>
                                                 <div class="font-medium text-gray-900">Selected: {selectedEquipment}</div>
                                                 <div class="text-sm text-gray-600">
                                                         {recommendedMachines.includes(selectedEquipment) ? 'Recommended' : 'Alternative'} equipment
