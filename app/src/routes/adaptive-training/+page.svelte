@@ -6,6 +6,9 @@
   import OuraDataDisplay from '$lib/components/OuraDataDisplay.svelte';
   import FitbitConnection from '$lib/components/FitbitConnection.svelte';
   import FitbitDataDisplay from '$lib/components/FitbitDataDisplay.svelte';
+  import PolarConnection from '$lib/components/PolarConnection.svelte';
+  import PolarDataDisplay from '$lib/components/PolarDataDisplay.svelte';
+  import MobilePlatformPlaceholder from '$lib/components/MobilePlatformPlaceholder.svelte';
   import DeloadWeekToggle from '$lib/components/DeloadWeekToggle.svelte';
   import StrainMonitor from '$lib/components/StrainMonitor.svelte';
   import SafetySettings from '$lib/components/SafetySettings.svelte';
@@ -15,6 +18,7 @@
   import { whoopState } from '$lib/stores/whoop';
   import { ouraState } from '$lib/stores/oura';
   import { fitbitState } from '$lib/stores/fitbit';
+  import { polarAuthState } from '$lib/stores/polar';
   import { Brain, Target, TrendingUp, Zap, Settings } from 'lucide-svelte';
 
   let selectedExercise = 'Bench Press';
@@ -62,6 +66,7 @@
   $: whoopConnected = $whoopState.isConnected;
   $: ouraConnected = $ouraState.isConnected;
   $: fitbitConnected = $fitbitState.isConnected;
+  $: polarConnected = $polarAuthState.isConnected;
   $: selectedExerciseData = exercises.find(e => e.name === selectedExercise) || exercises[0];
   
   function handleDeloadToggle(enabled: boolean) {
@@ -148,7 +153,7 @@
     </div>
 
     <!-- Fitness Tracker Data Overview -->
-    {#if whoopConnected || ouraConnected || fitbitConnected}
+    {#if whoopConnected || ouraConnected || fitbitConnected || polarConnected}
       <div class="mb-8">
         <h2 class="text-xl font-semibold text-gray-900 mb-6">Today's Readiness</h2>
         
@@ -171,6 +176,13 @@
             <div>
               <h3 class="text-lg font-medium text-gray-900 mb-3">Fitbit Data</h3>
               <FitbitDataDisplay compact={true} />
+            </div>
+          {/if}
+          
+          {#if polarConnected}
+            <div>
+              <h3 class="text-lg font-medium text-gray-900 mb-3">Polar Data</h3>
+              <PolarDataDisplay />
             </div>
           {/if}
         </div>
@@ -214,23 +226,81 @@
     <div class="mb-8">
       <h2 class="text-xl font-semibold text-gray-900 mb-6">Fitness Tracker Connections</h2>
       
-      <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
-        <!-- WHOOP Connection -->
-        <div>
-          <h3 class="text-lg font-medium text-gray-900 mb-3">WHOOP</h3>
-          <WHOOPDataDisplay compact={false} showConnection={true} />
+      <!-- Web-Accessible Platforms -->
+      <div class="mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Web-Accessible Platforms</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- WHOOP Connection -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3">WHOOP</h4>
+            <WHOOPDataDisplay compact={false} showConnection={true} />
+          </div>
+          
+          <!-- Oura Connection -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3">Oura Ring</h4>
+            <OuraConnection />
+          </div>
+          
+          <!-- Fitbit Connection -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3">Fitbit</h4>
+            <FitbitConnection />
+          </div>
+          
+          <!-- Polar Connection -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3">Polar</h4>
+            <PolarConnection />
+          </div>
         </div>
-        
-        <!-- Oura Connection -->
-        <div>
-          <h3 class="text-lg font-medium text-gray-900 mb-3">Oura Ring</h3>
-          <OuraConnection />
-        </div>
-        
-        <!-- Fitbit Connection -->
-        <div>
-          <h3 class="text-lg font-medium text-gray-900 mb-3">Fitbit</h3>
-          <FitbitConnection />
+      </div>
+
+      <!-- Mobile-Only Platforms -->
+      <div class="mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Popular Mobile Platforms</h3>
+        <p class="text-sm text-gray-600 mb-6">
+          These platforms require mobile apps for data access. We're exploring integration options for future releases.
+        </p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <MobilePlatformPlaceholder
+            platform="apple_watch"
+            title="Apple Watch / HealthKit"
+            description="Most popular fitness tracker with comprehensive health metrics"
+            requirements={[
+              'iOS device required',
+              'Companion mobile app needed',
+              'HealthKit API access',
+              'App Store distribution'
+            ]}
+            comingSoon={true}
+          />
+          
+          <MobilePlatformPlaceholder
+            platform="samsung_health"
+            title="Samsung Health"
+            description="Integrated health platform for Samsung and Android devices"
+            requirements={[
+              'Android device (Samsung preferred)',
+              'Samsung Health app installed',
+              'Partnership approval needed',
+              'Health Connect integration'
+            ]}
+            comingSoon={true}
+          />
+          
+          <MobilePlatformPlaceholder
+            platform="google_fit"
+            title="Google Fit"
+            description="Cross-platform fitness tracking (API deprecating June 2025)"
+            requirements={[
+              'API access ending June 2025',
+              'Migrating to Health Connect',
+              'Android-only in future',
+              'Limited web API support'
+            ]}
+            comingSoon={false}
+          />
         </div>
       </div>
       
