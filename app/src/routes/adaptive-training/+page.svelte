@@ -4,6 +4,8 @@
   import WHOOPDataDisplay from '$lib/components/WHOOPDataDisplay.svelte';
   import OuraConnection from '$lib/components/OuraConnection.svelte';
   import OuraDataDisplay from '$lib/components/OuraDataDisplay.svelte';
+  import FitbitConnection from '$lib/components/FitbitConnection.svelte';
+  import FitbitDataDisplay from '$lib/components/FitbitDataDisplay.svelte';
   import DeloadWeekToggle from '$lib/components/DeloadWeekToggle.svelte';
   import StrainMonitor from '$lib/components/StrainMonitor.svelte';
   import SafetySettings from '$lib/components/SafetySettings.svelte';
@@ -12,6 +14,7 @@
   import { DEFAULT_SAFETY_SETTINGS, TRACKER_DEFINITIONS } from '$lib/types/fitnessTrackers';
   import { whoopState } from '$lib/stores/whoop';
   import { ouraState } from '$lib/stores/oura';
+  import { fitbitState } from '$lib/stores/fitbit';
   import { Brain, Target, TrendingUp, Zap, Settings } from 'lucide-svelte';
 
   let selectedExercise = 'Bench Press';
@@ -58,6 +61,7 @@
 
   $: whoopConnected = $whoopState.isConnected;
   $: ouraConnected = $ouraState.isConnected;
+  $: fitbitConnected = $fitbitState.isConnected;
   $: selectedExerciseData = exercises.find(e => e.name === selectedExercise) || exercises[0];
   
   function handleDeloadToggle(enabled: boolean) {
@@ -144,11 +148,11 @@
     </div>
 
     <!-- Fitness Tracker Data Overview -->
-    {#if whoopConnected || ouraConnected}
+    {#if whoopConnected || ouraConnected || fitbitConnected}
       <div class="mb-8">
         <h2 class="text-xl font-semibold text-gray-900 mb-6">Today's Readiness</h2>
         
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {#if whoopConnected}
             <div>
               <h3 class="text-lg font-medium text-gray-900 mb-3">WHOOP Data</h3>
@@ -160,6 +164,13 @@
             <div>
               <h3 class="text-lg font-medium text-gray-900 mb-3">Oura Ring Data</h3>
               <OuraDataDisplay compact={true} />
+            </div>
+          {/if}
+          
+          {#if fitbitConnected}
+            <div>
+              <h3 class="text-lg font-medium text-gray-900 mb-3">Fitbit Data</h3>
+              <FitbitDataDisplay compact={true} />
             </div>
           {/if}
         </div>
@@ -203,7 +214,7 @@
     <div class="mb-8">
       <h2 class="text-xl font-semibold text-gray-900 mb-6">Fitness Tracker Connections</h2>
       
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
         <!-- WHOOP Connection -->
         <div>
           <h3 class="text-lg font-medium text-gray-900 mb-3">WHOOP</h3>
@@ -214,6 +225,12 @@
         <div>
           <h3 class="text-lg font-medium text-gray-900 mb-3">Oura Ring</h3>
           <OuraConnection />
+        </div>
+        
+        <!-- Fitbit Connection -->
+        <div>
+          <h3 class="text-lg font-medium text-gray-900 mb-3">Fitbit</h3>
+          <FitbitConnection />
         </div>
       </div>
       
