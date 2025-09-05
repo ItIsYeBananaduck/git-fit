@@ -21,7 +21,7 @@
   let data = $whoopData;
   let adaptiveEngine: AdaptiveTrainingEngine;
   let todaysRecommendation: any = null;
-  let adaptedParams: TrainingParameters;
+  let adaptedParams: TrainingParameters = { ...exercise.baseParams };
   let suggestions: string[] = [];
 
   $: state = $whoopState;
@@ -29,8 +29,6 @@
 
   onMount(() => {
     adaptiveEngine = new AdaptiveTrainingEngine('user-123'); // Replace with actual user ID
-    // Initialize adapted parameters with base parameters as default
-    adaptedParams = { ...exercise.baseParams };
     calculateTodaysWorkout();
   });
 
@@ -98,7 +96,7 @@
   }
 
   // Reactive updates when WHOOP data changes
-  $: if (state.isConnected || data.recovery.length > 0) {
+  $: if (adaptiveEngine && (state.isConnected || data.recovery.length > 0)) {
     calculateTodaysWorkout();
   }
 </script>
