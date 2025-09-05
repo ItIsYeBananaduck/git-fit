@@ -74,20 +74,67 @@ export default defineSchema({
     createdAt: v.string(),
   }).index("by_program", ["programId"]).index("by_program_and_day", ["programId", "dayNumber"]),
 
-  // Exercises within workouts
+  // Master exercise database (from Free Exercise DB)
+  exerciseDatabase: defineTable({
+    // Core exercise info
+    exerciseId: v.string(), // unique identifier from source
+    name: v.string(),
+    instructions: v.array(v.string()),
+    category: v.string(), // strength, cardio, stretching, etc.
+    // Difficulty and mechanics
+    level: v.string(), // beginner, intermediate, expert
+    force: v.optional(v.string()), // push, pull, static
+    mechanic: v.optional(v.string()), // compound, isolation
+    // Muscle groups
+    primaryMuscles: v.array(v.string()),
+    secondaryMuscles: v.array(v.string()),
+    // Equipment and recommendations
+    equipment: v.optional(v.string()), // primary equipment needed
+    alternativeEquipment: v.array(v.string()), // alternative options
+    recommendedMachines: v.array(v.string()), // specific machine recommendations
+    // Media
+    images: v.array(v.string()),
+    // Import metadata
+    importedAt: v.string(),
+    source: v.string(), // "free-exercise-db"
+  }).index("by_exercise_id", ["exerciseId"])
+    .index("by_category", ["category"])
+    .index("by_equipment", ["equipment"])
+    .index("by_level", ["level"])
+    .index("by_primary_muscle", ["primaryMuscles"]),
+
+  // Equipment recommendations and alternatives
+  equipmentRecommendations: defineTable({
+    equipmentType: v.string(), // "dumbbell", "machine", "cable", etc.
+    primaryMachines: v.array(v.string()), // main recommendations
+    alternatives: v.array(v.string()), // backup options
+    homeAlternatives: v.array(v.string()), // home gym options
+    description: v.string(),
+    priceRange: v.optional(v.string()), // "$", "$$", "$$$"
+    spaceRequired: v.optional(v.string()), // "minimal", "moderate", "large"
+  }).index("by_equipment_type", ["equipmentType"]),
+
+  // User equipment preferences
+  userEquipmentPreferences: defineTable({
+    userId: v.id("users"),
+    preferredEquipment: v.array(v.string()), // user's preferred machines
+    avoidedEquipment: v.array(v.string()), // equipment they can't/won't use
+    gymType: v.optional(v.string()), // "home", "commercial", "budget"
+    lastUpdated: v.string(),
+  }).index("by_user", ["userId"]),
+
+  // Exercises within workouts (now references exercise database)
   exercises: defineTable({
     workoutId: v.id("workouts"),
-    name: v.string(),
-    description: v.string(),
+    exerciseDbId: v.id("exerciseDatabase"), // reference to master exercise
     sets: v.number(),
     reps: v.optional(v.string()), // "10-12" or "to failure"
     weight: v.optional(v.number()), // kg
     duration: v.optional(v.number()), // seconds for time-based exercises
     restTime: v.optional(v.number()), // seconds
     order: v.number(), // order within the workout
-    instructions: v.string(),
-    videoUrl: v.optional(v.string()),
-    muscleGroups: v.array(v.string()),
+    selectedEquipment: v.optional(v.string()), // user's equipment choice
+    notes: v.optional(v.string()),
   }).index("by_workout", ["workoutId"]).index("by_workout_and_order", ["workoutId", "order"]),
 
   // User's active/purchased programs
