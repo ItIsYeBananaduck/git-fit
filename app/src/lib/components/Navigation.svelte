@@ -82,6 +82,7 @@
                                 <button 
                                         on:click={() => mobileMenuOpen = !mobileMenuOpen}
                                         class="md:hidden p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                                        aria-label="Toggle mobile menu"
                                 >
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 

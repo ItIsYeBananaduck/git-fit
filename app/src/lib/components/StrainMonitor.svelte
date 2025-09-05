@@ -7,7 +7,7 @@
   
   let currentStrain = 0;
   let isMonitoring = false;
-  let interval: number;
+  let interval: ReturnType<typeof setInterval>;
   let progress = 0;
   let shouldStop = false;
   let message = '';
