@@ -15,8 +15,43 @@
         }
 
         function handleConnect() {
-                // In real app, this would trigger OAuth flow
-                console.log(`Connecting to ${source.name}...`);
+                if (source.name.toLowerCase() === 'whoop') {
+                        initiateWHOOPConnection();
+                } else {
+                        // Other integrations - trigger OAuth flow
+                        console.log(`Connecting to ${source.name}...`);
+                }
+        }
+
+        async function initiateWHOOPConnection() {
+                try {
+                        // Generate secure state for OAuth
+                        const state = generateRandomString(16);
+                        sessionStorage.setItem('whoop_oauth_state', state);
+                        
+                        // Get environment variables
+                        const clientId = import.meta.env.VITE_WHOOP_CLIENT_ID || 'demo_client_id';
+                        const redirectUri = `${window.location.origin}/auth/whoop`;
+                        
+                        // Build OAuth URL
+                        const authUrl = new URL('https://api.prod.whoop.com/oauth/oauth2/auth');
+                        authUrl.searchParams.append('response_type', 'code');
+                        authUrl.searchParams.append('client_id', clientId);
+                        authUrl.searchParams.append('redirect_uri', redirectUri);
+                        authUrl.searchParams.append('scope', 'offline read:profile read:recovery read:sleep read:cycles read:workout read:body_measurement');
+                        authUrl.searchParams.append('state', state);
+                        
+                        // Redirect to WHOOP OAuth
+                        window.location.href = authUrl.toString();
+                } catch (error) {
+                        console.error('Failed to initiate WHOOP connection:', error);
+                }
+        }
+
+        function generateRandomString(length: number): string {
+                const array = new Uint8Array(length);
+                crypto.getRandomValues(array);
+                return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
         }
 
         function handleDisconnect() {

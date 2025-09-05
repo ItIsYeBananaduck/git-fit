@@ -221,4 +221,19 @@ export default defineSchema({
     notes: v.optional(v.string()),
     createdAt: v.string(),
   }).index("by_trainer", ["trainerId"]).index("by_client", ["clientId"]),
+
+  // WHOOP device connections
+  whoopConnections: defineTable({
+    userId: v.id("users"),
+    whoopUserId: v.string(), // WHOOP's user ID
+    accessToken: v.string(),
+    refreshToken: v.string(),
+    expiresIn: v.number(), // seconds until token expires
+    scope: v.string(), // granted permissions
+    connectedAt: v.string(),
+    disconnectedAt: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_user", ["userId"]).index("by_whoop_user", ["whoopUserId"]),
 });

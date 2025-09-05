@@ -1,7 +1,9 @@
 <script lang="ts">
         import FitnessChart from '$lib/components/FitnessChart.svelte';
         import DataSourceCard from '$lib/components/DataSourceCard.svelte';
+        import WHOOPDataDisplay from '$lib/components/WHOOPDataDisplay.svelte';
         import { Activity, Heart, Moon } from 'lucide-svelte';
+        import { whoopState } from '$lib/stores/whoop';
 
         // Mock fitness data
         let fitnessOverview = {
@@ -42,6 +44,8 @@
 
         let selectedMetric = 'steps';
         let timeRange = '7d';
+        
+        $: whoopConnected = $whoopState.isConnected;
 
         // Mock chart data
         let chartData = {
@@ -118,6 +122,13 @@
                         </div>
                 </div>
         </div>
+
+        <!-- WHOOP Data Section -->
+        {#if whoopConnected}
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <WHOOPDataDisplay />
+                </div>
+        {/if}
 
         <!-- Data Chart -->
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
