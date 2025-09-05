@@ -96,7 +96,7 @@ export const equipmentMapping = {
 
 // Get equipment recommendations for a specific exercise equipment type
 export function getEquipmentRecommendations(equipmentType: string) {
-  const mapping = equipmentMapping[equipmentType];
+  const mapping = equipmentMapping[equipmentType as keyof typeof equipmentMapping];
   if (!mapping) {
     return {
       primary: [],
