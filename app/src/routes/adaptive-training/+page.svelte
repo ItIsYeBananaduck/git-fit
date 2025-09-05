@@ -2,6 +2,8 @@
   import AdaptiveWorkoutCard from '$lib/components/AdaptiveWorkoutCard.svelte';
   import ProgressionAnalytics from '$lib/components/ProgressionAnalytics.svelte';
   import WHOOPDataDisplay from '$lib/components/WHOOPDataDisplay.svelte';
+  import OuraConnection from '$lib/components/OuraConnection.svelte';
+  import OuraDataDisplay from '$lib/components/OuraDataDisplay.svelte';
   import DeloadWeekToggle from '$lib/components/DeloadWeekToggle.svelte';
   import StrainMonitor from '$lib/components/StrainMonitor.svelte';
   import SafetySettings from '$lib/components/SafetySettings.svelte';
@@ -9,6 +11,7 @@
   import type { SafetySettings as SafetySettingsType, FitnessTracker } from '$lib/types/fitnessTrackers';
   import { DEFAULT_SAFETY_SETTINGS, TRACKER_DEFINITIONS } from '$lib/types/fitnessTrackers';
   import { whoopState } from '$lib/stores/whoop';
+  import { ouraState } from '$lib/stores/oura';
   import { Brain, Target, TrendingUp, Zap, Settings } from 'lucide-svelte';
 
   let selectedExercise = 'Bench Press';
@@ -54,6 +57,7 @@
   ];
 
   $: whoopConnected = $whoopState.isConnected;
+  $: ouraConnected = $ouraState.isConnected;
   $: selectedExerciseData = exercises.find(e => e.name === selectedExercise) || exercises[0];
   
   function handleDeloadToggle(enabled: boolean) {
@@ -102,7 +106,7 @@
         <h1 class="text-3xl font-bold text-gray-900">Adaptive Training System</h1>
       </div>
       <p class="text-lg text-gray-600">
-        AI-powered workout adjustments based on your WHOOP recovery, strain, and adaptation patterns
+        AI-powered workout adjustments based on your fitness tracker data, recovery metrics, and adaptation patterns
       </p>
     </div>
 
@@ -114,7 +118,7 @@
         </div>
         <h3 class="text-lg font-semibold text-gray-900 mb-2">Daily Assessment</h3>
         <p class="text-gray-600">
-          Analyzes your WHOOP recovery, strain, and HRV to determine optimal training intensity for today
+          Analyzes your recovery, strain, and HRV data from connected trackers to determine optimal training intensity
         </p>
       </div>
 
@@ -139,11 +143,26 @@
       </div>
     </div>
 
-    <!-- WHOOP Data Overview -->
-    {#if whoopConnected}
+    <!-- Fitness Tracker Data Overview -->
+    {#if whoopConnected || ouraConnected}
       <div class="mb-8">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Today's Readiness</h2>
-        <WHOOPDataDisplay compact={true} />
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Today's Readiness</h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {#if whoopConnected}
+            <div>
+              <h3 class="text-lg font-medium text-gray-900 mb-3">WHOOP Data</h3>
+              <WHOOPDataDisplay compact={true} />
+            </div>
+          {/if}
+          
+          {#if ouraConnected}
+            <div>
+              <h3 class="text-lg font-medium text-gray-900 mb-3">Oura Ring Data</h3>
+              <OuraDataDisplay compact={true} />
+            </div>
+          {/if}
+        </div>
       </div>
     {:else}
       <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
@@ -152,9 +171,9 @@
             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
           </svg>
           <div>
-            <h3 class="text-sm font-medium text-yellow-800">Connect WHOOP for Personalized Training</h3>
+            <h3 class="text-sm font-medium text-yellow-800">Connect Fitness Trackers for Personalized Training</h3>
             <p class="text-sm text-yellow-700 mt-1">
-              Connect your WHOOP device to enable AI-powered workout adjustments based on your recovery data.
+              Connect your fitness tracker (WHOOP, Oura Ring, etc.) to enable AI-powered workout adjustments based on your recovery data.
             </p>
           </div>
         </div>
@@ -182,11 +201,30 @@
 
     <!-- Tracker Setup -->
     <div class="mb-8">
-      <TrackerSelector 
-        connectedTrackers={connectedTrackers}
-        onTrackerAdd={handleTrackerAdd}
-        onTrackerRemove={handleTrackerRemove}
-      />
+      <h2 class="text-xl font-semibold text-gray-900 mb-6">Fitness Tracker Connections</h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- WHOOP Connection -->
+        <div>
+          <h3 class="text-lg font-medium text-gray-900 mb-3">WHOOP</h3>
+          <WHOOPDataDisplay compact={false} showConnection={true} />
+        </div>
+        
+        <!-- Oura Connection -->
+        <div>
+          <h3 class="text-lg font-medium text-gray-900 mb-3">Oura Ring</h3>
+          <OuraConnection />
+        </div>
+      </div>
+      
+      <!-- Multi-Tracker Selector -->
+      <div class="border-t border-gray-200 pt-6">
+        <TrackerSelector 
+          connectedTrackers={connectedTrackers}
+          onTrackerAdd={handleTrackerAdd}
+          onTrackerRemove={handleTrackerRemove}
+        />
+      </div>
     </div>
 
     <!-- Settings Toggle -->
