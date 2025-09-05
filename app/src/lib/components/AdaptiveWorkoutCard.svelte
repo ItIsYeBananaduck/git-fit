@@ -3,9 +3,14 @@
   import { whoopState, whoopData } from '$lib/stores/whoop';
   import { AdaptiveTrainingEngine } from '$lib/services/adaptiveTraining';
   import { ProgressionEngine } from '$lib/services/progressionEngine';
+  import { MultiTrackerAdaptiveEngine } from '$lib/services/multiTrackerAdaptive';
   import type { TrainingParameters } from '$lib/services/adaptiveTraining';
+  import type { SafetySettings, FitnessTracker, TrackerData } from '$lib/types/fitnessTrackers';
+  import { DEFAULT_SAFETY_SETTINGS } from '$lib/types/fitnessTrackers';
   import { TrendingUp, TrendingDown, Minus, Zap, Clock, Repeat, AlertTriangle, Shield, RotateCcw, Target } from 'lucide-svelte';
 
+  export let connectedTrackers: FitnessTracker[] = [];
+  export let safetySettings: SafetySettings = DEFAULT_SAFETY_SETTINGS;
   export let exercise = {
     name: 'Bench Press',
     baseParams: {
@@ -22,6 +27,7 @@
   let data = $whoopData;
   let adaptiveEngine: AdaptiveTrainingEngine;
   let progressionEngine: ProgressionEngine;
+  let multiTrackerEngine: MultiTrackerAdaptiveEngine;
   let todaysRecommendation: any = null;
   let progressionDecision: any = null;
   let currentParams: TrainingParameters = { ...exercise.baseParams }; // Current progression level
@@ -37,55 +43,98 @@
   onMount(() => {
     adaptiveEngine = new AdaptiveTrainingEngine('user-123');
     progressionEngine = new ProgressionEngine('user-123');
+    multiTrackerEngine = new MultiTrackerAdaptiveEngine('user-123', safetySettings);
     calculateTodaysWorkout();
     checkProgression();
   });
 
   function calculateTodaysWorkout() {
-    if (!state.isConnected || data.recovery.length === 0) {
-      // Use current progression parameters when no WHOOP data
+    if (connectedTrackers.length === 0) {
+      // No trackers connected
       todaysParams = { ...currentParams };
-      suggestions = ['Connect WHOOP for real-time safety alerts and rest period optimization'];
+      suggestions = ['Connect a fitness tracker for personalized training adjustments'];
       return;
     }
 
-    const latestRecovery = data.recovery[0]?.score?.recovery_score || 50;
-    const latestStrain = data.strain[0]?.score?.strain || 10;
-    const latestHRV = data.recovery[0]?.score?.hrv_rmssd_milli || 50;
-    const sleepScore = data.sleep[0]?.score?.sleep_performance_percentage || null;
+    // Simulate tracker data (in real app, this would come from actual APIs)
+    const trackerData = generateMockTrackerData();
+    const mockSessions = generateMockProgressionSessions();
 
-    // Get daily recommendation (only affects rest periods and safety)
-    todaysRecommendation = adaptiveEngine.getDailyTrainingRecommendation(
-      latestRecovery,
-      latestStrain,
-      latestHRV,
-      [] // Empty recent sessions for demo
+    // Use multi-tracker engine for recommendation
+    todaysRecommendation = multiTrackerEngine.getDailyTrainingRecommendation(
+      trackerData,
+      mockSessions,
+      isDeloadWeek
     );
 
     // Check for deload week recommendation
     if (todaysRecommendation.shouldDeload && !isDeloadWeek) {
       isDeloadWeek = true;
       // Create deload parameters: half weight, double reps, 90s rest
-      todaysParams = adaptiveEngine.createDeloadParameters(currentParams);
+      todaysParams = multiTrackerEngine.createDeloadParameters(currentParams);
     } else {
       // Normal day: adjust only rest periods, keep progression load/reps
-      todaysParams = adaptiveEngine.adjustRestPeriods(
-        currentParams,
-        todaysRecommendation
-      );
+      todaysParams = {
+        ...currentParams,
+        restBetweenSets: Math.round(currentParams.restBetweenSets * todaysRecommendation.restMultiplier),
+        restBetweenExercises: Math.round(currentParams.restBetweenExercises * todaysRecommendation.restMultiplier),
+        isDeloadWeek: currentParams.isDeloadWeek
+      };
     }
 
-    // Simulate current strain during workout (would come from real WHOOP data)
-    currentStrain = Math.random() * todaysRecommendation.targetStrain * 0.8; // 80% of target typically
-    strainCheck = adaptiveEngine.checkStrainTarget(currentStrain, todaysRecommendation.targetStrain);
+    // Simulate current strain during workout
+    const targetStrain = todaysRecommendation.targetStrain || 12;
+    currentStrain = Math.random() * targetStrain * 0.8; // 80% of target typically
+    strainCheck = multiTrackerEngine.checkStrainTarget(currentStrain, targetStrain, isDeloadWeek);
 
-    // Get training suggestions
-    suggestions = adaptiveEngine.generateTrainingSuggestions(
-      latestRecovery,
-      latestStrain,
-      latestHRV,
-      sleepScore || undefined
-    );
+    // Generate basic suggestions
+    suggestions = [
+      `Training confidence: ${Math.round(todaysRecommendation.confidence * 100)}%`,
+      `Data source: ${todaysRecommendation.adaptationSource}`,
+      todaysRecommendation.reasoning[0] || 'Standard training protocol'
+    ];
+  }
+
+  function generateMockTrackerData(): Record<string, TrackerData> {
+    const data: Record<string, TrackerData> = {};
+    
+    connectedTrackers.forEach(tracker => {
+      const mockData: TrackerData = {
+        timestamp: new Date()
+      };
+
+      // Generate data based on tracker capabilities
+      if (tracker.capabilities.hasRecovery) {
+        mockData.recovery = Math.random() * 40 + 40; // 40-80%
+      }
+      if (tracker.capabilities.hasStrain) {
+        mockData.strain = Math.random() * 8 + 8; // 8-16
+      }
+      if (tracker.capabilities.hasHRV) {
+        mockData.hrv = Math.random() * 30 + 30; // 30-60ms
+      }
+      if (tracker.capabilities.hasHeartRate) {
+        mockData.heartRate = Math.random() * 40 + 60; // 60-100 BPM
+        mockData.restingHeartRate = 55 + Math.random() * 15; // 55-70 BPM
+      }
+      if (tracker.capabilities.hasSleep) {
+        mockData.sleep = {
+          duration: 6 + Math.random() * 3, // 6-9 hours
+          quality: 60 + Math.random() * 30, // 60-90%
+          efficiency: 70 + Math.random() * 25 // 70-95%
+        };
+      }
+      if (tracker.capabilities.hasSteps) {
+        mockData.steps = Math.floor(Math.random() * 8000 + 2000); // 2k-10k steps
+      }
+      if (tracker.capabilities.hasCalories) {
+        mockData.calories = Math.floor(Math.random() * 1000 + 1500); // 1500-2500 calories
+      }
+
+      data[tracker.id] = mockData;
+    });
+
+    return data;
   }
 
   function checkProgression() {

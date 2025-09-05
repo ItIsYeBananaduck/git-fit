@@ -4,11 +4,18 @@
   import WHOOPDataDisplay from '$lib/components/WHOOPDataDisplay.svelte';
   import DeloadWeekToggle from '$lib/components/DeloadWeekToggle.svelte';
   import StrainMonitor from '$lib/components/StrainMonitor.svelte';
+  import SafetySettings from '$lib/components/SafetySettings.svelte';
+  import TrackerSelector from '$lib/components/TrackerSelector.svelte';
+  import type { SafetySettings as SafetySettingsType, FitnessTracker } from '$lib/types/fitnessTrackers';
+  import { DEFAULT_SAFETY_SETTINGS, TRACKER_DEFINITIONS } from '$lib/types/fitnessTrackers';
   import { whoopState } from '$lib/stores/whoop';
-  import { Brain, Target, TrendingUp, Zap } from 'lucide-svelte';
+  import { Brain, Target, TrendingUp, Zap, Settings } from 'lucide-svelte';
 
   let selectedExercise = 'Bench Press';
   let manualDeloadWeek = false;
+  let safetySettings: SafetySettingsType = { ...DEFAULT_SAFETY_SETTINGS };
+  let connectedTrackers: FitnessTracker[] = [];
+  let showSettings = false;
   
   const exercises = [
     {
@@ -56,6 +63,29 @@
   function handleStrainReached() {
     // Could trigger notifications, log completion, etc.
     console.log('Target strain reached - workout should be stopped');
+  }
+
+  function handleSafetySettingsChange(settings: SafetySettingsType) {
+    safetySettings = settings;
+  }
+
+  function handleTrackerAdd(trackerType: string) {
+    const trackerDef = TRACKER_DEFINITIONS[trackerType as keyof typeof TRACKER_DEFINITIONS];
+    if (trackerDef) {
+      const newTracker: FitnessTracker = {
+        id: `${trackerType}-${Date.now()}`,
+        name: trackerDef.name,
+        type: trackerType as any,
+        capabilities: trackerDef.capabilities,
+        isConnected: true,
+        lastSync: new Date()
+      };
+      connectedTrackers = [...connectedTrackers, newTracker];
+    }
+  }
+
+  function handleTrackerRemove(trackerId: string) {
+    connectedTrackers = connectedTrackers.filter(t => t.id !== trackerId);
   }
 </script>
 
@@ -150,6 +180,36 @@
       </div>
     </div>
 
+    <!-- Tracker Setup -->
+    <div class="mb-8">
+      <TrackerSelector 
+        connectedTrackers={connectedTrackers}
+        onTrackerAdd={handleTrackerAdd}
+        onTrackerRemove={handleTrackerRemove}
+      />
+    </div>
+
+    <!-- Settings Toggle -->
+    <div class="mb-6">
+      <button
+        on:click={() => showSettings = !showSettings}
+        class="flex items-center px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+      >
+        <Settings size={16} class="mr-2" />
+        {showSettings ? 'Hide' : 'Show'} Safety Settings
+      </button>
+    </div>
+
+    <!-- Settings Panel -->
+    {#if showSettings}
+      <div class="mb-8">
+        <SafetySettings 
+          settings={safetySettings}
+          onSettingsChange={handleSafetySettingsChange}
+        />
+      </div>
+    {/if}
+
     <!-- Controls Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
       <DeloadWeekToggle isDeloadWeek={manualDeloadWeek} onToggle={handleDeloadToggle} />
@@ -161,7 +221,11 @@
       <!-- Adaptive Workout Card -->
       <div>
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Today's Workout</h2>
-        <AdaptiveWorkoutCard exercise={selectedExerciseData} />
+        <AdaptiveWorkoutCard 
+          exercise={selectedExerciseData} 
+          connectedTrackers={connectedTrackers}
+          safetySettings={safetySettings}
+        />
       </div>
 
       <!-- Progression Analytics -->
