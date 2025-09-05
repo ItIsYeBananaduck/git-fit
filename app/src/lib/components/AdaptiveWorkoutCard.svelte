@@ -221,8 +221,13 @@
   }
 
   // Reactive updates when WHOOP data changes
-  $: if (adaptiveEngine && progressionEngine) {
+  $: if (adaptiveEngine && progressionEngine && multiTrackerEngine) {
     calculateTodaysWorkout();
+  }
+
+  // Update multi-tracker engine when safety settings change
+  $: if (multiTrackerEngine && safetySettings) {
+    multiTrackerEngine.updateSafetySettings(safetySettings);
   }
 </script>
 
