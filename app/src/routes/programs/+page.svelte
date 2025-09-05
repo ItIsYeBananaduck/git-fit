@@ -180,7 +180,7 @@
 
         {#if filteredPrograms.length === 0}
                 <div class="text-center py-12">
-                        <div class="text-gray-400 text-6xl mb-4">🔍</div>
+                        <div class="text-gray-400 text-lg font-medium mb-4">No Results</div>
                         <h3 class="text-lg font-medium text-gray-900 mb-2">No programs found</h3>
                         <p class="text-gray-600">Try adjusting your search criteria or filters</p>
                 </div>

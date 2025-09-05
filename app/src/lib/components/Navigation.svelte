@@ -11,16 +11,16 @@
         let mobileMenuOpen = false;
 
         const navItems = [
-                { href: '/', label: 'Dashboard', icon: '🏠', roles: ['client', 'trainer', 'admin'] },
-                { href: '/programs', label: 'Programs', icon: '💪', roles: ['client', 'trainer', 'admin'] },
-                { href: '/workouts', label: 'Workouts', icon: '🏋️', roles: ['client', 'trainer'] },
-                { href: '/fitness-data', label: 'Fitness Data', icon: '📊', roles: ['client'] },
-                { href: '/exercise-demo', label: 'Equipment Demo', icon: '⚙️', roles: ['client', 'trainer', 'admin'] },
-                { href: '/equipment-clean', label: 'Equipment', icon: '🏋️', roles: ['client', 'trainer', 'admin'] },
-                { href: '/create-program', label: 'Create Program', icon: '➕', roles: ['trainer'] },
-                { href: '/clients', label: 'My Clients', icon: '👥', roles: ['trainer'] },
-                { href: '/admin', label: 'Admin', icon: '🔧', roles: ['admin'] },
-                { href: '/profile', label: 'Profile', icon: '👤', roles: ['client', 'trainer', 'admin'] }
+                { href: '/', label: 'Dashboard', roles: ['client', 'trainer', 'admin'] },
+                { href: '/programs', label: 'Programs', roles: ['client', 'trainer', 'admin'] },
+                { href: '/workouts', label: 'Workouts', roles: ['client', 'trainer'] },
+                { href: '/fitness-data', label: 'Fitness Data', roles: ['client'] },
+                { href: '/exercise-demo', label: 'Equipment Demo', roles: ['client', 'trainer', 'admin'] },
+                { href: '/equipment-clean', label: 'Equipment', roles: ['client', 'trainer', 'admin'] },
+                { href: '/create-program', label: 'Create Program', roles: ['trainer'] },
+                { href: '/clients', label: 'My Clients', roles: ['trainer'] },
+                { href: '/admin', label: 'Admin', roles: ['admin'] },
+                { href: '/profile', label: 'Profile', roles: ['client', 'trainer', 'admin'] }
         ];
 
         $: filteredNavItems = navItems.filter(item => item.roles.includes(currentUser.role));
@@ -45,7 +45,6 @@
                                                                 ? 'bg-primary text-white' 
                                                                 : 'text-gray-700 hover:bg-gray-100'}"
                                         >
-                                                <span>{item.icon}</span>
                                                 <span>{item.label}</span>
                                         </a>
                                 {/each}
@@ -91,7 +90,6 @@
                                                                         : 'text-gray-700 hover:bg-gray-100'}"
                                                         on:click={() => mobileMenuOpen = false}
                                                 >
-                                                        <span class="text-lg">{item.icon}</span>
                                                         <span>{item.label}</span>
                                                 </a>
                                         {/each}
