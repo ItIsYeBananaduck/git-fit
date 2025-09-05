@@ -44,6 +44,7 @@ export class AdaptiveTrainingEngine {
 
   /**
    * Calculate daily training recommendations based on current recovery
+   * Only adjusts rest periods and safety recommendations in real-time
    */
   getDailyTrainingRecommendation(
     recovery: number, 
@@ -53,68 +54,75 @@ export class AdaptiveTrainingEngine {
   ): {
     recommendation: string;
     intensity: 'rest' | 'light' | 'moderate' | 'high';
-    loadMultiplier: number;
-    repAdjustment: number;
     restMultiplier: number;
+    shouldStop: boolean;
+    injuryRisk: 'low' | 'moderate' | 'high';
+    safetyAlerts: string[];
     reasoning: string[];
   } {
     const reasoning: string[] = [];
+    const safetyAlerts: string[] = [];
     let intensity: 'rest' | 'light' | 'moderate' | 'high' = 'moderate';
-    let loadMultiplier = 1.0;
-    let repAdjustment = 0;
     let restMultiplier = 1.0;
+    let shouldStop = false;
+    let injuryRisk: 'low' | 'moderate' | 'high' = 'low';
 
-    // Recovery-based adjustments
+    // Recovery-based rest adjustments and safety recommendations
     if (recovery < 30) {
       intensity = 'rest';
-      loadMultiplier = 0.0;
-      reasoning.push(`Recovery ${recovery}% - complete rest recommended`);
-    } else if (recovery < 50) {
+      shouldStop = true;
+      injuryRisk = 'high';
+      safetyAlerts.push('🚫 Stop all training - complete rest required');
+      reasoning.push(`Recovery ${recovery}% - complete rest day mandatory`);
+    } else if (recovery < 40) {
       intensity = 'light';
-      loadMultiplier = 0.65;
-      repAdjustment = -2;
+      restMultiplier = 1.5;
+      injuryRisk = 'high';
+      safetyAlerts.push('⚠️ High injury risk - consider stopping after warm-up');
+      safetyAlerts.push('🩹 Monitor for any pain or discomfort');
+      reasoning.push(`Recovery ${recovery}% - extend rest periods by 50%`);
+    } else if (recovery < 55) {
+      intensity = 'light';
       restMultiplier = 1.3;
-      reasoning.push(`Recovery ${recovery}% - light training with reduced load`);
+      injuryRisk = 'moderate';
+      safetyAlerts.push('⚠️ Moderate injury risk - stop if feeling fatigued');
+      reasoning.push(`Recovery ${recovery}% - extend rest periods by 30%`);
     } else if (recovery < 70) {
       intensity = 'moderate';
-      loadMultiplier = 0.85;
       restMultiplier = 1.1;
-      reasoning.push(`Recovery ${recovery}% - moderate training intensity`);
+      injuryRisk = 'low';
+      reasoning.push(`Recovery ${recovery}% - slightly longer rest periods`);
     } else {
       intensity = 'high';
-      loadMultiplier = 1.0;
-      repAdjustment = 1;
-      reasoning.push(`Recovery ${recovery}% - high intensity training allowed`);
+      restMultiplier = 0.9;
+      injuryRisk = 'low';
+      reasoning.push(`Recovery ${recovery}% - can reduce rest periods slightly`);
     }
 
-    // Strain-based adjustments (yesterday's strain affects today)
+    // Strain-based rest adjustments
     if (strain > 18) {
-      loadMultiplier *= 0.7;
       restMultiplier *= 1.4;
-      reasoning.push(`High strain (${strain}) - reducing intensity and extending rest`);
-    } else if (strain < 10 && recovery > 60) {
-      loadMultiplier *= 1.1;
-      repAdjustment += 1;
-      reasoning.push(`Low strain (${strain}) with good recovery - can push harder`);
-    }
-
-    // HRV trend analysis
-    const avgHrv = this.calculateRecentAverage(recentSessions, 'hrv', 7);
-    if (hrv < avgHrv * 0.9) {
-      loadMultiplier *= 0.8;
+      safetyAlerts.push('⚠️ Yesterday was high strain - prioritize recovery between sets');
+      reasoning.push(`High strain (${strain}) - extending rest periods significantly`);
+    } else if (strain > 15) {
       restMultiplier *= 1.2;
-      reasoning.push(`HRV below recent average - reducing load and extending rest`);
+      reasoning.push(`Moderate strain (${strain}) - slightly longer rest`);
     }
 
-    // Progressive adaptation check
-    const adaptationTrend = this.calculateAdaptationTrend(recentSessions);
-    if (adaptationTrend > 0.8) {
-      loadMultiplier *= 1.05;
-      reasoning.push(`Strong adaptation trend - slight load increase`);
-    } else if (adaptationTrend < -0.2) {
-      loadMultiplier *= 0.9;
-      restMultiplier *= 1.15;
-      reasoning.push(`Poor adaptation trend - reducing load and extending rest`);
+    // HRV-based safety alerts
+    const avgHrv = this.calculateRecentAverage(recentSessions, 'hrv', 7);
+    if (hrv < avgHrv * 0.85) {
+      restMultiplier *= 1.3;
+      injuryRisk = injuryRisk === 'low' ? 'moderate' : 'high';
+      safetyAlerts.push('📉 HRV significantly below average - increase rest and monitor closely');
+      reasoning.push(`HRV ${hrv.toFixed(1)}ms vs avg ${avgHrv.toFixed(1)}ms - extended rest needed`);
+    }
+
+    // Multi-factor injury risk assessment
+    if (recovery < 40 && strain > 16) {
+      shouldStop = true;
+      injuryRisk = 'high';
+      safetyAlerts.push('🛑 STOP: Low recovery + high strain = high injury risk');
     }
 
     const recommendation = this.generateRecommendationText(intensity, recovery, strain);
@@ -122,29 +130,28 @@ export class AdaptiveTrainingEngine {
     return {
       recommendation,
       intensity,
-      loadMultiplier: Math.max(0, Math.min(1.2, loadMultiplier)), // cap between 0-120%
-      repAdjustment: Math.max(-5, Math.min(3, repAdjustment)), // cap between -5 to +3
-      restMultiplier: Math.max(0.8, Math.min(2.0, restMultiplier)), // cap between 80%-200%
+      restMultiplier: Math.max(0.8, Math.min(2.5, restMultiplier)), // cap between 80%-250%
+      shouldStop,
+      injuryRisk,
+      safetyAlerts,
       reasoning
     };
   }
 
   /**
-   * Adjust workout parameters based on adaptation
+   * Adjust only rest periods in real-time, keep load/reps from progression system
    */
-  adaptWorkoutParameters(
+  adjustRestPeriods(
     baseParams: TrainingParameters,
     dailyRec: ReturnType<AdaptiveTrainingEngine['getDailyTrainingRecommendation']>
   ): TrainingParameters {
     return {
-      load: Math.round(baseParams.load * dailyRec.loadMultiplier),
-      reps: Math.max(1, baseParams.reps + dailyRec.repAdjustment),
+      load: baseParams.load, // Keep current progression load
+      reps: baseParams.reps, // Keep current progression reps
       sets: baseParams.sets,
       restBetweenSets: Math.round(baseParams.restBetweenSets * dailyRec.restMultiplier),
       restBetweenExercises: Math.round(baseParams.restBetweenExercises * dailyRec.restMultiplier),
-      intensity: dailyRec.intensity === 'rest' ? 'light' : 
-                dailyRec.intensity === 'light' ? 'light' :
-                dailyRec.intensity === 'moderate' ? 'moderate' : 'high'
+      intensity: baseParams.intensity // Keep planned intensity
     };
   }
 
