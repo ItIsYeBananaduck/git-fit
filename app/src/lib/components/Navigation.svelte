@@ -16,6 +16,7 @@
                 { href: '/workouts', label: 'Workouts', icon: '🏋️', roles: ['client', 'trainer'] },
                 { href: '/fitness-data', label: 'Fitness Data', icon: '📊', roles: ['client'] },
                 { href: '/exercise-demo', label: 'Equipment Demo', icon: '⚙️', roles: ['client', 'trainer', 'admin'] },
+                { href: '/equipment', label: 'Equipment', icon: '🏋️', roles: ['client', 'trainer', 'admin'] },
                 { href: '/create-program', label: 'Create Program', icon: '➕', roles: ['trainer'] },
                 { href: '/clients', label: 'My Clients', icon: '👥', roles: ['trainer'] },
                 { href: '/admin', label: 'Admin', icon: '🔧', roles: ['admin'] },
