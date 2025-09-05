@@ -2,10 +2,13 @@
   import AdaptiveWorkoutCard from '$lib/components/AdaptiveWorkoutCard.svelte';
   import ProgressionAnalytics from '$lib/components/ProgressionAnalytics.svelte';
   import WHOOPDataDisplay from '$lib/components/WHOOPDataDisplay.svelte';
+  import DeloadWeekToggle from '$lib/components/DeloadWeekToggle.svelte';
+  import StrainMonitor from '$lib/components/StrainMonitor.svelte';
   import { whoopState } from '$lib/stores/whoop';
   import { Brain, Target, TrendingUp, Zap } from 'lucide-svelte';
 
   let selectedExercise = 'Bench Press';
+  let manualDeloadWeek = false;
   
   const exercises = [
     {
@@ -45,6 +48,15 @@
 
   $: whoopConnected = $whoopState.isConnected;
   $: selectedExerciseData = exercises.find(e => e.name === selectedExercise) || exercises[0];
+  
+  function handleDeloadToggle(enabled: boolean) {
+    manualDeloadWeek = enabled;
+  }
+
+  function handleStrainReached() {
+    // Could trigger notifications, log completion, etc.
+    console.log('Target strain reached - workout should be stopped');
+  }
 </script>
 
 <svelte:head>
@@ -136,6 +148,12 @@
           </button>
         {/each}
       </div>
+    </div>
+
+    <!-- Controls Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <DeloadWeekToggle isDeloadWeek={manualDeloadWeek} onToggle={handleDeloadToggle} />
+      <StrainMonitor targetStrain={14} onStrainReached={handleStrainReached} />
     </div>
 
     <!-- Main Content Grid -->

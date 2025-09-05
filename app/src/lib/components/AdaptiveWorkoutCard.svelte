@@ -4,7 +4,7 @@
   import { AdaptiveTrainingEngine } from '$lib/services/adaptiveTraining';
   import { ProgressionEngine } from '$lib/services/progressionEngine';
   import type { TrainingParameters } from '$lib/services/adaptiveTraining';
-  import { TrendingUp, TrendingDown, Minus, Zap, Clock, Repeat, AlertTriangle, Shield } from 'lucide-svelte';
+  import { TrendingUp, TrendingDown, Minus, Zap, Clock, Repeat, AlertTriangle, Shield, RotateCcw, Target } from 'lucide-svelte';
 
   export let exercise = {
     name: 'Bench Press',
@@ -27,6 +27,9 @@
   let currentParams: TrainingParameters = { ...exercise.baseParams }; // Current progression level
   let todaysParams: TrainingParameters = { ...exercise.baseParams }; // Today's adjusted rest periods
   let suggestions: string[] = [];
+  let isDeloadWeek = false;
+  let currentStrain = 0;
+  let strainCheck: any = null;
 
   $: state = $whoopState;
   $: data = $whoopData;
@@ -59,11 +62,22 @@
       [] // Empty recent sessions for demo
     );
 
-    // Adjust only rest periods, keep progression load/reps
-    todaysParams = adaptiveEngine.adjustRestPeriods(
-      currentParams,
-      todaysRecommendation
-    );
+    // Check for deload week recommendation
+    if (todaysRecommendation.shouldDeload && !isDeloadWeek) {
+      isDeloadWeek = true;
+      // Create deload parameters: half weight, double reps, 90s rest
+      todaysParams = adaptiveEngine.createDeloadParameters(currentParams);
+    } else {
+      // Normal day: adjust only rest periods, keep progression load/reps
+      todaysParams = adaptiveEngine.adjustRestPeriods(
+        currentParams,
+        todaysRecommendation
+      );
+    }
+
+    // Simulate current strain during workout (would come from real WHOOP data)
+    currentStrain = Math.random() * todaysRecommendation.targetStrain * 0.8; // 80% of target typically
+    strainCheck = adaptiveEngine.checkStrainTarget(currentStrain, todaysRecommendation.targetStrain);
 
     // Get training suggestions
     suggestions = adaptiveEngine.generateTrainingSuggestions(
@@ -194,13 +208,38 @@
     </div>
   {/if}
 
-  {#if progressionDecision?.shouldProgress}
+  {#if isDeloadWeek}
+    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div class="flex items-center mb-2">
+        <RotateCcw size={20} class="text-blue-600 mr-2" />
+        <p class="text-sm font-bold text-blue-900">DELOAD WEEK ACTIVE</p>
+      </div>
+      <p class="text-sm text-blue-800">Weight reduced to 50%, reps doubled, rest fixed at 90s for recovery</p>
+    </div>
+  {:else if progressionDecision?.shouldProgress}
     <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
       <div class="flex items-center mb-1">
         <TrendingUp size={16} class="text-green-600 mr-2" />
         <p class="text-sm font-medium text-green-900">Progression Update</p>
       </div>
       <p class="text-sm text-green-800">{progressionDecision.reasoning}</p>
+    </div>
+  {/if}
+
+  <!-- Strain Monitoring -->
+  {#if todaysRecommendation && strainCheck}
+    <div class="mb-4 p-3 {strainCheck.shouldStop ? 'bg-red-50 border border-red-200' : strainCheck.progress > 0.9 ? 'bg-yellow-50 border border-yellow-200' : 'bg-gray-50'} rounded-lg">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center">
+          <Target size={16} class="text-gray-600 mr-2" />
+          <p class="text-sm font-medium text-gray-900">Strain Target</p>
+        </div>
+        <span class="text-sm font-bold text-gray-900">{currentStrain.toFixed(1)}/{todaysRecommendation.targetStrain}</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+        <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: {strainCheck.progress * 100}%"></div>
+      </div>
+      <p class="text-xs {strainCheck.shouldStop ? 'text-red-800' : strainCheck.progress > 0.9 ? 'text-yellow-800' : 'text-gray-600'}">{strainCheck.message}</p>
     </div>
   {/if}
 

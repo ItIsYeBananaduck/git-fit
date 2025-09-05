@@ -7,6 +7,7 @@ export interface TrainingParameters {
   restBetweenSets: number; // seconds
   restBetweenExercises: number; // seconds
   intensity: 'light' | 'moderate' | 'high' | 'max';
+  isDeloadWeek?: boolean; // indicates if this is deload week parameters
 }
 
 export interface WorkoutSession {
@@ -21,6 +22,9 @@ export interface WorkoutSession {
   recoveryBefore?: number; // WHOOP recovery score
   strainAfter?: number; // WHOOP strain score
   adaptationScore?: number; // calculated adaptation metric
+  targetStrain?: number; // target strain for this session
+  actualStrain?: number; // actual strain achieved
+  stoppedEarly?: boolean; // true if stopped due to strain target
 }
 
 export interface ProgressionRule {
@@ -59,6 +63,9 @@ export class AdaptiveTrainingEngine {
     injuryRisk: 'low' | 'moderate' | 'high';
     safetyAlerts: string[];
     reasoning: string[];
+    shouldDeload: boolean;
+    targetStrain: number;
+    strainAlert?: string;
   } {
     const reasoning: string[] = [];
     const safetyAlerts: string[] = [];
@@ -66,6 +73,9 @@ export class AdaptiveTrainingEngine {
     let restMultiplier = 1.0;
     let shouldStop = false;
     let injuryRisk: 'low' | 'moderate' | 'high' = 'low';
+    let shouldDeload = false;
+    let targetStrain = this.calculateTargetStrain(recovery, strain, recentSessions);
+    let strainAlert: string | undefined;
 
     // Recovery-based rest adjustments and safety recommendations
     if (recovery < 30) {
@@ -125,6 +135,20 @@ export class AdaptiveTrainingEngine {
       safetyAlerts.push('🛑 STOP: Low recovery + high strain = high injury risk');
     }
 
+    // Deload week assessment
+    const weeksOfTraining = this.calculateWeeksOfTraining(recentSessions);
+    const avgRecoveryTrend = this.calculateRecentAverage(recentSessions, 'recovery', 14);
+    if (weeksOfTraining >= 3 && (avgRecoveryTrend < 45 || this.isDeloadWeekScheduled())) {
+      shouldDeload = true;
+      safetyAlerts.push('🔄 Deload week recommended - reduce intensity and focus on recovery');
+      reasoning.push(`${weeksOfTraining} weeks of training completed - time for deload`);
+    }
+
+    // Strain target calculation and alert
+    if (strain > targetStrain * 0.9) {
+      strainAlert = `⚡ Approaching strain target (${strain.toFixed(1)}/${targetStrain}) - prepare to stop`;
+    }
+
     const recommendation = this.generateRecommendationText(intensity, recovery, strain);
 
     return {
@@ -134,7 +158,10 @@ export class AdaptiveTrainingEngine {
       shouldStop,
       injuryRisk,
       safetyAlerts,
-      reasoning
+      reasoning,
+      shouldDeload,
+      targetStrain,
+      strainAlert
     };
   }
 
@@ -151,7 +178,54 @@ export class AdaptiveTrainingEngine {
       sets: baseParams.sets,
       restBetweenSets: Math.round(baseParams.restBetweenSets * dailyRec.restMultiplier),
       restBetweenExercises: Math.round(baseParams.restBetweenExercises * dailyRec.restMultiplier),
-      intensity: baseParams.intensity // Keep planned intensity
+      intensity: baseParams.intensity, // Keep planned intensity
+      isDeloadWeek: baseParams.isDeloadWeek
+    };
+  }
+
+  /**
+   * Create deload week parameters: half weight, double reps, 90s rest
+   */
+  createDeloadParameters(baseParams: TrainingParameters): TrainingParameters {
+    return {
+      load: Math.round(baseParams.load * 0.5), // Half the weight
+      reps: Math.min(20, baseParams.reps * 2), // Double the reps, cap at 20
+      sets: baseParams.sets,
+      restBetweenSets: 90, // Fixed 90 seconds rest
+      restBetweenExercises: 120, // Shorter rest between exercises too
+      intensity: 'light', // Always light intensity
+      isDeloadWeek: true
+    };
+  }
+
+  /**
+   * Check if current strain target is reached and should stop
+   */
+  checkStrainTarget(currentStrain: number, targetStrain: number): {
+    shouldStop: boolean;
+    message: string;
+    progress: number; // 0-1 scale
+  } {
+    const progress = Math.min(1, currentStrain / targetStrain);
+    
+    if (currentStrain >= targetStrain) {
+      return {
+        shouldStop: true,
+        message: `🛑 STOP: Target strain reached (${currentStrain.toFixed(1)}/${targetStrain})`,
+        progress: 1
+      };
+    } else if (currentStrain >= targetStrain * 0.9) {
+      return {
+        shouldStop: false,
+        message: `⚡ Warning: Approaching strain target (${currentStrain.toFixed(1)}/${targetStrain})`,
+        progress
+      };
+    }
+    
+    return {
+      shouldStop: false,
+      message: `Strain progress: ${currentStrain.toFixed(1)}/${targetStrain} (${Math.round(progress * 100)}%)`,
+      progress
     };
   }
 
@@ -342,6 +416,39 @@ export class AdaptiveTrainingEngine {
     
     // Lower variance = higher consistency score (0-1 scale)
     return Math.max(0, Math.min(1, 1 - (variance / 10)));
+  }
+
+  private calculateTargetStrain(recovery: number, yesterdayStrain: number, sessions: WorkoutSession[]): number {
+    // Base target strain calculation
+    let baseTarget = 12; // Default moderate target
+    
+    // Adjust based on recovery
+    if (recovery > 70) baseTarget = 16; // Can push harder
+    else if (recovery > 50) baseTarget = 14; // Moderate push
+    else if (recovery > 30) baseTarget = 10; // Easy day
+    else baseTarget = 6; // Very light
+    
+    // Adjust based on yesterday's strain
+    if (yesterdayStrain > 16) baseTarget *= 0.8; // Reduce if high strain yesterday
+    else if (yesterdayStrain < 8) baseTarget *= 1.1; // Can increase if low strain
+    
+    return Math.round(baseTarget);
+  }
+
+  private calculateWeeksOfTraining(sessions: WorkoutSession[]): number {
+    if (sessions.length < 6) return 0;
+    
+    const firstSession = sessions[sessions.length - 1];
+    const lastSession = sessions[0];
+    const daysDiff = (new Date(lastSession.date).getTime() - new Date(firstSession.date).getTime()) / (1000 * 60 * 60 * 24);
+    
+    return Math.floor(daysDiff / 7);
+  }
+
+  private isDeloadWeekScheduled(): boolean {
+    // Check if it's week 4, 8, 12, etc. in a training cycle
+    const weekNumber = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 7)) % 4;
+    return weekNumber === 3; // Every 4th week
   }
 
   private generateRecommendationText(intensity: string, recovery: number, strain: number): string {
