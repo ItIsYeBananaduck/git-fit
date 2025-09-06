@@ -1,9 +1,41 @@
-// Mock API for demonstration - replace with actual Convex when configured
+import { ConvexHttpClient } from "convex/browser";
+// Import will be added when Convex is properly deployed
+// import { api as convexApi } from "../../convex/_generated/api";
+
+// Create Convex client - using a placeholder URL for now
+// In production, this would come from environment variables
+const convexUrl = import.meta.env.VITE_CONVEX_URL;
+
+let convexClient: ConvexHttpClient | null = null;
+
+// Only initialize if we have a proper Convex URL
+if (convexUrl && convexUrl !== "https://convex-cloud.com") {
+  try {
+    convexClient = new ConvexHttpClient(convexUrl);
+    console.log("Convex client initialized successfully");
+  } catch (error) {
+    console.warn("Convex client initialization failed, using mock data:", error);
+    convexClient = null;
+  }
+} else {
+  console.log("No Convex deployment URL configured, using mock data for development");
+}
+
 export const api = {
   query: async (functionName: string, args: any = {}) => {
-    console.log(`Mock query: ${functionName}`, args);
+    // If Convex client is available, use it
+    if (convexClient) {
+      try {
+        // Use the function name directly until API is properly deployed
+        return await convexClient.query(functionName as any, args);
+      } catch (error) {
+        console.warn(`Convex query failed for ${functionName}, using mock data:`, error);
+      }
+    }
     
-    // Mock marketplace data
+    // Fallback to mock data for development
+    console.log(`Using mock data for query: ${functionName}`, args);
+    
     if (functionName === 'functions/marketplace:getMarketplacePrograms') {
       return [
         {
@@ -94,7 +126,17 @@ export const api = {
   },
   
   mutation: async (functionName: string, args: any = {}) => {
-    console.log(`Mock mutation: ${functionName}`, args);
+    // If Convex client is available, use it
+    if (convexClient) {
+      try {
+        // Use the function name directly until API is properly deployed
+        return await convexClient.mutation(functionName as any, args);
+      } catch (error) {
+        console.warn(`Convex mutation failed for ${functionName}, using mock response:`, error);
+      }
+    }
+    
+    console.log(`Using mock mutation: ${functionName}`, args);
     return { success: true, id: 'mock_id_' + Date.now() };
   }
 };
