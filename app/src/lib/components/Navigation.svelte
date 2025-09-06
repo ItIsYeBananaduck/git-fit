@@ -10,7 +10,8 @@
                 Users, 
                 Shield, 
                 User,
-                Brain 
+                Brain,
+                ShoppingBag 
         } from 'lucide-svelte';
         
         // Mock user state - in real app this would come from auth
@@ -24,6 +25,7 @@
 
         const navItems = [
                 { href: '/', label: 'Dashboard', icon: Home, roles: ['client', 'trainer', 'admin'] },
+                { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag, roles: ['client', 'trainer', 'admin'] },
                 { href: '/programs', label: 'Programs', icon: Target, roles: ['client', 'trainer', 'admin'] },
                 { href: '/workouts', label: 'Workouts', icon: Dumbbell, roles: ['client', 'trainer'] },
                 { href: '/fitness-data', label: 'Fitness Data', icon: BarChart3, roles: ['client'] },

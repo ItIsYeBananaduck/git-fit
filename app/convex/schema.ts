@@ -236,4 +236,138 @@ export default defineSchema({
     createdAt: v.string(),
     updatedAt: v.string(),
   }).index("by_user", ["userId"]).index("by_whoop_user", ["whoopUserId"]),
+
+  // Marketplace: Program purchases
+  programPurchases: defineTable({
+    userId: v.id("users"),
+    programId: v.id("trainingPrograms"),
+    trainerId: v.id("users"),
+    purchaseType: v.literal("program"), // pre-made program
+    amount: v.number(), // total amount paid by user
+    platformFee: v.number(), // 10% commission for pre-made programs
+    trainerEarnings: v.number(), // 90% goes to trainer
+    paymentStatus: v.union(v.literal("pending"), v.literal("completed"), v.literal("failed"), v.literal("refunded")),
+    paymentIntentId: v.optional(v.string()), // Stripe payment intent ID
+    purchaseDate: v.string(),
+    accessExpiresAt: v.optional(v.string()), // if the program has limited access
+    refundedAt: v.optional(v.string()),
+    refundReason: v.optional(v.string()),
+  }).index("by_user", ["userId"])
+    .index("by_trainer", ["trainerId"])
+    .index("by_program", ["programId"])
+    .index("by_payment_status", ["paymentStatus"]),
+
+  // Marketplace: Custom coaching services
+  coachingServices: defineTable({
+    trainerId: v.id("users"),
+    clientId: v.id("users"),
+    serviceType: v.union(v.literal("custom_program"), v.literal("ongoing_coaching"), v.literal("consultation")),
+    title: v.string(),
+    description: v.string(),
+    price: v.number(), // total amount
+    duration: v.optional(v.number()), // weeks for programs, sessions for coaching
+    status: v.union(v.literal("pending"), v.literal("active"), v.literal("completed"), v.literal("cancelled")),
+    paymentStatus: v.union(v.literal("pending"), v.literal("paid"), v.literal("failed")),
+    paymentIntentId: v.optional(v.string()),
+    platformFee: v.number(), // 20% commission for custom services
+    trainerEarnings: v.number(), // 80% goes to trainer
+    requestedAt: v.string(),
+    acceptedAt: v.optional(v.string()),
+    completedAt: v.optional(v.string()),
+    deliveredAt: v.optional(v.string()), // when trainer delivers the custom program
+    clientNotes: v.optional(v.string()), // initial request from client
+    trainerNotes: v.optional(v.string()), // trainer's notes on the service
+  }).index("by_trainer", ["trainerId"])
+    .index("by_client", ["clientId"])
+    .index("by_status", ["status"])
+    .index("by_service_type", ["serviceType"]),
+
+  // Health data sharing permissions
+  healthDataSharing: defineTable({
+    clientId: v.id("users"),
+    trainerId: v.id("users"),
+    serviceId: v.optional(v.id("coachingServices")), // linked to specific coaching service
+    isActive: v.boolean(),
+    sharedDataTypes: v.array(v.string()), // which fitness data to share: "steps", "heartRate", "sleep", etc.
+    shareLevel: v.union(v.literal("summary"), v.literal("detailed"), v.literal("full")),
+    startDate: v.string(),
+    endDate: v.optional(v.string()), // when sharing expires
+    permissions: v.array(v.string()), // specific permissions: "view", "download", "analyze"
+    clientConsent: v.boolean(),
+    clientConsentDate: v.string(),
+    revokedAt: v.optional(v.string()),
+    revokedReason: v.optional(v.string()),
+  }).index("by_client", ["clientId"])
+    .index("by_trainer", ["trainerId"])
+    .index("by_service", ["serviceId"])
+    .index("by_active", ["isActive"]),
+
+  // Revenue tracking for platform and trainers
+  revenueTransactions: defineTable({
+    type: v.union(v.literal("program_purchase"), v.literal("coaching_service"), v.literal("refund")),
+    referenceId: v.union(v.id("programPurchases"), v.id("coachingServices")), // reference to purchase or service
+    trainerId: v.id("users"),
+    clientId: v.id("users"),
+    grossAmount: v.number(), // total transaction amount
+    platformFee: v.number(), // our commission
+    trainerEarnings: v.number(), // amount trainer receives
+    processingFees: v.optional(v.number()), // Stripe/payment processing fees
+    netPlatformEarnings: v.number(), // platform fee minus processing costs
+    payoutStatus: v.union(v.literal("pending"), v.literal("processing"), v.literal("paid"), v.literal("failed")),
+    payoutDate: v.optional(v.string()),
+    payoutId: v.optional(v.string()), // Stripe payout/transfer ID
+    transactionDate: v.string(),
+    metadata: v.optional(v.object({
+      programName: v.optional(v.string()),
+      serviceName: v.optional(v.string()),
+      paymentMethod: v.optional(v.string())
+    })),
+  }).index("by_trainer", ["trainerId"])
+    .index("by_client", ["clientId"])
+    .index("by_type", ["type"])
+    .index("by_payout_status", ["payoutStatus"])
+    .index("by_transaction_date", ["transactionDate"]),
+
+  // Trainer payout history
+  trainerPayouts: defineTable({
+    trainerId: v.id("users"),
+    amount: v.number(),
+    currency: v.string(),
+    payoutMethod: v.union(v.literal("stripe_transfer"), v.literal("bank_transfer"), v.literal("paypal")),
+    stripePayoutId: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("processing"), v.literal("paid"), v.literal("failed"), v.literal("cancelled")),
+    scheduledDate: v.string(),
+    paidDate: v.optional(v.string()),
+    failureReason: v.optional(v.string()),
+    transactionIds: v.array(v.id("revenueTransactions")), // which transactions this payout covers
+    periodStart: v.string(),
+    periodEnd: v.string(),
+    metadata: v.optional(v.object({
+      transactionCount: v.optional(v.number()),
+      bankAccount: v.optional(v.string())
+    })),
+  }).index("by_trainer", ["trainerId"])
+    .index("by_status", ["status"])
+    .index("by_scheduled_date", ["scheduledDate"]),
+
+  // Messages between trainers and clients
+  trainerClientMessages: defineTable({
+    senderId: v.id("users"),
+    receiverId: v.id("users"),
+    serviceId: v.optional(v.id("coachingServices")), // linked to specific service
+    messageType: v.union(v.literal("text"), v.literal("progress_update"), v.literal("program_delivery"), v.literal("system")),
+    subject: v.optional(v.string()),
+    content: v.string(),
+    attachments: v.optional(v.array(v.string())), // file URLs
+    isRead: v.boolean(),
+    readAt: v.optional(v.string()),
+    sentAt: v.string(),
+    metadata: v.optional(v.object({
+      programId: v.optional(v.id("trainingPrograms")),
+      workoutData: v.optional(v.any()), // shared workout results
+    })),
+  }).index("by_sender", ["senderId"])
+    .index("by_receiver", ["receiverId"])
+    .index("by_service", ["serviceId"])
+    .index("by_participants", ["senderId", "receiverId"]),
 });

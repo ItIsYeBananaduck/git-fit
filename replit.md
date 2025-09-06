@@ -1,6 +1,12 @@
 # Overview
 
-Git-fit is a comprehensive fitness platform that combines mobile and web applications for fitness tracking, training programs, and trainer-client interactions. The application is built as a cross-platform solution using SvelteKit for the web interface and Capacitor for mobile deployment. It leverages Convex as a real-time backend-as-a-service to handle user management, fitness data tracking, training programs, and workout management.
+GitFit is a comprehensive fitness marketplace that combines mobile and web applications for fitness tracking, training programs, and trainer-client interactions. The application is built as a cross-platform solution using SvelteKit for the web interface and Capacitor for mobile deployment. It leverages Convex as a real-time backend-as-a-service to handle user management, fitness data tracking, training programs, and workout management.
+
+## Business Model
+GitFit operates as a two-sided marketplace connecting fitness trainers with clients through:
+- **Pre-made Training Programs**: Trainers create and sell ready-to-use fitness programs with a 10% platform commission
+- **Custom Coaching Services**: Personalized training services including custom program creation, ongoing coaching, and consultations with a 20% platform commission
+- **Health Data Integration**: Optional fitness tracker data sharing between trainers and clients for personalized program adjustments
 
 The platform serves three primary user types: clients who track their fitness data and purchase training programs, trainers who create and sell programs, and administrators who manage the platform. The system integrates with various fitness trackers and wearable devices to collect comprehensive health and fitness metrics.
 
