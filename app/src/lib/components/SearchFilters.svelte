@@ -105,10 +105,11 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <!-- Category -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label for="category-select" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Category
             </label>
             <select
+              id="category-select"
               bind:value={filters.category}
               on:change={(e) => updateFilter('category', e.target.value)}
               class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 
@@ -125,10 +126,11 @@
 
           <!-- Difficulty -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label for="difficulty-select" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Difficulty
             </label>
             <select
+              id="difficulty-select"
               bind:value={filters.difficulty}
               on:change={(e) => updateFilter('difficulty', e.target.value)}
               class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 
@@ -145,10 +147,11 @@
 
           <!-- Max Price -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label for="max-price-range" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Max Price: ${filters.maxPrice || 'Any'}
             </label>
             <input
+              id="max-price-range"
               type="range"
               min="0"
               max="500"
@@ -169,10 +172,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Specialty -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label for="specialty-select" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Specialty
             </label>
             <select
+              id="specialty-select"
               bind:value={filters.specialty}
               on:change={(e) => updateFilter('specialty', e.target.value)}
               class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 
@@ -189,10 +193,11 @@
 
           <!-- Max Hourly Rate -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label for="max-hourly-rate-range" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Max Hourly Rate: ${filters.maxHourlyRate || 'Any'}
             </label>
             <input
+              id="max-hourly-rate-range"
               type="range"
               min="0"
               max="200"
