@@ -44,7 +44,7 @@
 
 	function toggleGoal(goalId: string) {
 		if (editedUser.goals.includes(goalId)) {
-			editedUser.goals = editedUser.goals.filter(g => g !== goalId);
+			editedUser.goals = editedUser.goals.filter((g) => g !== goalId);
 		} else {
 			editedUser.goals = [...editedUser.goals, goalId];
 		}
@@ -52,7 +52,7 @@
 </script>
 
 <svelte:head>
-	<title>Profile - GitFit</title>
+	<title>Profile - Technically Fit</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -68,10 +68,12 @@
 				<div class="ml-4">
 					<h1 class="text-2xl font-bold text-gray-900">{user.name}</h1>
 					<p class="text-gray-600 capitalize">{user.role}</p>
-					<p class="text-sm text-gray-500">Member since {new Date(user.joinDate).toLocaleDateString()}</p>
+					<p class="text-sm text-gray-500">
+						Member since {new Date(user.joinDate).toLocaleDateString()}
+					</p>
 				</div>
 			</div>
-			<button 
+			<button
 				on:click={toggleEdit}
 				class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
 			>
@@ -84,29 +86,29 @@
 		<!-- Personal Information -->
 		<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
 			<h2 class="text-lg font-semibold text-gray-900 mb-4">Personal Information</h2>
-			
+
 			{#if isEditing}
 				<div class="space-y-4">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-						<input 
-							type="text" 
+						<input
+							type="text"
 							bind:value={editedUser.name}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						/>
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-						<input 
-							type="email" 
+						<input
+							type="email"
 							bind:value={editedUser.email}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						/>
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-						<input 
-							type="date" 
+						<input
+							type="date"
 							bind:value={editedUser.dateOfBirth}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						/>
@@ -128,7 +130,9 @@
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-600">Age:</span>
-						<span class="font-medium">{new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear()}</span>
+						<span class="font-medium"
+							>{new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear()}</span
+						>
 					</div>
 				</div>
 			{/if}
@@ -137,22 +141,22 @@
 		<!-- Fitness Information -->
 		<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
 			<h2 class="text-lg font-semibold text-gray-900 mb-4">Fitness Information</h2>
-			
+
 			{#if isEditing}
 				<div class="space-y-4">
 					<div class="grid grid-cols-2 gap-4">
 						<div>
 							<label class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
-							<input 
-								type="number" 
+							<input
+								type="number"
 								bind:value={editedUser.height}
 								class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 							/>
 						</div>
 						<div>
 							<label class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
-							<input 
-								type="number" 
+							<input
+								type="number"
 								bind:value={editedUser.weight}
 								class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 							/>
@@ -160,7 +164,7 @@
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Fitness Level</label>
-						<select 
+						<select
 							bind:value={editedUser.fitnessLevel}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						>
@@ -182,7 +186,7 @@
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-600">BMI:</span>
-						<span class="font-medium">{(user.weight / ((user.height / 100) ** 2)).toFixed(1)}</span>
+						<span class="font-medium">{(user.weight / (user.height / 100) ** 2).toFixed(1)}</span>
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-600">Fitness Level:</span>
@@ -196,16 +200,16 @@
 	<!-- Fitness Goals -->
 	<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
 		<h2 class="text-lg font-semibold text-gray-900 mb-4">Fitness Goals</h2>
-		
+
 		{#if isEditing}
 			<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
 				{#each availableGoals as goal}
 					<button
 						on:click={() => toggleGoal(goal.id)}
 						class="p-3 rounded-lg border-2 transition-colors text-sm font-medium
-							{editedUser.goals.includes(goal.id) 
-								? 'border-primary bg-primary text-white' 
-								: 'border-gray-300 text-gray-700 hover:border-gray-400'}"
+							{editedUser.goals.includes(goal.id)
+							? 'border-primary bg-primary text-white'
+							: 'border-gray-300 text-gray-700 hover:border-gray-400'}"
 					>
 						{goal.label}
 					</button>
@@ -214,9 +218,11 @@
 		{:else}
 			<div class="flex flex-wrap gap-2">
 				{#each user.goals as goalId}
-					{@const goal = availableGoals.find(g => g.id === goalId)}
+					{@const goal = availableGoals.find((g) => g.id === goalId)}
 					{#if goal}
-						<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary text-white">
+						<span
+							class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary text-white"
+						>
 							{goal.label}
 						</span>
 					{/if}
@@ -227,13 +233,13 @@
 
 	{#if isEditing}
 		<div class="flex justify-end space-x-3">
-			<button 
+			<button
 				on:click={cancelEdit}
 				class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
 			>
 				Cancel
 			</button>
-			<button 
+			<button
 				on:click={toggleEdit}
 				class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
 			>

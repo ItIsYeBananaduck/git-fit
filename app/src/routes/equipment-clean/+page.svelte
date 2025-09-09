@@ -5,41 +5,46 @@
 	let searchQuery = '';
 
 	// Filter equipment based on category and search
-	$: filteredEquipment = equipmentData.filter(equipment => {
+	$: filteredEquipment = equipmentData.filter((equipment) => {
 		const matchesCategory = selectedCategory === 'all' || equipment.category === selectedCategory;
 		const matchesSearch = equipment.name.toLowerCase().includes(searchQuery.toLowerCase());
 		return matchesCategory && matchesSearch;
 	});
 
 	// Group equipment by category for better display
-	$: groupedEquipment = equipmentCategories.reduce((acc, category) => {
-		if (selectedCategory === 'all' || selectedCategory === category.slug) {
-			acc[category.slug] = filteredEquipment.filter(eq => eq.category === category.slug);
-		}
-		return acc;
-	}, {} as Record<string, typeof equipmentData>);
+	$: groupedEquipment = equipmentCategories.reduce(
+		(acc, category) => {
+			if (selectedCategory === 'all' || selectedCategory === category.slug) {
+				acc[category.slug] = filteredEquipment.filter((eq) => eq.category === category.slug);
+			}
+			return acc;
+		},
+		{} as Record<string, typeof equipmentData>
+	);
 
 	function getCategoryBadgeColor(category: string): string {
 		const colors = {
 			'free-weights': 'bg-blue-50 text-blue-700 border border-blue-200',
-			'bodyweight': 'bg-green-50 text-green-700 border border-green-200',
-			'functional': 'bg-purple-50 text-purple-700 border border-purple-200',
-			'machines': 'bg-orange-50 text-orange-700 border border-orange-200',
-			'cardio': 'bg-red-50 text-red-700 border border-red-200'
+			bodyweight: 'bg-green-50 text-green-700 border border-green-200',
+			functional: 'bg-purple-50 text-purple-700 border border-purple-200',
+			machines: 'bg-orange-50 text-orange-700 border border-orange-200',
+			cardio: 'bg-red-50 text-red-700 border border-red-200'
 		};
 		return colors[category] || 'bg-gray-50 text-gray-700 border border-gray-200';
 	}
 </script>
 
 <svelte:head>
-	<title>Equipment Database - GitFit</title>
+	<title>Equipment Database - Technically Fit</title>
 </svelte:head>
 
 <div class="space-y-6">
 	<!-- Header -->
 	<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
 		<h1 class="text-2xl font-bold text-gray-900 mb-2">Equipment Database</h1>
-		<p class="text-gray-600">Browse our comprehensive database of gym equipment for workout planning</p>
+		<p class="text-gray-600">
+			Browse our comprehensive database of gym equipment for workout planning
+		</p>
 	</div>
 
 	<!-- Search and Filters -->
@@ -58,18 +63,19 @@
 			<!-- Category Filter -->
 			<div class="flex flex-wrap gap-2">
 				<button
-					on:click={() => selectedCategory = 'all'}
-					class="px-4 py-2 rounded-lg font-medium transition-all {selectedCategory === 'all' 
-						? 'bg-primary text-white' 
+					on:click={() => (selectedCategory = 'all')}
+					class="px-4 py-2 rounded-lg font-medium transition-all {selectedCategory === 'all'
+						? 'bg-primary text-white'
 						: 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
 				>
 					All Equipment
 				</button>
 				{#each equipmentCategories as category}
 					<button
-						on:click={() => selectedCategory = category.slug}
-						class="px-4 py-2 rounded-lg font-medium transition-all {selectedCategory === category.slug 
-							? 'bg-primary text-white' 
+						on:click={() => (selectedCategory = category.slug)}
+						class="px-4 py-2 rounded-lg font-medium transition-all {selectedCategory ===
+						category.slug
+							? 'bg-primary text-white'
 							: 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
 					>
 						{category.name}
@@ -98,9 +104,15 @@
 					</h2>
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 						{#each categoryEquipment as equipment}
-							<div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+							<div
+								class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+							>
 								<div class="flex justify-end mb-3">
-									<span class="px-2 py-1 rounded-full text-xs font-medium {getCategoryBadgeColor(equipment.category)}">
+									<span
+										class="px-2 py-1 rounded-full text-xs font-medium {getCategoryBadgeColor(
+											equipment.category
+										)}"
+									>
 										{equipment.category.replace('-', ' ')}
 									</span>
 								</div>
@@ -114,9 +126,15 @@
 	{:else}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 			{#each filteredEquipment as equipment}
-				<div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+				<div
+					class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+				>
 					<div class="flex justify-end mb-3">
-						<span class="px-2 py-1 rounded-full text-xs font-medium {getCategoryBadgeColor(equipment.category)}">
+						<span
+							class="px-2 py-1 rounded-full text-xs font-medium {getCategoryBadgeColor(
+								equipment.category
+							)}"
+						>
 							{equipment.category.replace('-', ' ')}
 						</span>
 					</div>

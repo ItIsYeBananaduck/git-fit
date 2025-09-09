@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.example.gitfit',
-  appName: 'git-fit',
+  appId: 'com.example.technicallyfit',
+  appName: 'Technically Fit',
   webDir: 'dist'
 };
 

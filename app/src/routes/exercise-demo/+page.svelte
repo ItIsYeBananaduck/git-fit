@@ -4,44 +4,44 @@
 	// Sample exercise data to demonstrate the equipment recommendation system
 	let sampleExercises = [
 		{
-			name: "Dumbbell Bench Press",
-			primaryEquipment: "dumbbell",
-			recommendedMachines: ["Adjustable Dumbbells", "Fixed Weight Dumbbells", "Olympic Dumbbells"],
-			alternativeEquipment: ["Resistance Bands", "Cable Machine", "Barbell", "Push-ups"],
-			selectedEquipment: ""
+			name: 'Dumbbell Bench Press',
+			primaryEquipment: 'dumbbell',
+			recommendedMachines: ['Adjustable Dumbbells', 'Fixed Weight Dumbbells', 'Olympic Dumbbells'],
+			alternativeEquipment: ['Resistance Bands', 'Cable Machine', 'Barbell', 'Push-ups'],
+			selectedEquipment: ''
 		},
 		{
-			name: "Lat Pulldown",
-			primaryEquipment: "cable",
-			recommendedMachines: ["Lat Pulldown Machine", "Cable Crossover", "Functional Trainer"],
-			alternativeEquipment: ["Resistance Bands", "Pull-up Bar", "Suspension Trainer"],
-			selectedEquipment: ""
+			name: 'Lat Pulldown',
+			primaryEquipment: 'cable',
+			recommendedMachines: ['Lat Pulldown Machine', 'Cable Crossover', 'Functional Trainer'],
+			alternativeEquipment: ['Resistance Bands', 'Pull-up Bar', 'Suspension Trainer'],
+			selectedEquipment: ''
 		},
 		{
-			name: "Barbell Squat",
-			primaryEquipment: "barbell",
-			recommendedMachines: ["Olympic Barbell", "Safety Squat Bar", "Power Rack"],
-			alternativeEquipment: ["Dumbbells", "Kettlebells", "Bodyweight Squats", "Leg Press Machine"],
-			selectedEquipment: ""
+			name: 'Barbell Squat',
+			primaryEquipment: 'barbell',
+			recommendedMachines: ['Olympic Barbell', 'Safety Squat Bar', 'Power Rack'],
+			alternativeEquipment: ['Dumbbells', 'Kettlebells', 'Bodyweight Squats', 'Leg Press Machine'],
+			selectedEquipment: ''
 		},
 		{
-			name: "Push-ups",
-			primaryEquipment: "body only",
-			recommendedMachines: ["Exercise Mat", "Push-up Handles", "Suspension Trainer"],
-			alternativeEquipment: ["Resistance Bands", "Dumbbell Press", "Chest Press Machine"],
-			selectedEquipment: ""
+			name: 'Push-ups',
+			primaryEquipment: 'body only',
+			recommendedMachines: ['Exercise Mat', 'Push-up Handles', 'Suspension Trainer'],
+			alternativeEquipment: ['Resistance Bands', 'Dumbbell Press', 'Chest Press Machine'],
+			selectedEquipment: ''
 		}
 	];
 
 	// Mock user preferences
-	let userPreferences = ["Adjustable", "Functional", "Olympic"];
+	let userPreferences = ['Adjustable', 'Functional', 'Olympic'];
 
 	function handleEquipmentSelection(event) {
 		const { exerciseName, equipment, isAlternative } = event.detail;
 		console.log(`Selected ${equipment} for ${exerciseName} (Alternative: ${isAlternative})`);
-		
+
 		// Update the exercise selection
-		const exercise = sampleExercises.find(ex => ex.name === exerciseName);
+		const exercise = sampleExercises.find((ex) => ex.name === exerciseName);
 		if (exercise) {
 			exercise.selectedEquipment = equipment;
 			sampleExercises = [...sampleExercises]; // Trigger reactivity
@@ -49,10 +49,12 @@
 	}
 
 	function getSelectionSummary() {
-		const selected = sampleExercises.filter(ex => ex.selectedEquipment);
-		const optimal = selected.filter(ex => ex.recommendedMachines.includes(ex.selectedEquipment));
-		const alternatives = selected.filter(ex => !ex.recommendedMachines.includes(ex.selectedEquipment));
-		
+		const selected = sampleExercises.filter((ex) => ex.selectedEquipment);
+		const optimal = selected.filter((ex) => ex.recommendedMachines.includes(ex.selectedEquipment));
+		const alternatives = selected.filter(
+			(ex) => !ex.recommendedMachines.includes(ex.selectedEquipment)
+		);
+
 		return {
 			total: selected.length,
 			optimal: optimal.length,
@@ -64,14 +66,16 @@
 </script>
 
 <svelte:head>
-	<title>Exercise Equipment Demo - GitFit</title>
+	<title>Exercise Equipment Demo - Technically Fit</title>
 </svelte:head>
 
 <div class="space-y-6">
 	<!-- Header -->
 	<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
 		<h1 class="text-2xl font-bold text-gray-900 mb-2">Equipment Recommendation Demo</h1>
-		<p class="text-gray-600">See how GitFit automatically recommends equipment and provides alternatives for each exercise</p>
+		<p class="text-gray-600">
+			See how GitFit automatically recommends equipment and provides alternatives for each exercise
+		</p>
 	</div>
 
 	<!-- Summary Stats -->
@@ -112,7 +116,7 @@
 	<!-- Exercise Equipment Selectors -->
 	<div class="space-y-6">
 		<h2 class="text-xl font-semibold text-gray-900">Exercise Equipment Selection</h2>
-		
+
 		{#each sampleExercises as exercise}
 			<EquipmentSelector
 				exerciseName={exercise.name}
@@ -156,18 +160,22 @@
 		<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
 			<h2 class="text-xl font-semibold text-gray-900 mb-4">Your Equipment Selections</h2>
 			<div class="space-y-3">
-				{#each sampleExercises.filter(ex => ex.selectedEquipment) as exercise}
+				{#each sampleExercises.filter((ex) => ex.selectedEquipment) as exercise}
 					<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
 						<div>
 							<div class="font-medium text-gray-900">{exercise.name}</div>
 							<div class="text-sm text-gray-600">Using: {exercise.selectedEquipment}</div>
 						</div>
-						<span class="px-3 py-1 rounded-full text-xs font-medium {
-							exercise.recommendedMachines.includes(exercise.selectedEquipment) 
-								? 'bg-green-100 text-green-800 border border-green-200' 
-								: 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-						}">
-							{exercise.recommendedMachines.includes(exercise.selectedEquipment) ? 'Optimal' : 'Alternative'}
+						<span
+							class="px-3 py-1 rounded-full text-xs font-medium {exercise.recommendedMachines.includes(
+								exercise.selectedEquipment
+							)
+								? 'bg-green-100 text-green-800 border border-green-200'
+								: 'bg-yellow-100 text-yellow-800 border border-yellow-200'}"
+						>
+							{exercise.recommendedMachines.includes(exercise.selectedEquipment)
+								? 'Optimal'
+								: 'Alternative'}
 						</span>
 					</div>
 				{/each}
