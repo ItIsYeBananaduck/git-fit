@@ -1,4 +1,4 @@
-import { defineMutation, defineQuery } from "convex/server";
+import { defineMutation} from "convex/server";
 import fetch from "node-fetch";
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";

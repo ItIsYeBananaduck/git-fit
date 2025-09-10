@@ -15,23 +15,19 @@ export type AdminRole =
   | "analytics_viewer";
 
 export interface AdminUser {
-  _id: Id<"adminUsers">;
+  _id: string;
   email: string;
   name: string;
-  role: AdminRole;
+  role: string;
   permissions: string[];
-  passwordHash: string;
-  mfaSecret?: string;
-  mfaEnabled: boolean;
   isActive: boolean;
-  lastLogin?: string;
+  lockedUntil: string | null;
+  passwordHash: string;
+  mfaEnabled: boolean;
+  mfaSecret: string | null;
+  ipWhitelist: string[];
+  sessionTimeout: number;
   failedLoginAttempts: number;
-  lockedUntil?: string;
-  createdAt: string;
-  createdBy: Id<"adminUsers">;
-  updatedAt: string;
-  ipWhitelist?: string[];
-  sessionTimeout?: number;
 }
 
 export interface AdminCredentials {
@@ -41,17 +37,13 @@ export interface AdminCredentials {
 }
 
 export interface AdminSession {
-  _id: Id<"adminSessions">;
-  adminId: Id<"adminUsers">;
+  _id: string;
+  adminId: string;
   sessionToken: string;
   ipAddress: string;
   userAgent: string;
-  createdAt: string;
   expiresAt: string;
-  lastActivity: string;
   isActive: boolean;
-  revokedAt?: string;
-  revokedReason?: string;
 }
 
 export interface Permission {
@@ -135,7 +127,7 @@ export interface UserActivityMetrics {
   averageSessionDuration: number;
   featureUsage: Record<string, number>;
   engagementScore: number;
-  retentionCohort: string;
+  retentionCohort: "string";
 }
 
 export interface SupportTicket {
@@ -814,3 +806,8 @@ export interface ServiceError {
   message: string;
   details?: any;
 }
+
+// Ensure Id type is exported correctly
+export type Id<TableName extends string> = {
+  __tableName: TableName;
+};

@@ -11,8 +11,7 @@ import type {
   AdminRole as AdminRoleType
 } from "../types/admin";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { api } from "../../../convex/_generated/api";
-import { convex } from "$lib/convex";
+import { api } from "../convex";
 import * as crypto from "crypto";
 import * as speakeasy from "speakeasy";
 import * as bcrypt from "bcryptjs";
@@ -28,7 +27,7 @@ export class AdminAuthService {
   async authenticateAdmin(credentials: AdminCredentials, ipAddress: string, userAgent: string): Promise<AdminSession> {
     try {
       // Find admin user by email
-      const adminUser = await convex.query(api.admin.auth.getAdminByEmail, { 
+      const adminUser: AdminUser = await api.admin.auth.getAdminByEmail({ 
         email: credentials.email 
       });
 
@@ -87,7 +86,7 @@ export class AdminAuthService {
       const sessionToken = this.generateSessionToken();
       const expiresAt = new Date(Date.now() + (adminUser.sessionTimeout || AdminAuthService.SESSION_DURATION));
 
-      const session = await convex.mutation(api.admin.auth.createAdminSession, {
+      const session: AdminSession = await api.admin.auth.createAdminSession({
         adminId: adminUser._id,
         sessionToken,
         ipAddress,
@@ -96,7 +95,7 @@ export class AdminAuthService {
       });
 
       // Reset failed login attempts and update last login
-      await convex.mutation(api.admin.auth.updateAdminLoginSuccess, {
+      await api.admin.auth.updateAdminLoginSuccess({
         adminId: adminUser._id,
         lastLogin: new Date().toISOString()
       });
@@ -126,7 +125,7 @@ export class AdminAuthService {
    */
   async validateAdminSession(sessionToken: string, ipAddress: string): Promise<AdminUser | null> {
     try {
-      const session = await convex.query(api.admin.auth.getAdminSession, { 
+      const session = await api.admin.auth.getAdminSession({ 
         sessionToken 
       });
 
@@ -136,7 +135,7 @@ export class AdminAuthService {
 
       // Check if session is expired
       if (new Date(session.expiresAt) < new Date()) {
-        await convex.mutation(api.admin.auth.revokeAdminSession, {
+        await api.admin.auth.revokeAdminSession({
           sessionId: session._id,
           reason: "expired"
         });
@@ -145,7 +144,7 @@ export class AdminAuthService {
 
       // Verify IP address matches (optional security check)
       if (session.ipAddress !== ipAddress) {
-        await convex.mutation(api.admin.auth.revokeAdminSession, {
+        await api.admin.auth.revokeAdminSession({
           sessionId: session._id,
           reason: "ip_mismatch"
         });
@@ -153,12 +152,12 @@ export class AdminAuthService {
       }
 
       // Get admin user
-      const adminUser = await convex.query(api.admin.auth.getAdminById, { 
+      const adminUser: AdminUser = await api.admin.auth.getAdminById({ 
         adminId: session.adminId 
       });
 
       if (!adminUser || !adminUser.isActive) {
-        await convex.mutation(api.admin.auth.revokeAdminSession, {
+        await api.admin.auth.revokeAdminSession({
           sessionId: session._id,
           reason: "user_inactive"
         });
@@ -166,7 +165,7 @@ export class AdminAuthService {
       }
 
       // Update session activity
-      await convex.mutation(api.admin.auth.updateSessionActivity, {
+      await api.admin.auth.updateSessionActivity({
         sessionId: session._id,
         lastActivity: new Date().toISOString()
       });
@@ -188,7 +187,7 @@ export class AdminAuthService {
     resource: string
   ): Promise<boolean> {
     try {
-      const adminUser = await convex.query(api.admin.auth.getAdminById, { adminId });
+      const adminUser: AdminUser = await api.admin.auth.getAdminById({ adminId });
       
       if (!adminUser || !adminUser.isActive) {
         return false;
@@ -251,7 +250,7 @@ export class AdminAuthService {
       }
 
       // Create admin user
-      const newAdmin = await convex.mutation(api.admin.auth.createAdminUser, {
+      const newAdmin: AdminUser = await api.admin.auth.createAdminUser({
         ...adminData,
         passwordHash,
         mfaSecret,
@@ -301,13 +300,13 @@ export class AdminAuthService {
       }
 
       // Get current admin data
-      const currentAdmin = await convex.query(api.admin.auth.getAdminById, { adminId });
+      const currentAdmin = await api.admin.auth.getAdminById({ adminId });
       if (!currentAdmin) {
         throw new ConvexError("Admin user not found");
       }
 
       // Update permissions
-      await convex.mutation(api.admin.auth.updateAdminPermissions, {
+      await api.admin.auth.updateAdminPermissions({
         adminId,
         permissions,
         updatedAt: new Date().toISOString()
@@ -350,13 +349,13 @@ export class AdminAuthService {
       }
 
       // Deactivate admin user
-      await convex.mutation(api.admin.auth.deactivateAdminUser, {
+      await api.admin.auth.deactivateAdminUser({
         adminId,
         updatedAt: new Date().toISOString()
       });
 
       // Revoke all active sessions
-      await convex.mutation(api.admin.auth.revokeAllAdminSessions, {
+      await api.admin.auth.revokeAllAdminSessions({
         adminId,
         reason: `Access revoked: ${reason}`
       });
@@ -388,7 +387,7 @@ export class AdminAuthService {
     limit: number = 100
   ): Promise<AuditLogEntry[]> {
     try {
-      return await convex.query(api.admin.audit.getAdminAuditLog, {
+      return await api.admin.audit.getAdminAuditLog({
         adminId,
         startTime: timeframe.start,
         endTime: timeframe.end,
@@ -405,7 +404,7 @@ export class AdminAuthService {
    */
   async logAdminAction(adminId: Id<"adminUsers">, action: AdminAction): Promise<void> {
     try {
-      await convex.mutation(api.admin.audit.logAdminAction, {
+      await api.admin.audit.logAdminAction({
         adminId,
         action: action.action,
         resource: action.resource,
@@ -428,7 +427,7 @@ export class AdminAuthService {
    */
   async setupMFA(adminId: Id<"adminUsers">): Promise<{ secret: string; qrCode: string }> {
     try {
-      const adminUser = await convex.query(api.admin.auth.getAdminById, { adminId });
+      const adminUser = await api.admin.auth.getAdminById({ adminId });
       if (!adminUser) {
         throw new ConvexError("Admin user not found");
       }
@@ -439,7 +438,7 @@ export class AdminAuthService {
       });
 
       // Store the secret (temporarily, until verified)
-      await convex.mutation(api.admin.auth.storeMFASecret, {
+      await api.admin.auth.storeMFASecret({
         adminId,
         mfaSecret: secret.base32
       });
@@ -462,7 +461,7 @@ export class AdminAuthService {
    */
   async verifyAndEnableMFA(adminId: Id<"adminUsers">, token: string): Promise<void> {
     try {
-      const adminUser = await convex.query(api.admin.auth.getAdminById, { adminId });
+      const adminUser = await api.admin.auth.getAdminById({ adminId });
       if (!adminUser || !adminUser.mfaSecret) {
         throw new ConvexError("MFA setup not found");
       }
@@ -479,7 +478,7 @@ export class AdminAuthService {
       }
 
       // Enable MFA
-      await convex.mutation(api.admin.auth.enableMFA, {
+      await api.admin.auth.enableMFA({
         adminId,
         updatedAt: new Date().toISOString()
       });
@@ -507,7 +506,7 @@ export class AdminAuthService {
    */
   async logoutAdmin(sessionToken: string, adminId: Id<"adminUsers">): Promise<void> {
     try {
-      await convex.mutation(api.admin.auth.revokeAdminSessionByToken, {
+      await api.admin.auth.revokeAdminSessionByToken({
         sessionToken,
         reason: "user_logout"
       });
@@ -535,7 +534,7 @@ export class AdminAuthService {
 
   private async handleFailedLogin(adminId: Id<"adminUsers">, ipAddress: string): Promise<void> {
     try {
-      const adminUser = await convex.query(api.admin.auth.getAdminById, { adminId });
+      const adminUser = await api.admin.auth.getAdminById({ adminId });
       if (!adminUser) return;
 
       const newFailedAttempts = adminUser.failedLoginAttempts + 1;
@@ -545,7 +544,7 @@ export class AdminAuthService {
         lockedUntil = new Date(Date.now() + AdminAuthService.LOCKOUT_DURATION).toISOString();
       }
 
-      await convex.mutation(api.admin.auth.updateFailedLoginAttempts, {
+      await api.admin.auth.updateFailedLoginAttempts({
         adminId,
         failedLoginAttempts: newFailedAttempts,
         lockedUntil
@@ -572,7 +571,7 @@ export class AdminAuthService {
   private async logFailedLogin(email: string, reason: string, ipAddress: string): Promise<void> {
     try {
       // Log failed login attempt (without admin ID since user might not exist)
-      await convex.mutation(api.admin.audit.logFailedLogin, {
+      await api.admin.audit.logFailedLogin({
         email,
         reason,
         ipAddress,
@@ -585,7 +584,7 @@ export class AdminAuthService {
 
   private async getRolePermissions(role: string): Promise<string[]> {
     try {
-      const roleData = await convex.query(api.admin.roles.getRolePermissions, { role });
+      const roleData = await api.admin.roles.getRolePermissions({ role });
       return roleData?.permissions || [];
     } catch (error) {
       console.error("Failed to get role permissions:", error);
