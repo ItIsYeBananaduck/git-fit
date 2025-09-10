@@ -35,21 +35,21 @@ export const getTrainingPrograms = query({
     publishedOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("trainingPrograms");
-    
+    let q = ctx.db.query("trainingPrograms");
+
     if (args.publishedOnly) {
-      query = query.filter((q) => q.eq(q.field("isPublished"), true));
+      q = q.filter((qq) => qq.eq(qq.field("isPublished"), true));
     }
-    
+
     if (args.difficulty) {
-      query = query.filter((q) => q.eq(q.field("difficulty"), args.difficulty));
+      q = q.filter((qq) => qq.eq(qq.field("difficulty"), args.difficulty));
     }
-    
+
     if (args.trainerId) {
-      query = query.filter((q) => q.eq(q.field("trainerId"), args.trainerId));
+      q = q.filter((qq) => qq.eq(qq.field("trainerId"), args.trainerId));
     }
-    
-    return await query.collect();
+
+    return await q.collect();
   },
 });
 
@@ -65,12 +65,12 @@ export const publishTrainingProgram = mutation({
   handler: async (ctx, args) => {
     const program = await ctx.db.get(args.programId);
     if (!program) throw new Error("Program not found");
-    
+
     await ctx.db.patch(args.programId, {
       isPublished: true,
       updatedAt: new Date().toISOString(),
     });
-    
+
     return { success: true };
   },
 });
@@ -86,7 +86,7 @@ export const addTrainingProgram = mutation({
     // Create a default trainer user for legacy compatibility
     const program = {
       ...args,
-      trainerId: "default_trainer", // This should be replaced with actual trainer ID
+      trainerId: "default_trainer", // TODO: replace with actual trainer ID
       difficulty: "beginner",
       duration: 4,
       category: ["general"],
