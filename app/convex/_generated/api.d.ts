@@ -13,6 +13,15 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as functions_admin_audit from "../functions/admin/audit.js";
+import type * as functions_admin_auth from "../functions/admin/auth.js";
+import type * as functions_admin_communication from "../functions/admin/communication.js";
+import type * as functions_admin_moderation from "../functions/admin/moderation.js";
+import type * as functions_admin_privacy from "../functions/admin/privacy.js";
+import type * as functions_admin_roles from "../functions/admin/roles.js";
+import type * as functions_admin_setup from "../functions/admin/setup.js";
+import type * as functions_admin_support from "../functions/admin/support.js";
+import type * as functions_admin_users from "../functions/admin/users.js";
 import type * as functions_exercises from "../functions/exercises.js";
 import type * as functions_fitnessData from "../functions/fitnessData.js";
 import type * as functions_marketplace from "../functions/marketplace.js";
@@ -30,6 +39,15 @@ import type * as functions_workouts from "../functions/workouts.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "functions/admin/audit": typeof functions_admin_audit;
+  "functions/admin/auth": typeof functions_admin_auth;
+  "functions/admin/communication": typeof functions_admin_communication;
+  "functions/admin/moderation": typeof functions_admin_moderation;
+  "functions/admin/privacy": typeof functions_admin_privacy;
+  "functions/admin/roles": typeof functions_admin_roles;
+  "functions/admin/setup": typeof functions_admin_setup;
+  "functions/admin/support": typeof functions_admin_support;
+  "functions/admin/users": typeof functions_admin_users;
   "functions/exercises": typeof functions_exercises;
   "functions/fitnessData": typeof functions_fitnessData;
   "functions/marketplace": typeof functions_marketplace;

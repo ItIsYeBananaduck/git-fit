@@ -19,7 +19,7 @@ export const importExercises = mutation({
     }))
   },
   handler: async (ctx, args) => {
-    const importedCount = 0;
+    let importedCount = 0;
     const errors = [];
 
     try {
