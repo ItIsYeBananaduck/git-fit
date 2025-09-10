@@ -26,6 +26,9 @@ importers:
       convex-svelte:
         specifier: ^0.0.11
         version: 0.0.11(convex@1.26.2)(svelte@5.38.6)
+      lucide-svelte:
+        specifier: ^0.542.0
+        version: 0.542.0(svelte@5.38.6)
     devDependencies:
       '@eslint/compat':
         specifier: ^1.2.5
@@ -1386,6 +1389,11 @@ packages:
   lru-cache@11.2.1:
     resolution: {integrity: sha512-r8LA6i4LP4EeWOhqBaZZjDWwehd1xUJPCJd9Sv300H0ZmcUER4+JPh7bqqZeqs1o5pgtgvXm+d9UGrB5zZGDiQ==}
     engines: {node: 20 || >=22}
+
+  lucide-svelte@0.542.0:
+    resolution: {integrity: sha512-KxqJycY4EWaGy1zk/7sqEcf48j4YaP9zEujYczzrsw5j9b9b5pjAJ1qGFKZvD7T6xz9reSYAfUAd6Bz62TdqGw==}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5.0.0-next.42
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -3170,6 +3178,10 @@ snapshots:
   loupe@3.2.1: {}
 
   lru-cache@11.2.1: {}
+
+  lucide-svelte@0.542.0(svelte@5.38.6):
+    dependencies:
+      svelte: 5.38.6
 
   lz-string@1.5.0: {}
 

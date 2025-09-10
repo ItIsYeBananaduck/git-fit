@@ -1,4 +1,4 @@
-package com.example.gitfit;
+package com.example.technicallyfit;
 
 import com.getcapacitor.BridgeActivity;
 
