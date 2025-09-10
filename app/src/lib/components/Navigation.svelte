@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { authStore, user, isAuthenticated } from '$lib/stores/auth';
+	import { goto } from '$app/navigation';
 	import {
 		Home,
 		Target,
@@ -11,17 +13,17 @@
 		Shield,
 		User,
 		Brain,
-		ShoppingBag
+		ShoppingBag,
+		LogOut,
+		LogIn
 	} from 'lucide-svelte';
 
-	// Mock user state - in real app this would come from auth
-	let currentUser = {
-		name: 'Demo User',
-		role: 'client', // 'client', 'trainer', 'admin'
-		avatar: null
-	};
-
 	let mobileMenuOpen = false;
+
+	async function handleLogout() {
+		await authStore.logout();
+		goto('/auth/login');
+	}
 
 	const navItems = [
 		{ href: '/', label: 'Dashboard', icon: Home, roles: ['client', 'trainer', 'admin'] },
@@ -53,7 +55,7 @@
 		{ href: '/profile', label: 'Profile', icon: User, roles: ['client', 'trainer', 'admin'] }
 	];
 
-	$: filteredNavItems = navItems.filter((item) => item.roles.includes(currentUser.role));
+	$: filteredNavItems = $user ? navItems.filter((item) => item.roles.includes($user.role)) : [];
 </script>
 
 <nav class="bg-white shadow-lg border-b border-gray-200">
@@ -83,17 +85,48 @@
 
 			<!-- User Menu -->
 			<div class="flex items-center space-x-4">
-				<div class="hidden sm:flex items-center space-x-2">
-					<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-						<span class="text-white text-sm font-semibold">
-							{currentUser.name.charAt(0)}
-						</span>
+				{#if $isAuthenticated && $user}
+					<!-- Authenticated User -->
+					<div class="hidden sm:flex items-center space-x-2">
+						<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+							<span class="text-white text-sm font-semibold">
+								{$user.name.charAt(0)}
+							</span>
+						</div>
+						<div class="text-sm">
+							<div class="font-medium text-gray-900">{$user.name}</div>
+							<div class="text-gray-500 capitalize">{$user.role}</div>
+						</div>
 					</div>
-					<div class="text-sm">
-						<div class="font-medium text-gray-900">{currentUser.name}</div>
-						<div class="text-gray-500 capitalize">{currentUser.role}</div>
+
+					<!-- Logout Button -->
+					<button
+						on:click={handleLogout}
+						class="hidden sm:flex items-center space-x-1 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+						title="Sign out"
+					>
+						<LogOut size={16} />
+						<span>Sign out</span>
+					</button>
+				{:else}
+					<!-- Not Authenticated -->
+					<div class="hidden sm:flex items-center space-x-2">
+						<a
+							href="/auth/login"
+							class="flex items-center space-x-1 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+						>
+							<LogIn size={16} />
+							<span>Sign in</span>
+						</a>
+						<a
+							href="/auth/register"
+							class="flex items-center space-x-1 px-3 py-2 text-sm text-white bg-primary hover:bg-blue-700 rounded-lg transition-colors"
+						>
+							<User size={16} />
+							<span>Sign up</span>
+						</a>
 					</div>
-				</div>
+				{/if}
 
 				<!-- Mobile menu button -->
 				<button
@@ -116,36 +149,72 @@
 		<!-- Mobile Navigation -->
 		{#if mobileMenuOpen}
 			<div class="md:hidden py-4 border-t border-gray-200">
-				<div class="space-y-2">
-					{#each filteredNavItems as item}
-						<a
-							href={item.href}
-							class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
-                                                                {$page.url.pathname === item.href
-								? 'bg-primary text-white'
-								: 'text-gray-700 hover:bg-gray-100'}"
-							on:click={() => (mobileMenuOpen = false)}
-						>
-							<svelte:component this={item.icon} size={20} />
-							<span>{item.label}</span>
-						</a>
-					{/each}
-				</div>
+				{#if $isAuthenticated && $user}
+					<!-- Authenticated Mobile Menu -->
+					<div class="space-y-2">
+						{#each filteredNavItems as item}
+							<a
+								href={item.href}
+								class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
+                                                                        {$page.url.pathname ===
+								item.href
+									? 'bg-primary text-white'
+									: 'text-gray-700 hover:bg-gray-100'}"
+								on:click={() => (mobileMenuOpen = false)}
+							>
+								<svelte:component this={item.icon} size={20} />
+								<span>{item.label}</span>
+							</a>
+						{/each}
 
-				<!-- Mobile User Info -->
-				<div class="mt-4 pt-4 border-t border-gray-200">
-					<div class="flex items-center space-x-3 px-4">
-						<div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-							<span class="text-white font-semibold">
-								{currentUser.name.charAt(0)}
-							</span>
-						</div>
-						<div>
-							<div class="font-medium text-gray-900">{currentUser.name}</div>
-							<div class="text-gray-500 capitalize text-sm">{currentUser.role}</div>
+						<!-- Mobile Logout -->
+						<button
+							on:click={() => {
+								handleLogout();
+								mobileMenuOpen = false;
+							}}
+							class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full text-left"
+						>
+							<LogOut size={20} />
+							<span>Sign out</span>
+						</button>
+					</div>
+
+					<!-- Mobile User Info -->
+					<div class="mt-4 pt-4 border-t border-gray-200">
+						<div class="flex items-center space-x-3 px-4">
+							<div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+								<span class="text-white font-semibold">
+									{$user.name.charAt(0)}
+								</span>
+							</div>
+							<div>
+								<div class="font-medium text-gray-900">{$user.name}</div>
+								<div class="text-gray-500 capitalize text-sm">{$user.role}</div>
+							</div>
 						</div>
 					</div>
-				</div>
+				{:else}
+					<!-- Not Authenticated Mobile Menu -->
+					<div class="space-y-2">
+						<a
+							href="/auth/login"
+							class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
+							on:click={() => (mobileMenuOpen = false)}
+						>
+							<LogIn size={20} />
+							<span>Sign in</span>
+						</a>
+						<a
+							href="/auth/register"
+							class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-white bg-primary hover:bg-blue-700"
+							on:click={() => (mobileMenuOpen = false)}
+						>
+							<User size={20} />
+							<span>Sign up</span>
+						</a>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>

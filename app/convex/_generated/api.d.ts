@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as functions_admin_analytics from "../functions/admin/analytics.js";
 import type * as functions_admin_audit from "../functions/admin/audit.js";
 import type * as functions_admin_auth from "../functions/admin/auth.js";
 import type * as functions_admin_communication from "../functions/admin/communication.js";
@@ -39,6 +40,7 @@ import type * as functions_workouts from "../functions/workouts.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "functions/admin/analytics": typeof functions_admin_analytics;
   "functions/admin/audit": typeof functions_admin_audit;
   "functions/admin/auth": typeof functions_admin_auth;
   "functions/admin/communication": typeof functions_admin_communication;

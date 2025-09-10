@@ -10,6 +10,11 @@ export default defineSchema({
     profileImage: v.optional(v.string()),
     createdAt: v.string(),
     updatedAt: v.string(),
+    // Authentication fields
+    passwordHash: v.string(),
+    emailVerified: v.boolean(),
+    isActive: v.boolean(),
+    lastLogin: v.optional(v.string()),
     // Client-specific fields
     dateOfBirth: v.optional(v.string()),
     height: v.optional(v.number()), // in cm
@@ -21,10 +26,39 @@ export default defineSchema({
     specialties: v.optional(v.array(v.string())),
     bio: v.optional(v.string()),
     hourlyRate: v.optional(v.number()),
+    experience: v.optional(v.number()), // years
     isVerified: v.optional(v.boolean()),
     rating: v.optional(v.number()),
     totalClients: v.optional(v.number()),
-  }).index("by_email", ["email"]).index("by_role", ["role"]),
+    // User preferences
+    preferences: v.optional(v.object({
+      units: v.optional(v.union(v.literal("metric"), v.literal("imperial"))),
+      notifications: v.optional(v.boolean()),
+      dataSharing: v.optional(v.boolean()),
+      timezone: v.optional(v.string()),
+    })),
+  }).index("by_email", ["email"]).index("by_role", ["role"]).index("by_active", ["isActive"]),
+
+  // User sessions for authentication
+  sessions: defineTable({
+    userId: v.id("users"),
+    token: v.string(),
+    expiresAt: v.string(),
+    createdAt: v.string(),
+    lastActivity: v.string(),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    isActive: v.boolean(),
+  }).index("by_token", ["token"]).index("by_user", ["userId"]).index("by_expires", ["expiresAt"]),
+
+  // Password reset tokens
+  passwordResets: defineTable({
+    email: v.string(),
+    token: v.string(),
+    expiresAt: v.string(),
+    used: v.boolean(),
+    createdAt: v.string(),
+  }).index("by_token", ["token"]).index("by_email", ["email"]),
 
   // Fitness tracker data
   fitnessData: defineTable({

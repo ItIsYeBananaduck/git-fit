@@ -1,34 +1,35 @@
 <script lang="ts">
-	// Mock user profile data
-	let user = {
-		name: 'Demo User',
-		email: 'demo@example.com',
-		role: 'client',
-		profileImage: null,
-		dateOfBirth: '1990-05-15',
-		height: 175, // cm
-		weight: 70, // kg
-		fitnessLevel: 'intermediate',
-		goals: ['weight-loss', 'muscle-gain', 'endurance'],
-		joinDate: '2024-12-01'
-	};
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { user, isAuthenticated, authStore } from '$lib/stores/auth';
+
+	// Redirect to login if not authenticated
+	$: if (!$isAuthenticated && $user === null) {
+		goto(`/auth/login?redirect=${encodeURIComponent($page.url.pathname)}`);
+	}
 
 	let isEditing = false;
-	let editedUser = { ...user };
+	let editedUser = $user ? { ...$user } : null;
 
-	function toggleEdit() {
-		if (isEditing) {
+	async function toggleEdit() {
+		if (isEditing && $user && editedUser) {
 			// Save changes
-			user = { ...editedUser };
-		} else {
+			try {
+				await authStore.updateProfile(editedUser);
+			} catch (error) {
+				console.error('Failed to update profile:', error);
+			}
+		} else if ($user) {
 			// Start editing
-			editedUser = { ...user };
+			editedUser = { ...$user };
 		}
 		isEditing = !isEditing;
 	}
 
 	function cancelEdit() {
-		editedUser = { ...user };
+		if ($user) {
+			editedUser = { ...$user };
+		}
 		isEditing = false;
 	}
 
@@ -43,10 +44,12 @@
 	];
 
 	function toggleGoal(goalId: string) {
-		if (editedUser.goals.includes(goalId)) {
-			editedUser.goals = editedUser.goals.filter((g) => g !== goalId);
-		} else {
-			editedUser.goals = [...editedUser.goals, goalId];
+		if (editedUser && editedUser.goals) {
+			if (editedUser.goals.includes(goalId)) {
+				editedUser.goals = editedUser.goals.filter((g) => g !== goalId);
+			} else {
+				editedUser.goals = [...editedUser.goals, goalId];
+			}
 		}
 	}
 </script>
@@ -60,18 +63,20 @@
 	<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center">
-				<div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-					<span class="text-white text-xl font-semibold">
-						{user.name.charAt(0)}
-					</span>
-				</div>
-				<div class="ml-4">
-					<h1 class="text-2xl font-bold text-gray-900">{user.name}</h1>
-					<p class="text-gray-600 capitalize">{user.role}</p>
-					<p class="text-sm text-gray-500">
-						Member since {new Date(user.joinDate).toLocaleDateString()}
-					</p>
-				</div>
+				{#if $user}
+					<div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+						<span class="text-white text-xl font-semibold">
+							{$user.name.charAt(0)}
+						</span>
+					</div>
+					<div class="ml-4">
+						<h1 class="text-2xl font-bold text-gray-900">{$user.name}</h1>
+						<p class="text-gray-600 capitalize">{$user.role}</p>
+						<p class="text-sm text-gray-500">
+							Member since {new Date($user.createdAt).toLocaleDateString()}
+						</p>
+					</div>
+				{/if}
 			</div>
 			<button
 				on:click={toggleEdit}

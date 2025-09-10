@@ -12,7 +12,7 @@ import type {
 } from "../types/admin";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { api } from "../../../convex/_generated/api";
-import { convex } from "../convex";
+import { convex } from "$lib/convex";
 import * as crypto from "crypto";
 import * as speakeasy from "speakeasy";
 import * as bcrypt from "bcryptjs";

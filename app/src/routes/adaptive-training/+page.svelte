@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { user, isAuthenticated } from '$lib/stores/auth';
 	import AdaptiveWorkoutCard from '$lib/components/AdaptiveWorkoutCard.svelte';
 	import ProgressionAnalytics from '$lib/components/ProgressionAnalytics.svelte';
 	import WHOOPDataDisplay from '$lib/components/WHOOPDataDisplay.svelte';
@@ -17,6 +20,7 @@
 		SafetySettings as SafetySettingsType,
 		FitnessTracker
 	} from '$lib/types/fitnessTrackers';
+	import type { TrainingParameters } from '$lib/services/adaptiveTraining';
 	import { DEFAULT_SAFETY_SETTINGS, TRACKER_DEFINITIONS } from '$lib/types/fitnessTrackers';
 	import { whoopState } from '$lib/stores/whoop';
 	import { ouraState } from '$lib/stores/oura';
@@ -24,13 +28,23 @@
 	import { polarAuthState } from '$lib/stores/polar';
 	import { Brain, Target, TrendingUp, Zap, Settings } from 'lucide-svelte';
 
+	// Redirect to login if not authenticated or not a client
+	$: if (!$isAuthenticated && $user === null) {
+		goto(`/auth/login?redirect=${encodeURIComponent($page.url.pathname)}`);
+	} else if ($user && !['client', 'admin'].includes($user.role)) {
+		goto('/unauthorized');
+	}
+
 	let selectedExercise = 'Bench Press';
 	let manualDeloadWeek = false;
 	let safetySettings: SafetySettingsType = { ...DEFAULT_SAFETY_SETTINGS };
 	let connectedTrackers: FitnessTracker[] = [];
 	let showSettings = false;
 
-	const exercises = [
+	const exercises: Array<{
+		name: string;
+		baseParams: TrainingParameters;
+	}> = [
 		{
 			name: 'Bench Press',
 			baseParams: {
@@ -39,7 +53,7 @@
 				sets: 3,
 				restBetweenSets: 90,
 				restBetweenExercises: 180,
-				intensity: 'moderate'
+				intensity: 'moderate' as const
 			}
 		},
 		{
@@ -50,7 +64,7 @@
 				sets: 3,
 				restBetweenSets: 120,
 				restBetweenExercises: 180,
-				intensity: 'moderate'
+				intensity: 'moderate' as const
 			}
 		},
 		{
@@ -61,7 +75,7 @@
 				sets: 3,
 				restBetweenSets: 180,
 				restBetweenExercises: 240,
-				intensity: 'high'
+				intensity: 'high' as const
 			}
 		}
 	];
@@ -245,7 +259,7 @@
 					<!-- WHOOP Connection -->
 					<div>
 						<h4 class="text-md font-medium text-gray-900 mb-3">WHOOP</h4>
-						<WHOOPDataDisplay compact={false} showConnection={true} />
+						<WHOOPDataDisplay compact={false} />
 					</div>
 
 					<!-- Oura Connection -->

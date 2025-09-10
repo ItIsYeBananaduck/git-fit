@@ -8,9 +8,9 @@ import type {
   BulkActionResult,
   UserSearchCriteria
 } from "../types/admin";
-import type { Id } from "../../../../convex/_generated/dataModel";
-import { api } from "../../../../convex/_generated/api";
-import { convex } from "../convex";
+import type { Id } from "../../../convex/_generated/dataModel";
+import { api } from "../../../convex/_generated/api";
+import { convex } from "$lib/convex";
 import { adminAuthService } from "./adminAuth";
 
 export class SupportService {

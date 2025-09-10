@@ -1,17 +1,17 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { user, isAuthenticated } from '$lib/stores/auth';
 	import FitnessStats from '$lib/components/FitnessStats.svelte';
 	import QuickActions from '$lib/components/QuickActions.svelte';
 	import RecentWorkouts from '$lib/components/RecentWorkouts.svelte';
 	import ProgressChart from '$lib/components/ProgressChart.svelte';
 
-	// Mock user data - in real app this would come from Convex
-	let currentUser = {
-		name: 'Demo User',
-		role: 'client',
-		fitnessLevel: 'intermediate',
-		currentPrograms: 2,
-		completedWorkouts: 24
-	};
+	// Redirect to login if not authenticated
+	$: if (!$isAuthenticated && $user === null) {
+		goto(`/auth/login?redirect=${encodeURIComponent($page.url.pathname)}`);
+	}
 
 	let fitnessData = {
 		todaySteps: 8432,
@@ -28,21 +28,23 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<!-- Welcome Header -->
-	<div class="bg-gradient-to-r from-primary to-blue-600 rounded-xl p-6 text-white">
-		<div class="flex items-center justify-between">
-			<div>
-				<h1 class="text-2xl font-bold">Welcome back, {currentUser.name}!</h1>
-				<p class="text-blue-100 mt-1">Ready to crush your fitness goals today?</p>
-			</div>
-			<div class="hidden sm:block">
-				<div class="text-right">
-					<div class="text-sm text-blue-100">Fitness Level</div>
-					<div class="text-lg font-semibold capitalize">{currentUser.fitnessLevel}</div>
+	{#if $user}
+		<!-- Welcome Header -->
+		<div class="bg-gradient-to-r from-primary to-blue-600 rounded-xl p-6 text-white">
+			<div class="flex items-center justify-between">
+				<div>
+					<h1 class="text-2xl font-bold">Welcome back, {$user.name}!</h1>
+					<p class="text-blue-100 mt-1">Ready to crush your fitness goals today?</p>
+				</div>
+				<div class="hidden sm:block">
+					<div class="text-right">
+						<div class="text-sm text-blue-100">Role</div>
+						<div class="text-lg font-semibold capitalize">{$user.role}</div>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
+	{/if}
 
 	<!-- Quick Stats Grid -->
 	<FitnessStats {fitnessData} />
@@ -51,7 +53,9 @@
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 		<!-- Left Column - Quick Actions & Progress -->
 		<div class="lg:col-span-1 space-y-6">
-			<QuickActions userRole={currentUser.role} />
+			{#if $user}
+				<QuickActions userRole={$user.role} />
+			{/if}
 
 			<!-- Weekly Progress -->
 			<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">

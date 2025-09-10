@@ -1,6 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { user, isAuthenticated } from '$lib/stores/auth';
 	import { api } from '$lib/convex';
+
+	// Redirect to login if not authenticated or not admin
+	$: if (!$isAuthenticated && $user === null) {
+		goto(`/auth/login?redirect=${encodeURIComponent($page.url.pathname)}`);
+	} else if ($user && $user.role !== 'admin') {
+		goto('/unauthorized');
+	}
 
 	let importStatus = '';
 	let isImporting = false;
