@@ -183,7 +183,8 @@
     - Test session persistence and expiration
     - _Requirements: All authentication requirements_
 
-- [ ] 11. Optimize performance and add caching
+- [-] 11. Optimize performance and add caching
+
 
   - Implement user profile data caching in authentication store
   - Add optimistic UI updates for profile changes
