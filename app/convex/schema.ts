@@ -661,4 +661,246 @@ export default defineSchema({
   }).index("by_user", ["userId"])
     .index("by_deleted_by", ["deletedBy"])
     .index("by_deleted_at", ["deletedAt"]),
+
+  // =============================================================================
+  // NUTRITION TRACKING SYSTEM
+  // =============================================================================
+
+  // Food database from Open Food Facts and USDA
+  foods: defineTable({
+    name: v.string(),
+    brand: v.optional(v.string()),
+    barcode: v.optional(v.string()),
+    category: v.optional(v.string()),
+    // Nutrition per 100g
+    caloriesPer100g: v.number(),
+    proteinPer100g: v.number(),
+    carbsPer100g: v.number(),
+    fatPer100g: v.number(),
+    fiberPer100g: v.optional(v.number()),
+    sugarPer100g: v.optional(v.number()),
+    sodiumPer100g: v.optional(v.number()),
+    // Micronutrients per 100g (optional)
+    vitaminAPer100g: v.optional(v.number()),
+    vitaminCPer100g: v.optional(v.number()),
+    calciumPer100g: v.optional(v.number()),
+    ironPer100g: v.optional(v.number()),
+    // Data source and quality
+    source: v.union(v.literal("open_food_facts"), v.literal("usda"), v.literal("custom")),
+    sourceId: v.optional(v.string()),
+    qualityScore: v.optional(v.number()), // 0-1 score for data completeness
+    // Common serving sizes
+    commonServings: v.array(v.object({
+      name: v.string(), // "1 cup", "1 slice", etc.
+      grams: v.number()
+    })),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_barcode", ["barcode"])
+    .index("by_name", ["name"])
+    .index("by_category", ["category"])
+    .index("by_source", ["source"]),
+
+  // User's daily food entries
+  foodEntries: defineTable({
+    userId: v.id("users"),
+    foodId: v.id("foods"),
+    date: v.string(), // YYYY-MM-DD format
+    mealType: v.union(v.literal("breakfast"), v.literal("lunch"), v.literal("dinner"), v.literal("snack")),
+    servingGrams: v.number(),
+    servingDescription: v.optional(v.string()), // "1 cup", "2 slices"
+    // Calculated nutrition for this serving
+    calories: v.number(),
+    protein: v.number(),
+    carbs: v.number(),
+    fat: v.number(),
+    fiber: v.optional(v.number()),
+    sugar: v.optional(v.number()),
+    sodium: v.optional(v.number()),
+    timestamp: v.string(),
+    loggedAt: v.string(),
+    notes: v.optional(v.string()),
+    // Photo logging
+    photoUrl: v.optional(v.string()),
+    isPhotoLogged: v.boolean(),
+  }).index("by_user_and_date", ["userId", "date"])
+    .index("by_user", ["userId"])
+    .index("by_food", ["foodId"])
+    .index("by_meal_type", ["mealType"]),
+
+  // User's nutrition goals
+  nutritionGoals: defineTable({
+    userId: v.id("users"),
+    // Daily targets
+    dailyCalories: v.number(),
+    dailyProtein: v.number(),
+    dailyCarbs: v.number(),
+    dailyFat: v.number(),
+    dailyFiber: v.optional(v.number()),
+    dailySodium: v.optional(v.number()),
+    // Goals based on fitness objectives
+    goalType: v.union(v.literal("weight_loss"), v.literal("muscle_gain"), v.literal("maintenance"), v.literal("performance")),
+    activityLevel: v.union(v.literal("sedentary"), v.literal("light"), v.literal("moderate"), v.literal("active"), v.literal("very_active")),
+    // Weekly macro balancing settings
+    allowWeeklyBalancing: v.boolean(),
+    maxDailyCalorieAdjustment: v.number(), // max % adjustment per day
+    maxDailyMacroAdjustment: v.number(), // max % adjustment for macros
+    // Integration with training
+    adjustForWorkouts: v.boolean(),
+    preWorkoutCarbs: v.optional(v.number()), // extra carbs before workout
+    postWorkoutProtein: v.optional(v.number()), // extra protein after workout
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_goal_type", ["goalType"]),
+
+  // Weekly macro balancing history
+  weeklyMacroBalances: defineTable({
+    userId: v.id("users"),
+    weekStartDate: v.string(), // Monday YYYY-MM-DD
+    weekEndDate: v.string(),
+    // Original targets
+    originalDailyCalories: v.number(),
+    originalDailyProtein: v.number(),
+    originalDailyCarbs: v.number(),
+    originalDailyFat: v.number(),
+    // Actual daily adjustments (7 entries)
+    adjustedTargets: v.array(v.object({
+      date: v.string(),
+      calories: v.number(),
+      protein: v.number(),
+      carbs: v.number(),
+      fat: v.number(),
+      reasonForAdjustment: v.string()
+    })),
+    // Balance tracking
+    totalCalorieVariance: v.number(),
+    totalProteinVariance: v.number(),
+    totalCarbsVariance: v.number(),
+    totalFatVariance: v.number(),
+    balancingApplied: v.boolean(),
+    userAccepted: v.boolean(),
+    createdAt: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_week", ["weekStartDate"]),
+
+  // Recovery-aware nutrition adjustments
+  nutritionRecoveryAdjustments: defineTable({
+    userId: v.id("users"),
+    date: v.string(),
+    // Recovery metrics
+    recoveryScore: v.optional(v.number()), // from WHOOP/Oura
+    strainScore: v.optional(v.number()),
+    sleepScore: v.optional(v.number()),
+    hrv: v.optional(v.number()),
+    // Nutrition adjustments
+    adjustmentType: v.union(
+      v.literal("high_recovery_boost"),
+      v.literal("low_recovery_support"),
+      v.literal("high_strain_recovery"),
+      v.literal("poor_sleep_compensation")
+    ),
+    calorieAdjustment: v.number(), // +/- calories
+    proteinBoost: v.number(), // additional protein in grams
+    carbAdjustment: v.number(), // +/- carbs for energy/recovery
+    hydrationReminder: v.boolean(),
+    supplementSuggestions: v.array(v.string()),
+    applied: v.boolean(),
+    userFeedback: v.optional(v.string()),
+    createdAt: v.string(),
+  }).index("by_user_and_date", ["userId", "date"])
+    .index("by_adjustment_type", ["adjustmentType"]),
+
+  // RIR Models for AI calibration
+  rirModels: defineTable({
+    userId: v.id("users"),
+    exerciseId: v.id("exercises"),
+    // Model parameters
+    baselineRIR: v.number(), // initial RIR capability
+    adaptationRate: v.number(), // how quickly they adapt
+    recoveryFactor: v.number(), // how recovery affects performance
+    consistencyScore: v.number(), // 0-1 score for prediction reliability
+    // Training data
+    sessionCount: v.number(), // number of sessions used for model
+    lastCalibration: v.string(),
+    accuracyScore: v.number(), // prediction accuracy
+    // Model coefficients for prediction
+    coefficients: v.object({
+      recovery: v.number(),
+      strain: v.number(),
+      sleep: v.number(),
+      timeOfDay: v.number(),
+      daysSinceLastWorkout: v.number()
+    }),
+    isCalibrated: v.boolean(),
+    needsRecalibration: v.boolean(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_exercise", ["exerciseId"])
+    .index("by_user_and_exercise", ["userId", "exerciseId"]),
+
+  // User motivation and achievement system
+  userAchievements: defineTable({
+    userId: v.id("users"),
+    achievementType: v.union(
+      v.literal("workout_streak"),
+      v.literal("nutrition_consistency"),
+      v.literal("recovery_improvement"),
+      v.literal("strength_milestone"),
+      v.literal("habit_formation"),
+      v.literal("goal_achievement"),
+      v.literal("consistency_master"),
+      v.literal("adaptive_learner")
+    ),
+    title: v.string(),
+    description: v.string(),
+    iconName: v.string(),
+    // Progress tracking
+    currentValue: v.number(),
+    targetValue: v.number(),
+    isCompleted: v.boolean(),
+    completedAt: v.optional(v.string()),
+    // Rewards
+    points: v.number(),
+    badgeColor: v.string(),
+    // Motivation
+    celebrationMessage: v.string(),
+    nextMilestone: v.optional(v.string()),
+    createdAt: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_type", ["achievementType"])
+    .index("by_completed", ["isCompleted"]),
+
+  // Personalized recommendations
+  userRecommendations: defineTable({
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("nutrition_timing"),
+      v.literal("workout_adjustment"),
+      v.literal("recovery_optimization"),
+      v.literal("habit_suggestion"),
+      v.literal("goal_refinement"),
+      v.literal("exercise_alternative")
+    ),
+    title: v.string(),
+    description: v.string(),
+    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("urgent")),
+    // AI reasoning
+    reasoning: v.array(v.string()),
+    confidence: v.number(), // 0-1 confidence score
+    basedOnData: v.array(v.string()), // what data was used
+    // User interaction
+    isRead: v.boolean(),
+    isAccepted: v.optional(v.boolean()),
+    userFeedback: v.optional(v.string()),
+    dismissedAt: v.optional(v.string()),
+    // Timing
+    validUntil: v.string(),
+    showAfter: v.string(),
+    createdAt: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_type", ["type"])
+    .index("by_priority", ["priority"])
+    .index("by_valid_until", ["validUntil"]),
 });
