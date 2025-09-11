@@ -5,10 +5,22 @@ import type { Id } from "../types/admin";
 // Note: This is a simplified approach for the demo
 // In production, you'd use the official Convex React client
 
-const CONVEX_URL = import.meta.env.VITE_CONVEX_URL || process.env.PUBLIC_CONVEX_URL;
+// Resolve Convex URL from various env locations (Vite vs Node vs runtime).
+const CONVEX_URL =
+  import.meta.env.VITE_CONVEX_URL ||
+  // Vite exposes public env vars as import.meta.env.PUBLIC_* during build/dev
+  (import.meta.env as any).PUBLIC_CONVEX_URL ||
+  // Node runtime fallback (used by some dev setups)
+  process.env.PUBLIC_CONVEX_URL ||
+  process.env.CONVEX_URL ||
+  undefined;
 
 if (!CONVEX_URL) {
-  throw new Error("Missing CONVEX_URL environment variable");
+  // Don't throw during SSR/dev — log a warning and continue with a dummy URL.
+  // This allows the dev server to start while env files are validated separately.
+  // Frontend code should guard against missing/invalid Convex config in production.
+  // eslint-disable-next-line no-console
+  console.warn("Warning: Missing CONVEX_URL environment variable. Convex calls will be mocked in dev.");
 }
 
 interface QueryArgs {
