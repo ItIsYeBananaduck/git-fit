@@ -17,17 +17,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-
-      - name: Install pnpm
-        run: npm install -g pnpm@9
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Build web app
         working-directory: ./app
-        run: pnpm run build
+        run: npm run build
 
       - name: Run convex codegen (typecheck disabled)
         working-directory: ./app
@@ -35,8 +32,8 @@ jobs:
 
       - name: Run lint (optional)
         working-directory: ./app
-        run: pnpm run lint || true
+        run: npm run lint || true
 
       - name: Run unit tests
         working-directory: ./app
-        run: pnpm run test || true
+        run: npm run test || true
