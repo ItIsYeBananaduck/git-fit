@@ -3,7 +3,7 @@
 This quickstart describes how to run and manually validate the authentication feature locally.
 
 ## Prerequisites
-- Node.js and pnpm/npm installed
+- Node.js and npm installed
 - Convex configured (env + dev instance)
 - Resend account and API key
 - OAuth credentials for Google and Apple (dev)
@@ -32,8 +32,8 @@ APPLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
 
 ## Install & Run
 ```
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
 ## Flows to Validate
