@@ -26,6 +26,7 @@ import type * as functions_admin_users from "../functions/admin/users.js";
 import type * as functions_exercises from "../functions/exercises.js";
 import type * as functions_fitnessData from "../functions/fitnessData.js";
 import type * as functions_marketplace from "../functions/marketplace.js";
+import type * as functions_nutrition from "../functions/nutrition.js";
 import type * as functions_trainingPrograms from "../functions/trainingPrograms.js";
 import type * as functions_users from "../functions/users.js";
 import type * as functions_whoop from "../functions/whoop.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   "functions/exercises": typeof functions_exercises;
   "functions/fitnessData": typeof functions_fitnessData;
   "functions/marketplace": typeof functions_marketplace;
+  "functions/nutrition": typeof functions_nutrition;
   "functions/trainingPrograms": typeof functions_trainingPrograms;
   "functions/users": typeof functions_users;
   "functions/whoop": typeof functions_whoop;
