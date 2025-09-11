@@ -13,9 +13,9 @@ export const createModerationAction = mutation({
   args: {
     userId: v.id("users"),
     action: v.union(
-      v.literal("warning"), 
-      v.literal("suspension"), 
-      v.literal("termination"), 
+      v.literal("warning"),
+      v.literal("suspension"),
+      v.literal("termination"),
       v.literal("content_removal")
     ),
     reason: v.string(),
@@ -27,7 +27,7 @@ export const createModerationAction = mutation({
   handler: async (ctx, args) => {
     // In a real implementation, this would be stored in a dedicated moderation actions table
     // For now, we'll create a record in the moderation queue as a placeholder
-    
+
     const moderationRecord = await ctx.db.insert("moderationQueue", {
       itemType: "user_report",
       itemId: args.userId,
@@ -63,15 +63,15 @@ export const createModerationAction = mutation({
 });
 
 export const getModerationHistory = query({
-  args: { 
+  args: {
     userId: v.optional(v.id("users")),
     limit: v.optional(v.number())
   },
   handler: async (ctx, args) => {
     let query = ctx.db.query("moderationQueue");
-    
+
     if (args.userId) {
-      query = query.filter(q => q.eq(q.field("itemId"), args.userId));
+      query = query.filter((q: any) => q.eq(q.field("itemId"), args.userId));
     }
 
     const moderationRecords = await query
@@ -98,16 +98,16 @@ export const getModerationQueue = query({
   args: {
     itemType: v.optional(v.union(
       v.literal("custom_exercise"),
-      v.literal("trainer_message"), 
+      v.literal("trainer_message"),
       v.literal("user_report"),
       v.literal("program_content"),
       v.literal("user_profile")
     )),
     status: v.optional(v.union(
-      v.literal("pending"), 
-      v.literal("under_review"), 
-      v.literal("approved"), 
-      v.literal("rejected"), 
+      v.literal("pending"),
+      v.literal("under_review"),
+      v.literal("approved"),
+      v.literal("rejected"),
       v.literal("escalated")
     )),
     priority: v.optional(v.union(
@@ -126,23 +126,23 @@ export const getModerationQueue = query({
 
     // Apply filters
     if (args.itemType) {
-      query = query.filter(q => q.eq(q.field("itemType"), args.itemType));
+      query = query.filter((q: any) => q.eq(q.field("itemType"), args.itemType));
     }
 
     if (args.status) {
-      query = query.filter(q => q.eq(q.field("status"), args.status));
+      query = query.filter((q: any) => q.eq(q.field("status"), args.status));
     }
 
     if (args.priority) {
-      query = query.filter(q => q.eq(q.field("priority"), args.priority));
+      query = query.filter((q: any) => q.eq(q.field("priority"), args.priority));
     }
 
     if (args.assignedTo) {
-      query = query.filter(q => q.eq(q.field("assignedTo"), args.assignedTo));
+      query = query.filter((q: any) => q.eq(q.field("assignedTo"), args.assignedTo));
     }
 
     if (args.autoFlagged !== undefined) {
-      query = query.filter(q => q.eq(q.field("autoFlagged"), args.autoFlagged));
+      query = query.filter((q: any) => q.eq(q.field("autoFlagged"), args.autoFlagged));
     }
 
     // Get total count for pagination
@@ -152,7 +152,7 @@ export const getModerationQueue = query({
     // Apply pagination
     const offset = args.offset || 0;
     const limit = args.limit || 50;
-    
+
     const items = await query
       .order("desc")
       .take(limit + offset);
@@ -174,9 +174,9 @@ export const getModerationItem = query({
   },
   handler: async (ctx, args) => {
     const item = await ctx.db.query("moderationQueue")
-      .filter(q => q.eq(q.field("itemId"), args.itemId))
+      .filter((q: any) => q.eq(q.field("itemId"), args.itemId))
       .first();
-    
+
     return item;
   }
 });
@@ -191,9 +191,9 @@ export const assignModerationItem = mutation({
   handler: async (ctx, args) => {
     // Find the moderation item by itemId
     const item = await ctx.db.query("moderationQueue")
-      .filter(q => q.eq(q.field("itemId"), args.itemId))
+      .filter((q: any) => q.eq(q.field("itemId"), args.itemId))
       .first();
-    
+
     if (!item) {
       throw new ConvexError("Moderation item not found");
     }
@@ -224,14 +224,14 @@ export const reviewContent = mutation({
     const item = await ctx.db.query("moderationQueue")
       .filter(q => q.eq(q.field("itemId"), args.itemId))
       .first();
-    
+
     if (!item) {
       throw new ConvexError("Moderation item not found");
     }
 
     const statusMap = {
       approve: "approved",
-      reject: "rejected", 
+      reject: "rejected",
       modify: "approved", // Modified content is approved
       escalate: "escalated"
     } as const;
@@ -267,7 +267,7 @@ export const reviewModerationItem = mutation({
   handler: async (ctx, args) => {
     const statusMap = {
       approve: "approved",
-      reject: "rejected", 
+      reject: "rejected",
       modify: "approved", // Modified content is approved
       escalate: "escalated"
     } as const;
@@ -294,7 +294,7 @@ export const createModerationItem = mutation({
   args: {
     itemType: v.union(
       v.literal("custom_exercise"),
-      v.literal("trainer_message"), 
+      v.literal("trainer_message"),
       v.literal("user_report"),
       v.literal("program_content"),
       v.literal("user_profile")
@@ -338,7 +338,7 @@ export const escalateModerationItem = mutation({
     const item = await ctx.db.query("moderationQueue")
       .filter(q => q.eq(q.field("itemId"), args.itemId))
       .first();
-    
+
     if (!item) {
       throw new ConvexError("Moderation item not found");
     }
@@ -427,7 +427,7 @@ export const flagContent = mutation({
   handler: async (ctx, args) => {
     // Determine priority based on flags and confidence
     let priority: "low" | "medium" | "high" | "urgent" = "medium";
-    
+
     if (args.flags.includes("inappropriate_language") || args.flags.includes("harassment")) {
       priority = "high";
     }
@@ -451,10 +451,10 @@ export const flagContent = mutation({
       confidenceScore: args.confidenceScore
     });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       moderationItemId: moderationItem,
-      priority 
+      priority
     };
   }
 });
@@ -481,21 +481,26 @@ export const getContentAnalytics = query({
     endDate: v.string()
   },
   handler: async (ctx, args) => {
+    const { startDate, endDate } = args;
+
     let query = ctx.db.query("moderationQueue");
-    
-    query = query.filter(q => 
+
+    // Use narrowed locals to keep TypeScript happy when used inside the query
+    const sd = startDate;
+    const ed = endDate;
+    query = query.filter(q =>
       q.and(
-        q.gte(q.field("createdAt"), args.startDate),
-        q.lte(q.field("createdAt"), args.endDate)
+        q.gte(q.field("createdAt"), sd),
+        q.lte(q.field("createdAt"), ed)
       )
     );
 
     const allItems = await query.collect();
-    
+
     // Calculate average review time
     const reviewedItems = allItems.filter(item => item.reviewedAt && item.createdAt);
     let averageReviewTime = 0;
-    
+
     if (reviewedItems.length > 0) {
       const totalReviewTime = reviewedItems.reduce((sum, item) => {
         const created = new Date(item.createdAt).getTime();
@@ -508,14 +513,14 @@ export const getContentAnalytics = query({
     const analytics = {
       totalItems: allItems.length,
       pendingReview: allItems.filter(item => item.status === "pending").length,
-      approvedToday: allItems.filter(item => 
-        item.status === "approved" && 
-        item.reviewedAt && 
+      approvedToday: allItems.filter(item =>
+        item.status === "approved" &&
+        item.reviewedAt &&
         new Date(item.reviewedAt).toDateString() === new Date().toDateString()
       ).length,
-      rejectedToday: allItems.filter(item => 
-        item.status === "rejected" && 
-        item.reviewedAt && 
+      rejectedToday: allItems.filter(item =>
+        item.status === "rejected" &&
+        item.reviewedAt &&
         new Date(item.reviewedAt).toDateString() === new Date().toDateString()
       ).length,
       averageReviewTime,
@@ -556,9 +561,9 @@ export const updateUserReport = mutation({
   handler: async (ctx, args) => {
     // Find the report in moderation queue
     const report = await ctx.db.query("moderationQueue")
-      .filter(q => q.eq(q.field("itemId"), args.reportId))
+      .filter((q: any) => q.eq(q.field("itemId"), args.reportId))
       .first();
-    
+
     if (!report) {
       throw new ConvexError("User report not found");
     }
@@ -584,18 +589,19 @@ export const getModerationStats = query({
   },
   handler: async (ctx, args) => {
     let query = ctx.db.query("moderationQueue");
-    
+
     if (args.timeframe) {
-      query = query.filter(q => 
+      const { start, end } = args.timeframe;
+      query = query.filter(q =>
         q.and(
-          q.gte(q.field("createdAt"), args.timeframe!.start),
-          q.lte(q.field("createdAt"), args.timeframe!.end)
+          q.gte(q.field("createdAt"), start),
+          q.lte(q.field("createdAt"), end)
         )
       );
     }
 
     const allItems = await query.collect();
-    
+
     const stats = {
       totalItems: allItems.length,
       pendingReview: allItems.filter(item => item.status === "pending").length,
@@ -811,13 +817,16 @@ export const getUserReports = query({
     }
 
     if (args.status) {
-      const statusMap = {
+      const statusMap: Record<string, string> = {
         pending: "pending",
         under_review: "under_review",
         resolved: "approved",
         dismissed: "rejected"
       };
-      query = query.filter(q => q.eq(q.field("status"), statusMap[args.status]));
+      const mapped = statusMap[args.status as string];
+      if (mapped) {
+        query = query.filter(q => q.eq(q.field("status"), mapped));
+      }
     }
 
     // Get total count for pagination
@@ -827,7 +836,7 @@ export const getUserReports = query({
     // Apply pagination
     const offset = args.offset || 0;
     const limit = args.limit || 50;
-    
+
     const items = await query
       .order("desc")
       .take(limit + offset);
@@ -867,7 +876,7 @@ export const investigateUserReport = mutation({
     const report = await ctx.db.query("moderationQueue")
       .filter(q => q.eq(q.field("itemId"), args.reportId))
       .first();
-    
+
     if (!report) {
       throw new ConvexError("User report not found");
     }
@@ -916,7 +925,7 @@ export const flagInappropriateContentAuto = mutation({
   handler: async (ctx, args) => {
     // Determine priority based on confidence score and flag reason
     let priority: "low" | "medium" | "high" | "urgent" = "medium";
-    
+
     if (args.confidenceScore >= 0.9) {
       priority = "high";
     } else if (args.confidenceScore >= 0.7) {
@@ -931,8 +940,8 @@ export const flagInappropriateContentAuto = mutation({
     }
 
     const moderationItemId = await ctx.db.insert("moderationQueue", {
-      itemType: args.contentType === "message" ? "trainer_message" : 
-                args.contentType === "exercise" ? "custom_exercise" : "user_profile",
+      itemType: args.contentType === "message" ? "trainer_message" :
+        args.contentType === "exercise" ? "custom_exercise" : "user_profile",
       itemId: args.contentId,
       priority,
       status: "pending",
@@ -943,10 +952,10 @@ export const flagInappropriateContentAuto = mutation({
       confidenceScore: args.confidenceScore
     });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       moderationItemId,
-      priority 
+      priority
     };
   }
 });
@@ -979,12 +988,16 @@ export const getModerationActions = query({
       query = query.filter(q => q.eq(q.field("assignedTo"), args.performedBy));
     }
 
-    if (args.startDate) {
-      query = query.filter(q => q.gte(q.field("reviewedAt"), args.startDate));
+    const startDate = args.startDate;
+    const endDate = args.endDate;
+    if (startDate) {
+      const s = startDate;
+      query = query.filter(q => q.gte(q.field("reviewedAt"), s));
     }
 
-    if (args.endDate) {
-      query = query.filter(q => q.lte(q.field("reviewedAt"), args.endDate));
+    if (endDate) {
+      const e = endDate;
+      query = query.filter(q => q.lte(q.field("reviewedAt"), e));
     }
 
     const actions = await query
@@ -1048,11 +1061,13 @@ export const getContentAnalyticsDetailed = query({
   },
   handler: async (ctx, args) => {
     let query = ctx.db.query("moderationQueue");
-    
-    query = query.filter(q => 
+
+    const start = args.startDate;
+    const end = args.endDate;
+    query = query.filter(q =>
       q.and(
-        q.gte(q.field("createdAt"), args.startDate),
-        q.lte(q.field("createdAt"), args.endDate)
+        q.gte(q.field("createdAt"), start),
+        q.lte(q.field("createdAt"), end)
       )
     );
 
@@ -1061,7 +1076,7 @@ export const getContentAnalyticsDetailed = query({
     }
 
     const allItems = await query.collect();
-    
+
     // Calculate detailed analytics
     const analytics = {
       totalItems: allItems.length,

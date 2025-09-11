@@ -9,7 +9,7 @@ import type { Id } from "../types/admin";
 const CONVEX_URL =
   import.meta.env.VITE_CONVEX_URL ||
   // Vite exposes public env vars as import.meta.env.PUBLIC_* during build/dev
-  (import.meta.env as any).PUBLIC_CONVEX_URL ||
+  (import.meta.env as Record<string, string>).PUBLIC_CONVEX_URL ||
   // Node runtime fallback (used by some dev setups)
   process.env.PUBLIC_CONVEX_URL ||
   process.env.CONVEX_URL ||
@@ -62,13 +62,23 @@ interface AdminSession {
   isActive: boolean;
 }
 
+interface ImportExercisesArgs {
+  exercises: Array<{
+    name: string;
+    category: string;
+    level: string;
+    equipment: string[];
+    muscleGroup: string[];
+  }>;
+}
+
 // Simplified API object for demo purposes
 export const api = {
   users: {
     // Add user functions here when needed
   },
   exercises: {
-    importExercises: async (args: any) => {
+    importExercises: async (args: ImportExercisesArgs) => {
       // This would connect to your Convex backend
       console.log('Mock: Importing exercises', args);
       return { success: true, imported: args.exercises.length, total: args.exercises.length, errors: [] };

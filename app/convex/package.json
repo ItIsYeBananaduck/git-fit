@@ -1,0 +1,12 @@
+{
+  "name": "git-fit-convex",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Convex functions for git-fit",
+  "dependencies": {
+    "convex": "^1.26.2"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
+  }
+}

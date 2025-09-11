@@ -101,39 +101,47 @@ export const getAdminAuditLog = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 100;
-    let query = ctx.db.query("auditLogs");
+    // Use QueryInitializer separately so types remain correct when calling withIndex
+    let qInit: any = ctx.db.query("auditLogs");
+    let primaryUsed = false;
 
-    // Apply filters
+    // Apply filters using indices when possible; use locals to avoid referencing args inside callback
     if (args.adminId) {
-      query = query.withIndex("by_admin", (q) => q.eq("adminId", args.adminId));
+      const adminId = args.adminId;
+      qInit = qInit.withIndex("by_admin", (q: any) => q.eq("adminId", adminId));
+      primaryUsed = true;
     }
 
-    let results = await query.order("desc").collect();
+    const q = qInit.order("desc");
+    let results = await q.collect();
 
     // Apply additional filters
-    if (args.startTime || args.endTime) {
-      results = results.filter(log => {
-        const logTime = new Date(log.timestamp);
-        if (args.startTime && logTime < new Date(args.startTime)) return false;
-        if (args.endTime && logTime > new Date(args.endTime)) return false;
+    const startTime = args.startTime;
+    const endTime = args.endTime;
+    if (startTime || endTime) {
+      results = results.filter((log: Record<string, unknown>) => {
+        const logTs = (log as any).timestamp;
+        const logTime = new Date(logTs);
+        if (startTime && logTime < new Date(startTime)) return false;
+        if (endTime && logTime > new Date(endTime)) return false;
         return true;
       });
     }
 
     if (args.action) {
-      results = results.filter(log => log.action === args.action);
+      results = results.filter((log: Record<string, unknown>) => (log as any).action === args.action);
     }
 
     if (args.resource) {
-      results = results.filter(log => log.resource === args.resource);
+      results = results.filter((log: any) => log.resource === args.resource);
     }
 
     if (args.severity) {
-      results = results.filter(log => log.severity === args.severity);
+      results = results.filter((log: any) => log.severity === args.severity);
     }
 
     if (args.category) {
-      results = results.filter(log => log.category === args.category);
+      results = results.filter((log: any) => log.category === args.category);
     }
 
     // Apply pagination
@@ -150,10 +158,11 @@ export const getAuditLogByAction = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
-    
+
+    const actionVal = args.action;
     const logs = await ctx.db
       .query("auditLogs")
-      .withIndex("by_action", (q) => q.eq("action", args.action))
+      .withIndex("by_action", (q) => q.eq("action", actionVal))
       .order("desc")
       .take(limit);
 
@@ -170,10 +179,11 @@ export const getAuditLogByResource = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
-    
+
+    const resourceVal = args.resource;
     let logs = await ctx.db
       .query("auditLogs")
-      .withIndex("by_resource", (q) => q.eq("resource", args.resource))
+      .withIndex("by_resource", (q) => q.eq("resource", resourceVal))
       .order("desc")
       .take(limit);
 
@@ -193,10 +203,11 @@ export const getAuditLogBySeverity = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
-    
+
+    const severityVal = args.severity;
     const logs = await ctx.db
       .query("auditLogs")
-      .withIndex("by_severity", (q) => q.eq("severity", args.severity))
+      .withIndex("by_severity", (q) => q.eq("severity", severityVal))
       .order("desc")
       .take(limit);
 
@@ -219,10 +230,11 @@ export const getAuditLogByCategory = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
-    
+
+    const categoryVal = args.category;
     const logs = await ctx.db
       .query("auditLogs")
-      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .withIndex("by_category", (q) => q.eq("category", categoryVal))
       .order("desc")
       .take(limit);
 
@@ -239,7 +251,7 @@ export const getAuditLogByTimeRange = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 100;
-    
+
     const logs = await ctx.db
       .query("auditLogs")
       .withIndex("by_timestamp")
@@ -361,64 +373,81 @@ export const searchAuditLogsAdvanced = query({
     const limit = args.limit || 100;
     const offset = args.offset || 0;
 
-    let query = ctx.db.query("auditLogs");
+    // Cast to any to avoid narrow typing issues between Query and QueryInitializer
+    let qInit: any = ctx.db.query("auditLogs");
+    let primaryUsed = false;
 
-    // Apply primary index filters
-    if (args.adminId) {
-      query = query.withIndex("by_admin", (q) => q.eq("adminId", args.adminId));
-    } else if (args.severity) {
-      query = query.withIndex("by_severity", (q) => q.eq("severity", args.severity));
-    } else if (args.category) {
-      query = query.withIndex("by_category", (q) => q.eq("category", args.category));
-    } else if (args.action) {
-      query = query.withIndex("by_action", (q) => q.eq("action", args.action));
-    } else if (args.resource) {
-      query = query.withIndex("by_resource", (q) => q.eq("resource", args.resource));
+    // Apply primary index filters (pick only one index to leverage)
+    const adminId = args.adminId;
+    const severity = args.severity;
+    const category = args.category;
+    const action = args.action;
+    const resource = args.resource;
+
+    if (adminId) {
+      qInit = qInit.withIndex("by_admin", (q: any) => q.eq("adminId", adminId));
+      primaryUsed = true;
+    } else if (severity) {
+      qInit = qInit.withIndex("by_severity", (q: any) => q.eq("severity", severity));
+      primaryUsed = true;
+    } else if (category) {
+      qInit = qInit.withIndex("by_category", (q: any) => q.eq("category", category));
+      primaryUsed = true;
+    } else if (action) {
+      qInit = qInit.withIndex("by_action", (q: any) => q.eq("action", action));
+      primaryUsed = true;
+    } else if (resource) {
+      qInit = qInit.withIndex("by_resource", (q: any) => q.eq("resource", resource));
+      primaryUsed = true;
     }
 
-    let results = await query.order("desc").collect();
+    const q = qInit.order("desc");
+    let results = await q.collect();
 
     // Apply additional filters
-    if (args.startTime || args.endTime) {
-      results = results.filter(log => {
-        const logTime = new Date(log.timestamp);
-        if (args.startTime && logTime < new Date(args.startTime)) return false;
-        if (args.endTime && logTime > new Date(args.endTime)) return false;
+    const startTime = args.startTime;
+    const endTime = args.endTime;
+    if (startTime || endTime) {
+      results = results.filter((log: Record<string, unknown>) => {
+        const logTs = (log as any).timestamp;
+        const logTime = new Date(logTs);
+        if (startTime && logTime < new Date(startTime)) return false;
+        if (endTime && logTime > new Date(endTime)) return false;
         return true;
       });
     }
 
     if (args.resourceId) {
-      results = results.filter(log => log.resourceId === args.resourceId);
+      results = results.filter((log: any) => log.resourceId === args.resourceId);
     }
 
     if (args.outcome) {
-      results = results.filter(log => log.outcome === args.outcome);
+      results = results.filter((log: any) => log.outcome === args.outcome);
     }
 
     if (args.ipAddress) {
-      results = results.filter(log => log.ipAddress === args.ipAddress);
+      results = results.filter((log: any) => log.ipAddress === args.ipAddress);
     }
 
     // Apply additional filters that weren't used as primary index
-    if (!args.adminId && args.adminId !== undefined) {
-      results = results.filter(log => log.adminId === args.adminId);
+    if (!primaryUsed && args.adminId !== undefined) {
+      results = results.filter((log: any) => log.adminId === args.adminId);
     }
 
-    if (!args.severity && args.severity !== undefined) {
-      results = results.filter(log => log.severity === args.severity);
+    if (!primaryUsed && args.severity !== undefined) {
+      results = results.filter((log: any) => log.severity === args.severity);
     }
 
-    if (!args.category && args.category !== undefined) {
-      results = results.filter(log => log.category === args.category);
+    if (!primaryUsed && args.category !== undefined) {
+      results = results.filter((log: any) => log.category === args.category);
     }
 
-    if (!args.action && args.action !== undefined) {
-      results = results.filter(log => log.action === args.action);
+    if (!primaryUsed && args.action !== undefined) {
+      results = results.filter((log: any) => log.action === args.action);
     }
 
-    if (!args.resource && args.resource !== undefined) {
-      results = results.filter(log => log.resource === args.resource);
+    if (!primaryUsed && args.resource !== undefined) {
+      results = results.filter((log: any) => log.resource === args.resource);
     }
 
     // Apply pagination
@@ -442,8 +471,8 @@ export const getFailedLoginsByIP = query({
       .filter((q) => q.eq(q.field("outcome"), "failure"))
       .collect();
 
-    return logs.filter(log => 
-      log.ipAddress === args.ipAddress && 
+    return logs.filter(log =>
+      log.ipAddress === args.ipAddress &&
       new Date(log.timestamp) >= cutoffTime
     );
   },
@@ -460,15 +489,17 @@ export const getAdminActivityTimeline = query({
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
 
-    let logs = await ctx.db
-      .query("auditLogs")
-      .withIndex("by_admin", (q) => q.eq("adminId", args.adminId))
-      .order("desc")
-      .take(limit);
+    const adminIdVal = args.adminId;
+    // Use any here to allow conditional withIndex usage (Query vs QueryInitializer typing)
+    let logsQuery: any = ctx.db.query("auditLogs");
+    if (adminIdVal) {
+      logsQuery = logsQuery.withIndex("by_admin", (q: any) => q.eq("adminId", adminIdVal));
+    }
+    let logs = await logsQuery.order("desc").take(limit);
 
     // Filter by time range if provided
     if (args.startTime || args.endTime) {
-      logs = logs.filter(log => {
+      logs = logs.filter((log: any) => {
         const logTime = new Date(log.timestamp);
         if (args.startTime && logTime < new Date(args.startTime)) return false;
         if (args.endTime && logTime > new Date(args.endTime)) return false;
@@ -490,25 +521,28 @@ export const detectSuspiciousActivity = query({
     const hours = args.hours || 24;
     const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
 
-    let query = ctx.db.query("auditLogs");
-    
-    if (args.adminId) {
-      query = query.withIndex("by_admin", (q) => q.eq("adminId", args.adminId));
+    // Cast to any so we can call withIndex() conditionally without TS complaining
+    let query: any = ctx.db.query("auditLogs");
+
+    // extract adminId to a local before using inside the withIndex callback
+    const adminId = args.adminId;
+    if (adminId) {
+      query = query.withIndex("by_admin", (q: any) => q.eq("adminId", adminId));
     }
 
     const logs = await query.collect();
-    
+
     // Filter by time
-    const recentLogs = logs.filter(log => new Date(log.timestamp) >= cutoffTime);
+    const recentLogs = logs.filter((log: any) => new Date(log.timestamp) >= cutoffTime);
 
     // Analyze patterns
     const suspiciousPatterns = [];
 
     // Pattern 1: Multiple failed logins
-    const failedLogins = recentLogs.filter(log => 
+    const failedLogins = recentLogs.filter((log: any) =>
       log.category === "authentication" && log.outcome === "failure"
     );
-    
+
     if (failedLogins.length >= 5) {
       suspiciousPatterns.push({
         type: "multiple_failed_logins",
@@ -519,7 +553,7 @@ export const detectSuspiciousActivity = query({
     }
 
     // Pattern 2: Unusual access hours
-    const unusualHourLogs = recentLogs.filter(log => {
+    const unusualHourLogs = recentLogs.filter((log: any) => {
       const hour = new Date(log.timestamp).getHours();
       return hour < 6 || hour > 22;
     });
@@ -534,8 +568,8 @@ export const detectSuspiciousActivity = query({
     }
 
     // Pattern 3: Rapid permission changes
-    const permissionChanges = recentLogs.filter(log => 
-      log.action.includes("permission") || 
+    const permissionChanges = recentLogs.filter((log: any) =>
+      log.action.includes("permission") ||
       log.action.includes("role") ||
       log.resource === "admin_users"
     );
@@ -550,8 +584,8 @@ export const detectSuspiciousActivity = query({
     }
 
     // Pattern 4: Excessive financial data access
-    const financialAccess = recentLogs.filter(log => 
-      log.category === "financial" || 
+    const financialAccess = recentLogs.filter((log: any) =>
+      log.category === "financial" ||
       log.resource.includes("financial") ||
       log.resource.includes("revenue") ||
       log.resource.includes("payout")
