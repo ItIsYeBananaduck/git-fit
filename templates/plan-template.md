@@ -24,32 +24,36 @@
 8. STOP - Ready for /tasks command
 ```
 
+**IMPORTANT**: The /plan command STOPS at step 7. Phases 2-4 are executed by other commands:
+- Phase 2: /tasks command creates tasks.md
+- Phase 3-4: Implementation execution (manual or via tools)
+
 ## Summary
-Authentication system with email/password and OAuth (Google, Apple), email verification (Resend), breach-checked passwords, cookie-based sessions, lockout after 5 failed attempts, and role-gated access (user, trainer, admin, optional subscriber). SvelteKit (TypeScript) frontend integrates with Convex for user/session/token/role data.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
-**Language/Version**: TypeScript (SvelteKit)  
-**Primary Dependencies**: SvelteKit, Convex, Resend (email), OAuth (Google, Apple)  
-**Storage**: Convex (users, sessions, tokens, roles)  
-**Testing**: Vitest (unit/integration), Playwright (optional E2E)  
-**Target Platform**: Web  
-**Project Type**: web (frontend app + Convex backend data)  
-**Performance Goals**: NEEDS CLARIFICATION (target auth latency, page load)  
-**Constraints**: Cookie-based sessions; idle timeout 30 minutes; max age 7 days; Secure in production  
-**Scale/Scope**: NEEDS CLARIFICATION (expected DAU/MAU)
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 **Simplicity**:
-- Projects: [2] (SvelteKit frontend, Convex backend)
+- Projects: [#] (max 3 - e.g., api, cli, tests)
 - Using framework directly? (no wrapper classes)
 - Single data model? (no DTOs unless serialization differs)
 - Avoiding patterns? (no Repository/UoW without proven need)
 
 **Architecture**:
 - EVERY feature as library? (no direct app code)
-- Libraries listed: [SvelteKit, Convex, Resend, OAuth]
+- Libraries listed: [name + purpose for each]
 - CLI per library: [commands with --help/--version/--format]
 - Library docs: llms.txt format planned?
 
@@ -86,31 +90,42 @@ specs/[###-feature]/
 
 ### Source Code (repository root)
 ```
+# Option 1: Single project (DEFAULT)
+src/
+├── models/
+├── services/
+├── cli/
+└── lib/
+
+tests/
+├── contract/
+├── integration/
+└── unit/
+
 # Option 2: Web application (when "frontend" + "backend" detected)
-app/
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
 ├── src/
 │   ├── components/
 │   ├── pages/
 │   └── services/
 └── tests/
 
-convex/
-└── [Convex data models and workflows]
+# Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
 
-# Option 1: Single project (DEFAULT)
-# src/
-# ├── models/
-# ├── services/
-# ├── cli/
-# └── lib/
-
-# tests/
-# ├── contract/
-# ├── integration/
-# └── unit/
+ios/ or android/
+└── [platform-specific structure]
 ```
 
-**Structure Decision**: Web application. Use existing SvelteKit app under `app/` for UI and integrate Convex for auth data and workflows.
+**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:

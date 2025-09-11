@@ -1,7 +1,7 @@
-# Feature Specification: [FEATURE NAME]
+# Feature Specification: Authentication System
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
+**Feature Branch**: `001-authentication-system`  
+**Created**: 2025-09-10  
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
@@ -55,32 +55,50 @@ When creating this spec from a user prompt:
 ## User Scenarios & Testing *(mandatory)*
 
 ### Primary User Story
-[Describe the main user journey in plain language]
+As a visitor, I can register and sign in using email/password or OAuth (Google/Apple) so I can access member features. My session is maintained via a secure cookie. Admins and trainers have elevated capabilities. Subscribers may have additional access.
 
 ### Acceptance Scenarios
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. Registration (email/password)
+   - Given I am on the register page, when I submit a valid email and password (min 7 chars with at least one letter and one digit), then I receive a verification email and see a confirmation message.
+2. Email verification
+   - Given I received a verification email, when I click the link within its validity window, then my account becomes verified and I can sign in.
+3. Sign in (email/password)
+   - Given my account is verified, when I sign in with correct credentials, then I am redirected to the app and an httpOnly session cookie is set.
+4. OAuth sign in
+   - Given I choose Google or Apple, when I complete provider consent, then I am signed in (new users created on first login) and an httpOnly session cookie is set.
+5. Password reset
+   - Given I forgot my password, when I request a reset with my email, then a reset link is sent; when I follow it and provide a new valid password, then I can sign in with the new password.
+6. Account lockout
+   - Given I fail to sign in 5 times within a short period, then my account is temporarily locked and I am informed of the cooldown.
+7. Role access
+   - Given I am an admin, when I access admin pages, then I am allowed; given I am a trainer, when I access trainer tools, then I am allowed; given I am a standard user, when I access restricted areas, then I am redirected to Unauthorized.
+8. Subscription role (optional)
+   - Given I have an active subscription, when I access subscriber-only features, then I am allowed; otherwise I am informed and offered to subscribe.
 
 ### Edge Cases
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
+- OAuth cancels/denies consent → user is returned to login with an explanatory message.
+- Verification or reset link expired/invalid → show safe error and allow re-request.
+- Concurrent sessions on multiple devices → last sign-in should not invalidate others unless configured.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
-
-*Example of marking unclear requirements:*
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **FR-001 (Registration)**: Users MUST be able to register with email and password (min 7 characters; must include at least one letter and one digit).
+- **FR-002 (Email Verification)**: System MUST send verification email on sign-up and require verification before sign-in with email/password.
+- **FR-003 (OAuth)**: Users MUST be able to authenticate via Google and Apple; first-time OAuth sign-in creates a linked user.
+- **FR-004 (Sign-in/Sign-out)**: Verified users MUST be able to sign in/out; successful sign-in sets a secure, httpOnly cookie-based session.
+- **FR-005 (Password Reset)**: Users MUST be able to request password reset via email link and set a new password meeting policy.
+- **FR-006 (Breach Check)**: Passwords MUST be checked against known breached lists; breached passwords are rejected with guidance.
+- **FR-007 (Lockout Policy)**: After 5 failed attempts within a defined window, account MUST be temporarily locked with clear user messaging.
+- **FR-008 (Roles/Permissions)**: Roles MUST include admin, trainer, and user; authorization MUST gate admin and trainer areas. A subscriber role MAY grant additional features.
+- **FR-009 (Session Policy)**: Sessions MUST be cookie-based (httpOnly, Secure in production), include idle timeout (30 minutes) and max age (7 days).
+- **FR-010 (Audit/Logging)**: Security events (registration, login success/failure, password reset requests, role changes) MUST be logged.
 
 ### Key Entities *(include if feature involves data)*
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+- **User**: id, email, emailVerifiedAt, roles [user, trainer, admin, subscriber?], passwordHash (for email/password users), oauthProvider, oauthSubject.
+- **Session**: id, userId, createdAt, lastActivityAt, expiresAt, ip/userAgent (for security/audit), revokedAt.
+- **PasswordResetToken**: token, userId, createdAt, expiresAt, usedAt.
+- **EmailVerificationToken**: token, userId, createdAt, expiresAt, usedAt.
 
 ---
 
