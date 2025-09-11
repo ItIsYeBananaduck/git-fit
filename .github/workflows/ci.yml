@@ -13,34 +13,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        run: |
-          npm install -g pnpm@10.13.1
-          pnpm --version
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-
-      - name: Verify pnpm installation
-        run: |
-          which pnpm
-          pnpm --version
+          cache: 'npm'
 
       - name: Install dependencies
         run: |
-          pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
+          npm ci || npm install
 
       - name: Install app dependencies  
         working-directory: ./app
         run: |
-          pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
+          npm ci || npm install
 
       - name: Build web app
         working-directory: ./app
-        run: pnpm run build
+        run: npm run build
 
       - name: Run convex codegen (typecheck disabled)
         working-directory: ./app
@@ -48,8 +38,8 @@ jobs:
 
       - name: Run lint (optional)
         working-directory: ./app
-        run: pnpm run lint || true
+        run: npm run lint || true
 
       - name: Run unit tests
         working-directory: ./app
-        run: pnpm run test || true
+        run: npm run test || true
