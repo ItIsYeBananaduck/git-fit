@@ -3,6 +3,9 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
+  import { convex } from '$lib/convex';
+  import { api } from '$lib/convex';
+  import { emailService } from '$lib/services/emailService';
 
 	let email = '';
 	let password = '';
@@ -59,6 +62,28 @@
 	function handlePasswordBlur() {
 		passwordTouched = true;
 	}
+
+  let resendMsg = '';
+  let resending = false;
+  async function resendVerification() {
+    resendMsg = '';
+    if (!email) {
+      resendMsg = 'Enter your email first.';
+      return;
+    }
+    try {
+      resending = true;
+      const { token } = await convex.mutation(api.functions.users.issueEmailVerificationByEmail, { email: email.toLowerCase().trim() });
+      if (token) {
+        await emailService.sendEmailVerificationEmail(email.toLowerCase().trim(), token);
+      }
+      resendMsg = 'If an account exists, a new verification email has been sent.';
+    } catch (e) {
+      resendMsg = 'Could not resend verification email right now.';
+    } finally {
+      resending = false;
+    }
+  }
 
 	async function handleLogin() {
 		// Mark all fields as touched for validation
@@ -258,44 +283,6 @@
 							<div class="ml-3">
 								<p class="text-sm text-red-800">{error}</p>
 							</div>
-						</div>
-					</div>
-				{/if}
-
-				<!-- Submit Button -->
-				<div>
-					<button
-						type="submit"
-						disabled={loading || !isFormValid}
-						class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white {loading || !isFormValid ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-					>
-						{#if loading}
-							<svg
-								class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<circle
-									class="opacity-25"
-									cx="12"
-									cy="12"
-									r="10"
-									stroke="currentColor"
-									stroke-width="4"
-								></circle>
-								<path
-									class="opacity-75"
-									fill="currentColor"
-									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-								></path>
-							</svg>
-							Signing in...
-						{:else}
-							Sign in
-						{/if}
-					</button>
-				</div>
-			</form>
 
 			<!-- Social Login (Future Enhancement) -->
 			<div class="mt-6">
