@@ -1,10 +1,9 @@
-# Tasks: [FEATURE NAME]
+# Tasks: Authentication System
 
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
 
 ## Execution Flow (main)
-```
 1. Load plan.md from feature directory
    → If not found: ERROR "No implementation plan found"
    → Extract: tech stack, libraries, structure
@@ -30,7 +29,6 @@
    → All entities have models?
    → All endpoints implemented?
 9. Return: SUCCESS (tasks ready for execution)
-```
 
 ## Format: `[ID] [P?] Description`
 - **[P]**: Can run in parallel (different files, no dependencies)
@@ -97,13 +95,61 @@ Task: "Integration test auth in tests/integration/test_auth.py"
 - Commit after each task
 - Avoid: vague tasks, same file conflicts
 
+## SvelteKit + Convex Task Plan (authoritative)
+
+The following tasks supersede the generic examples above. They are tailored for SvelteKit (TypeScript) + Convex with Resend and OAuth (Google/Apple). Follow TDD: write tests that fail first, then implement.
+
+### Paths
+- App UI and services: `app/src/...`
+- Tests (Vitest): `app/src/**/__tests__/*.test.ts`
+- Convex functions: `convex/`
+
+### Phase A: Setup
+- [ ] T100 Ensure environment wiring (create `.env.example`, configure local `.env`)
+- [ ] T101 [P] Add session cookie utility and config in `app/src/lib/auth/`
+- [ ] T102 [P] Add Resend email helper in `app/src/lib/services/emailService.ts` (verify keys via env)
+
+### Phase B: Tests First (Vitest)
+- [ ] T110 [P] Unit test password policy in `app/src/lib/utils/__tests__/password.test.ts` (≥7, letter+digit)
+- [ ] T111 [P] Unit test breach-check helper stub in `app/src/lib/utils/__tests__/password-breach.test.ts`
+- [ ] T112 [P] Unit test auth guards in `app/src/lib/utils/__tests__/auth-guards.test.ts` (roles: user/trainer/admin/subscriber)
+- [ ] T113 Integration test auth service happy-paths in `app/src/lib/services/__tests__/authService.test.ts` (register → verify → login → logout)
+- [ ] T114 Integration test lockout (5 failed attempts) in `app/src/lib/services/__tests__/authService.test.ts`
+- [ ] T115 Integration test password reset flow in `app/src/lib/services/__tests__/authService.test.ts`
+
+### Phase C: Convex Data + Server Logic
+- [ ] T120 Create Convex schemas/tables for User, Session, PasswordResetToken, EmailVerificationToken
+- [ ] T121 Implement Convex functions: `register`, `issueEmailVerification`, `verifyEmail`
+- [ ] T122 Implement Convex functions: `loginPassword`, `recordFailedAttempt`, `enforceLockout`
+- [ ] T123 Implement Convex function: `requestPasswordReset`, `resetPassword`
+- [ ] T124 Implement Convex functions: `createSession`, `revokeSession`, `touchSession`
+- [ ] T125 Add role helpers and subscriber derivation logic
+
+### Phase D: SvelteKit Integration
+- [ ] T130 Register page action uses Convex `register` + Resend mailer
+- [ ] T131 Email verification route consumes token and calls Convex `verifyEmail`
+- [ ] T132 Login action calls `loginPassword`; on success sets httpOnly cookie (idle 30m, max 7d)
+- [ ] T133 Logout action revokes session and clears cookie
+- [ ] T134 OAuth routes (Google, Apple) with callback handlers creating/linking users and sessions
+- [ ] T135 Password reset request page + action → Convex `requestPasswordReset`
+- [ ] T136 Password reset page (token) + action → Convex `resetPassword`
+
+### Phase E: Policies & Guards
+- [ ] T140 Implement role-based guards; protect admin/trainer routes; unauthorized → `routes/unauthorized`
+- [ ] T141 Add server hook to load session/user on each request; enforce idle timeout/expiry
+- [ ] T142 Log security events (register/login success+failure, resets, role changes)
+
+### Phase F: Polish
+- [ ] T150 [P] Add email templates (Resend) for verification and reset
+- [ ] T151 [P] Add basic rate limits (e.g., reset/email requests) if not covered elsewhere
+- [ ] T152 Update `specs/001-authentication-system/quickstart.md` with verification steps
+
 ## Task Generation Rules
 *Applied during main() execution*
 
 1. **From Contracts**:
    - Each contract file → contract test task [P]
    - Each endpoint → implementation task
-   
 2. **From Data Model**:
    - Each entity → model creation task [P]
    - Relationships → service layer tasks
