@@ -9,7 +9,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.13.1",
   "dependencies": {
     "convex": "^1.26.2",
     "lucide-svelte": "^0.542.0"
