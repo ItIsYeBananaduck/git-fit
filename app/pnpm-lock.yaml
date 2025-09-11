@@ -24,11 +24,11 @@ importers:
         specifier: ^2.4.3
         version: 2.4.3
       convex:
-        specifier: ^1.26.2
-        version: 1.26.2
+        specifier: ^1.27.0
+        version: 1.27.0
       convex-svelte:
         specifier: ^0.0.11
-        version: 0.0.11(convex@1.26.2)(svelte@5.38.6)
+        version: 0.0.11(convex@1.27.0)(svelte@5.38.6)
       lucide-svelte:
         specifier: ^0.542.0
         version: 0.542.0(svelte@5.38.6)
@@ -1022,8 +1022,8 @@ packages:
       convex: ^1.10.0
       svelte: ^5.0.0
 
-  convex@1.26.2:
-    resolution: {integrity: sha512-QG3zvZ9GTTeeBS+N5PJj73TULHYu99eVSOI3KU2hMnB9q40fHxkMFJ+AYox+K81roTakciBvNTvGlhfz+M10fQ==}
+  convex@1.27.0:
+    resolution: {integrity: sha512-IHkqZX3GtY4nKFPTAR4mvWHHhDiQX9PM7EjpEv0pJWoMoq0On6oOL3iZ7Xz4Ls96dF7WJd4AjfitJsg2hUnLSQ==}
     engines: {node: '>=18.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
@@ -2825,12 +2825,12 @@ snapshots:
 
   concat-map@0.0.1: {}
 
-  convex-svelte@0.0.11(convex@1.26.2)(svelte@5.38.6):
+  convex-svelte@0.0.11(convex@1.27.0)(svelte@5.38.6):
     dependencies:
-      convex: 1.26.2
+      convex: 1.27.0
       svelte: 5.38.6
 
-  convex@1.26.2:
+  convex@1.27.0:
     dependencies:
       esbuild: 0.25.4
       jwt-decode: 4.0.0
