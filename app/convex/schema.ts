@@ -62,6 +62,28 @@ export default defineSchema({
     createdAt: v.string(),
   }).index("by_token", ["token"]).index("by_email", ["email"]),
 
+  // Subscriptions for consumers and Trainer Pro (B2B)
+  subscriptions: defineTable({
+    userId: v.id("users"),
+    type: v.union(v.literal("consumer"), v.literal("trainer_pro")),
+    provider: v.union(v.literal("stripe"), v.literal("iap")),
+    status: v.union(
+      v.literal("active"),
+      v.literal("trialing"),
+      v.literal("past_due"),
+      v.literal("canceled"),
+      v.literal("incomplete"),
+      v.literal("incomplete_expired")
+    ),
+    startedAt: v.string(),
+    currentPeriodEnd: v.string(),
+    cancelAt: v.optional(v.string()),
+    providerCustomerId: v.optional(v.string()),
+    providerSubscriptionId: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"]) 
+    .index("by_provider_sub", ["providerSubscriptionId"]),
+
   // Email verification tokens
   emailVerifications: defineTable({
     userId: v.id("users"),
