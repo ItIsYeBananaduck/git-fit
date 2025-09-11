@@ -1,0 +1,21 @@
+required_files:
+  - README.md
+  - LICENSE
+  - CONTRIBUTING.md
+  - .kiro/specs/
+
+templates:
+  issues:
+    - .github/spec-kit/templates/issue-template.md
+  pull_requests:
+    - .github/spec-kit/templates/pull-request-template.md
+
+validation_rules:
+  - name: Ensure each spec folder contains required files
+    description: Each folder in `.kiro/specs/` must include `design.md`, `requirements.md`, and `tasks.md`.
+    check:
+      path: .kiro/specs/*/
+      required_files:
+        - design.md
+        - requirements.md
+        - tasks.md
