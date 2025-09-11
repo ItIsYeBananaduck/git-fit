@@ -1,3 +1,0 @@
-[submodule ".github/spec-kit"]
-	path = .github/spec-kit
-	url = https://github.com/github/spec-kit.git
