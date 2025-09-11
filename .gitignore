@@ -1,2 +1,6 @@
 
 .env.local
+
+# Ignore dependencies and editor caches
+node_modules/
+node_modules/.svelte2tsx-language-server-files/
