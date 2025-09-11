@@ -17,11 +17,7 @@
 		"admin:setup": "tsx scripts/setup-admin.ts",
 		"admin:status": "tsx scripts/setup-admin.ts --status"
 	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"esbuild"
-		]
-	},
+
 	"dependencies": {
 		"@capacitor/android": "^7.4.3",
 		"@capacitor/cli": "^7.4.3",
