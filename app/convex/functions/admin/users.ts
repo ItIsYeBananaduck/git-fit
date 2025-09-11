@@ -28,15 +28,17 @@ export const searchUsers = query({
 
     // Apply role filter
     if (args.role) {
-      usersQuery = usersQuery.filter(q => q.eq(q.field("role"), args.role));
+      usersQuery = usersQuery.filter((q: any) => q.eq(q.field("role"), args.role));
     }
 
     // Apply date range filter
     if (args.dateRange) {
-      usersQuery = usersQuery.filter(q => 
+      const start = args.dateRange.start;
+      const end = args.dateRange.end;
+      usersQuery = usersQuery.filter((q: any) =>
         q.and(
-          q.gte(q.field("createdAt"), args.dateRange!.start),
-          q.lte(q.field("createdAt"), args.dateRange!.end)
+          q.gte(q.field("createdAt"), start),
+          q.lte(q.field("createdAt"), end)
         )
       );
     }
@@ -48,7 +50,7 @@ export const searchUsers = query({
     let filteredUsers = allUsers;
     if (args.query) {
       const searchTerm = args.query.toLowerCase();
-      filteredUsers = allUsers.filter(user => 
+      filteredUsers = allUsers.filter(user =>
         user.email.toLowerCase().includes(searchTerm) ||
         user.name.toLowerCase().includes(searchTerm)
       );
@@ -123,9 +125,10 @@ export const getUserSubscriptionInfo = query({
     }
 
     // Check if user has any active programs
+    const uid = args.userId;
     const userPrograms = await ctx.db
       .query("userPrograms")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
+      .withIndex("by_user", q => q.eq("userId", uid))
       .collect();
 
     const hasActivePrograms = userPrograms.some(program => !program.isCompleted);
@@ -145,15 +148,16 @@ export const getUserActivityMetrics = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     // Get workout sessions for activity metrics
+    const uid2 = args.userId;
     const workoutSessions = await ctx.db
       .query("workoutSessions")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
+      .withIndex("by_user", q => q.eq("userId", uid2))
       .collect();
 
     // Get user programs for engagement calculation
     const userPrograms = await ctx.db
       .query("userPrograms")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
+      .withIndex("by_user", q => q.eq("userId", uid2))
       .collect();
 
     // Calculate metrics
@@ -166,7 +170,7 @@ export const getUserActivityMetrics = query({
     const engagementScore = Math.min(sessionCount / 30, 1); // Based on sessions per month
 
     // Get last login (simplified - using last workout as proxy)
-    const lastSession = workoutSessions.sort((a, b) => 
+    const lastSession = workoutSessions.sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )[0];
 
@@ -206,38 +210,46 @@ export const getUserFinancialSummary = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     // Get program purchases
+    const uid3 = args.userId;
     const purchases = await ctx.db
       .query("programPurchases")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
+      .withIndex("by_user", q => q.eq("userId", uid3))
       .collect();
 
     // Get coaching services
+    const uid4 = args.userId;
     const coachingServices = await ctx.db
       .query("coachingServices")
-      .withIndex("by_client", q => q.eq("clientId", args.userId))
+      .withIndex("by_client", q => q.eq("clientId", uid4))
       .collect();
 
     // Calculate totals
     const totalSpent = purchases.reduce((sum, purchase) => sum + purchase.amount, 0) +
-                     coachingServices.reduce((sum, service) => sum + service.price, 0);
+      coachingServices.reduce((sum, service) => sum + service.price, 0);
 
     const refunds = purchases.filter(p => p.paymentStatus === "refunded");
     const totalRefunds = refunds.reduce((sum, refund) => sum + refund.amount, 0);
 
     const completedPurchases = purchases.filter(p => p.paymentStatus === "completed");
-    const averageOrderValue = completedPurchases.length > 0 ? 
+    const averageOrderValue = completedPurchases.length > 0 ?
       completedPurchases.reduce((sum, p) => sum + p.amount, 0) / completedPurchases.length : 0;
 
+    function getPurchaseTime(item: any): string {
+      if ((item as any).purchaseDate) return (item as any).purchaseDate;
+      if ((item as any).requestedAt) return (item as any).requestedAt;
+      return new Date(0).toISOString();
+    }
+
     const lastPurchase = [...purchases, ...coachingServices]
-      .sort((a, b) => new Date(b.purchaseDate || b.requestedAt).getTime() - 
-                     new Date(a.purchaseDate || a.requestedAt).getTime())[0];
+      .sort((a, b) => new Date(getPurchaseTime(b)).getTime() -
+        new Date(getPurchaseTime(a)).getTime())[0];
 
     return {
       totalSpent,
       totalRefunds,
       averageOrderValue,
       paymentMethods: ["stripe"], // Simplified
-      lastPayment: lastPurchase?.purchaseDate || lastPurchase?.requestedAt,
+      lastPayment: lastPurchase ? getPurchaseTime(lastPurchase) : undefined,
       outstandingBalance: 0 // Simplified
     };
   }
@@ -247,9 +259,10 @@ export const getUserDeviceConnections = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     // Get WHOOP connections
+    const uid5 = args.userId;
     const whoopConnections = await ctx.db
       .query("whoopConnections")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
+      .withIndex("by_user", q => q.eq("userId", uid5))
       .collect();
 
     const connections = whoopConnections.map(conn => ({
@@ -265,17 +278,18 @@ export const getUserDeviceConnections = query({
 });
 
 export const getUserActivityTimeline = query({
-  args: { 
+  args: {
     userId: v.id("users"),
     limit: v.number()
   },
   handler: async (ctx, args) => {
     const timeline = [];
+    const uid = args.userId;
 
     // Get recent workout sessions
     const workoutSessions = await ctx.db
       .query("workoutSessions")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
+      .withIndex("by_user", q => q.eq("userId", uid))
       .order("desc")
       .take(20);
 
@@ -294,7 +308,7 @@ export const getUserActivityTimeline = query({
     // Get program purchases
     const purchases = await ctx.db
       .query("programPurchases")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
+      .withIndex("by_user", q => q.eq("userId", uid))
       .order("desc")
       .take(10);
 
@@ -330,9 +344,10 @@ export const suspendUser = mutation({
     suspendedAt: v.string()
   },
   handler: async (ctx, args) => {
+    const uid = args.userId;
     // For now, we'll add a suspended flag to the user record
     // In a full implementation, this would be a separate suspension table
-    await ctx.db.patch(args.userId, {
+    await ctx.db.patch(uid, {
       updatedAt: args.suspendedAt
       // In a real implementation, we'd add suspension fields to the schema
     });
@@ -344,7 +359,8 @@ export const suspendUser = mutation({
 export const activateUser = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.userId, {
+    const uid = args.userId;
+    await ctx.db.patch(uid, {
       updatedAt: new Date().toISOString()
       // Remove suspension flags
     });
@@ -361,8 +377,9 @@ export const terminateUser = mutation({
     terminatedAt: v.string()
   },
   handler: async (ctx, args) => {
+    const uid = args.userId;
     // Mark user as terminated (in a real implementation, this would be a separate field)
-    await ctx.db.patch(args.userId, {
+    await ctx.db.patch(uid, {
       updatedAt: args.terminatedAt
       // Add termination fields
     });
@@ -380,16 +397,17 @@ export const deleteUserData = mutation({
   },
   handler: async (ctx, args) => {
     let deletedRecords = 0;
+    const uid = args.userId;
 
     if (args.deletionType === "hard") {
       // Delete all user-related data
-      
+
       // Delete workout sessions
       const workoutSessions = await ctx.db
         .query("workoutSessions")
-        .withIndex("by_user", q => q.eq("userId", args.userId))
+        .withIndex("by_user", q => q.eq("userId", uid))
         .collect();
-      
+
       for (const session of workoutSessions) {
         await ctx.db.delete(session._id);
         deletedRecords++;
@@ -398,9 +416,9 @@ export const deleteUserData = mutation({
       // Delete user programs
       const userPrograms = await ctx.db
         .query("userPrograms")
-        .withIndex("by_user", q => q.eq("userId", args.userId))
+        .withIndex("by_user", q => q.eq("userId", uid))
         .collect();
-      
+
       for (const program of userPrograms) {
         await ctx.db.delete(program._id);
         deletedRecords++;
@@ -409,9 +427,9 @@ export const deleteUserData = mutation({
       // Delete fitness data
       const fitnessData = await ctx.db
         .query("fitnessData")
-        .withIndex("by_user_and_type", q => q.eq("userId", args.userId))
+        .withIndex("by_user_and_type", q => q.eq("userId", uid))
         .collect();
-      
+
       for (const data of fitnessData) {
         await ctx.db.delete(data._id);
         deletedRecords++;
@@ -420,22 +438,22 @@ export const deleteUserData = mutation({
       // Delete device connections
       const whoopConnections = await ctx.db
         .query("whoopConnections")
-        .withIndex("by_user", q => q.eq("userId", args.userId))
+        .withIndex("by_user", q => q.eq("userId", uid))
         .collect();
-      
+
       for (const connection of whoopConnections) {
         await ctx.db.delete(connection._id);
         deletedRecords++;
       }
 
       // Finally delete the user
-      await ctx.db.delete(args.userId);
+      await ctx.db.delete(uid);
       deletedRecords++;
 
     } else {
       // Soft delete - anonymize user data
-      await ctx.db.patch(args.userId, {
-        email: `deleted_user_${args.userId}@deleted.com`,
+      await ctx.db.patch(uid, {
+        email: `deleted_user_${uid}@deleted.com`,
         name: "Deleted User",
         profileImage: undefined,
         updatedAt: args.deletedAt
@@ -460,7 +478,7 @@ export const sendUserMessage = mutation({
     // This would send a message to the user
     // For now, we'll just return success
     // In a real implementation, this would create a message record or send an email
-    
+
     return { success: true };
   }
 });

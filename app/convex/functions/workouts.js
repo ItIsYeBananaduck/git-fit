@@ -25,9 +25,10 @@ export const createWorkout = mutation({
 export const getWorkoutsByProgram = query({
   args: { programId: v.id("trainingPrograms") },
   handler: async (ctx, args) => {
+    const programId = args.programId;
     return await ctx.db
       .query("workouts")
-      .withIndex("by_program", (q) => q.eq("programId", args.programId))
+      .withIndex("by_program", (q) => q.eq("programId", programId))
       .collect();
   },
 });
@@ -57,9 +58,10 @@ export const createExercise = mutation({
 export const getExercisesByWorkout = query({
   args: { workoutId: v.id("workouts") },
   handler: async (ctx, args) => {
+    const workoutId = args.workoutId;
     return await ctx.db
       .query("exercises")
-      .withIndex("by_workout_and_order", (q) => q.eq("workoutId", args.workoutId))
+      .withIndex("by_workout_and_order", (q) => q.eq("workoutId", workoutId))
       .collect();
   },
 });
@@ -71,11 +73,13 @@ export const purchaseProgram = mutation({
     programId: v.id("trainingPrograms"),
   },
   handler: async (ctx, args) => {
+    const userId = args.userId;
+    const programId = args.programId;
     // Check if user already has this program
     const existing = await ctx.db
       .query("userPrograms")
       .withIndex("by_user_and_program", (q) => 
-        q.eq("userId", args.userId).eq("programId", args.programId)
+        q.eq("userId", userId).eq("programId", programId)
       )
       .first();
     
@@ -110,9 +114,10 @@ export const purchaseProgram = mutation({
 export const getUserPrograms = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    const userId = args.userId;
     return await ctx.db
       .query("userPrograms")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
   },
 });
@@ -164,9 +169,10 @@ export const getUserWorkoutSessions = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const userId = args.userId;
     const sessions = await ctx.db
       .query("workoutSessions")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
     
     const sorted = sessions.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));

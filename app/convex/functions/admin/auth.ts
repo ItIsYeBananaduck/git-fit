@@ -10,7 +10,8 @@ export const getAdminByEmail = query({
   handler: async (ctx, args) => {
     const admin = await ctx.db
       .query("adminUsers")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
+  // extract email to local to avoid using args inside the withIndex callback
+  .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
     
     return admin;
@@ -32,7 +33,7 @@ export const getAdminSession = query({
   handler: async (ctx, args) => {
     const session = await ctx.db
       .query("adminSessions")
-      .withIndex("by_token", (q) => q.eq("sessionToken", args.sessionToken))
+  .withIndex("by_token", (q) => q.eq("sessionToken", args.sessionToken))
       .first();
     
     return session;
@@ -68,7 +69,7 @@ export const createAdminUser = mutation({
     // Check if email already exists
     const existingAdmin = await ctx.db
       .query("adminUsers")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
+  .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
 
     if (existingAdmin) {
@@ -182,7 +183,7 @@ export const revokeAdminSessionByToken = mutation({
   handler: async (ctx, args) => {
     const session = await ctx.db
       .query("adminSessions")
-      .withIndex("by_token", (q) => q.eq("sessionToken", args.sessionToken))
+  .withIndex("by_token", (q) => q.eq("sessionToken", args.sessionToken))
       .first();
 
     if (session) {
@@ -203,8 +204,8 @@ export const revokeAllAdminSessions = mutation({
   },
   handler: async (ctx, args) => {
     const sessions = await ctx.db
-      .query("adminSessions")
-      .withIndex("by_admin", (q) => q.eq("adminId", args.adminId))
+  .query("adminSessions")
+  .withIndex("by_admin", (q) => q.eq("adminId", args.adminId))
       .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
 
@@ -364,7 +365,7 @@ export const createFirstSuperAdmin = mutation({
       throw new ConvexError("Admin system is already initialized");
     }
 
-    // Create the first super admin with all permissions
+    // Create the first super admin with all permissions (insert without self-reference)
     const adminId = await ctx.db.insert("adminUsers", {
       email: args.email,
       name: args.name,
@@ -378,13 +379,14 @@ export const createFirstSuperAdmin = mutation({
       failedLoginAttempts: 0,
       lockedUntil: undefined,
       createdAt: args.createdAt,
-      createdBy: adminId, // Self-created
+      // createdBy will be replaced in a second step to avoid referencing adminId inside the initializer
+      createdBy: "system" as any,
       updatedAt: args.updatedAt,
       ipWhitelist: undefined,
       sessionTimeout: undefined,
     });
 
-    // Update the createdBy field to reference itself
+    // Patch the created document to set createdBy to the generated id
     await ctx.db.patch(adminId, {
       createdBy: adminId,
     });

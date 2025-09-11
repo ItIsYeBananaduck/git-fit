@@ -14,16 +14,15 @@ export const getMarketplacePrograms = query({
     let query = ctx.db.query("trainingPrograms")
       .filter(q => q.eq(q.field("isPublished"), true));
 
-    if (args.category) {
-      query = query.filter(q => q.field("category").includes(args.category));
-    }
+  // We'll apply category filtering after fetching since `category` is an array field
 
     if (args.difficulty) {
       query = query.filter(q => q.eq(q.field("difficulty"), args.difficulty));
     }
 
-    if (args.maxPrice) {
-      query = query.filter(q => q.lte(q.field("price"), args.maxPrice));
+    const maxPrice = args.maxPrice;
+    if (maxPrice !== undefined && maxPrice !== null) {
+      query = query.filter(q => q.lte(q.field("price"), maxPrice));
     }
 
     const programs = await query
@@ -49,10 +48,16 @@ export const getMarketplacePrograms = query({
       })
     );
 
+    // Apply category filter client-side if requested
+    let filteredPrograms = programsWithTrainer;
+    if (args.category) {
+      filteredPrograms = filteredPrograms.filter(p => Array.isArray(p.category) && p.category.includes(args.category as string));
+    }
+
     // Filter by search term if provided
     if (args.search) {
       const searchTerm = args.search.toLowerCase();
-      return programsWithTrainer.filter(program =>
+      return filteredPrograms.filter(program =>
         program.name.toLowerCase().includes(searchTerm) ||
         program.description.toLowerCase().includes(searchTerm) ||
         program.tags.some(tag => tag.toLowerCase().includes(searchTerm)) ||
@@ -60,7 +65,7 @@ export const getMarketplacePrograms = query({
       );
     }
 
-    return programsWithTrainer;
+    return filteredPrograms;
   },
 });
 
@@ -72,7 +77,7 @@ export const getAvailableTrainers = query({
     search: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("users")
+  const query = ctx.db.query("users")
       .filter(q => q.eq(q.field("role"), "trainer"))
       .filter(q => q.eq(q.field("isVerified"), true));
 
@@ -82,13 +87,14 @@ export const getAvailableTrainers = query({
 
     if (args.specialty) {
       filteredTrainers = filteredTrainers.filter(trainer =>
-        trainer.specialties?.includes(args.specialty)
+        !!trainer.specialties && trainer.specialties.includes(args.specialty as string)
       );
     }
 
-    if (args.maxHourlyRate) {
+    const maxHourlyRate = args.maxHourlyRate;
+    if (maxHourlyRate !== undefined && maxHourlyRate !== null) {
       filteredTrainers = filteredTrainers.filter(trainer =>
-        trainer.hourlyRate && trainer.hourlyRate <= args.maxHourlyRate
+        typeof trainer.hourlyRate === 'number' && trainer.hourlyRate <= maxHourlyRate
       );
     }
 

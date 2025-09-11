@@ -15,7 +15,8 @@
 		Brain,
 		ShoppingBag,
 		LogOut,
-		LogIn
+		LogIn,
+		Apple
 	} from 'lucide-svelte';
 
 	let mobileMenuOpen = false;
@@ -35,6 +36,7 @@
 		},
 		{ href: '/programs', label: 'Programs', icon: Target, roles: ['client', 'trainer', 'admin'] },
 		{ href: '/workouts', label: 'Workouts', icon: Dumbbell, roles: ['client', 'trainer'] },
+		{ href: '/nutrition', label: 'Nutrition', icon: Apple, roles: ['client', 'trainer'] },
 		{ href: '/fitness-data', label: 'Fitness Data', icon: BarChart3, roles: ['client'] },
 		{ href: '/adaptive-training', label: 'AI Training', icon: Brain, roles: ['client'] },
 		{

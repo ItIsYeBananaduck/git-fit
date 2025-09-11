@@ -49,12 +49,14 @@ export const getFitnessData = query({
     endDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const uid = args.userId;
+    const dataType = args.dataType;
     let query = ctx.db
       .query("fitnessData")
       .withIndex("by_user_and_type", (q) => 
-        args.dataType 
-          ? q.eq("userId", args.userId).eq("dataType", args.dataType)
-          : q.eq("userId", args.userId)
+        dataType 
+          ? q.eq("userId", uid).eq("dataType", dataType)
+          : q.eq("userId", uid)
       );
     
     let data = await query.collect();
@@ -89,10 +91,12 @@ export const getLatestFitnessData = query({
     ),
   },
   handler: async (ctx, args) => {
+    const uid = args.userId;
+    const dataType = args.dataType;
     const data = await ctx.db
       .query("fitnessData")
       .withIndex("by_user_and_type", (q) => 
-        q.eq("userId", args.userId).eq("dataType", args.dataType)
+        q.eq("userId", uid).eq("dataType", dataType)
       )
       .collect();
     

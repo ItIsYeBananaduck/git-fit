@@ -38,9 +38,10 @@ export const storeWHOOPConnection = mutation({
     connectedAt: v.string(),
   },
   handler: async (ctx, args) => {
+    const uid = args.userId;
     const existing = await ctx.db
       .query("whoopConnections")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", uid))
       .first();
 
     if (existing) {
@@ -70,9 +71,10 @@ export const storeWHOOPConnection = mutation({
 export const getWHOOPConnection = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    const uid = args.userId;
     return await ctx.db
       .query("whoopConnections")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", uid))
       .first();
   },
 });
@@ -86,9 +88,10 @@ export const updateWHOOPTokens = mutation({
     expiresIn: v.number(),
   },
   handler: async (ctx, args) => {
+    const uid = args.userId;
     const connection = await ctx.db
       .query("whoopConnections")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", uid))
       .first();
 
     if (!connection) {
@@ -110,9 +113,10 @@ export const updateWHOOPTokens = mutation({
 export const disconnectWHOOP = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    const uid = args.userId;
     const connection = await ctx.db
       .query("whoopConnections")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", uid))
       .first();
 
     if (connection) {
@@ -185,9 +189,10 @@ export const storeWHOOPData = mutation({
 export const getWHOOPSyncStatus = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    const uid = args.userId;
     const connection = await ctx.db
       .query("whoopConnections")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", uid))
       .first();
 
     if (!connection || !connection.isActive) {
@@ -197,7 +202,7 @@ export const getWHOOPSyncStatus = query({
     // Get most recent WHOOP data
     const recentData = await ctx.db
       .query("fitnessData")
-      .withIndex("by_user_and_date", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user_and_date", (q) => q.eq("userId", uid))
       .filter((q) => q.eq(q.field("source"), "whoop"))
       .order("desc")
       .take(1);

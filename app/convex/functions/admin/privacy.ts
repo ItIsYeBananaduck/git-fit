@@ -186,13 +186,22 @@ export const processUserDataDeletion = mutation({
     let backupLocation: string | undefined;
 
     if (args.deletionType === "soft") {
-      // Soft delete: Mark user as deleted but keep data
+      // Soft delete: Mark user as inactive and record deletion in dataDeletions
       await ctx.db.patch(args.userId, {
-        isActive: false,
-        deletedAt: args.deletedAt,
-        deletedBy: args.deletedBy,
-        deletionReason: args.reason
+        isActive: false
       });
+
+      await ctx.db.insert("dataDeletions", {
+        userId: args.userId,
+        deletionType: "soft",
+        deletedBy: args.deletedBy,
+        deletedAt: args.deletedAt,
+        reason: args.reason,
+        deletedRecords: 0,
+        backupLocation: undefined,
+        isReversible: true
+      });
+
       deletedRecords = 1;
     } else {
       // Hard delete: Actually remove user data
@@ -200,9 +209,10 @@ export const processUserDataDeletion = mutation({
       // This would involve deleting from all related tables:
       
       // 1. Delete fitness data
+      const uid = args.userId;
       const fitnessData = await ctx.db
         .query("fitnessData")
-        .withIndex("by_user_and_type", q => q.eq("userId", args.userId))
+        .withIndex("by_user_and_type", q => q.eq("userId", uid))
         .collect();
       
       for (const data of fitnessData) {
@@ -211,9 +221,10 @@ export const processUserDataDeletion = mutation({
       }
 
       // 2. Delete workout sessions
+      const uid2 = args.userId;
       const workoutSessions = await ctx.db
         .query("workoutSessions")
-        .withIndex("by_user", q => q.eq("userId", args.userId))
+        .withIndex("by_user", q => q.eq("userId", uid2))
         .collect();
       
       for (const session of workoutSessions) {
@@ -222,9 +233,10 @@ export const processUserDataDeletion = mutation({
       }
 
       // 3. Delete user programs
+      const uid3 = args.userId;
       const userPrograms = await ctx.db
         .query("userPrograms")
-        .withIndex("by_user", q => q.eq("userId", args.userId))
+        .withIndex("by_user", q => q.eq("userId", uid3))
         .collect();
       
       for (const program of userPrograms) {
@@ -247,9 +259,10 @@ export const processUserDataDeletion = mutation({
       }
 
       // 5. Delete support tickets and messages
+      const uid4 = args.userId;
       const supportTickets = await ctx.db
         .query("supportTickets")
-        .withIndex("by_user", q => q.eq("userId", args.userId))
+        .withIndex("by_user", q => q.eq("userId", uid4))
         .collect();
       
       for (const ticket of supportTickets) {
@@ -395,13 +408,8 @@ export const getDataExportStatus = query({
       return null;
     }
 
-    // Check if download URL has expired
+    // Check if download URL has expired and return computed status (do not mutate in a query)
     if (exportRecord.expiresAt && new Date(exportRecord.expiresAt) < new Date()) {
-      await ctx.db.patch(args.exportId, {
-        status: "failed",
-        errorMessage: "Download link expired"
-      });
-      
       return {
         ...exportRecord,
         status: "failed" as const,
@@ -425,12 +433,14 @@ export const getPrivacyComplianceStats = query({
   },
   handler: async (ctx, args) => {
     // Get privacy requests in timeframe
+    const start = args.timeframe.start;
+    const end = args.timeframe.end;
     const requests = await ctx.db
       .query("privacyRequests")
       .filter(q => 
         q.and(
-          q.gte(q.field("requestedAt"), args.timeframe.start),
-          q.lte(q.field("requestedAt"), args.timeframe.end)
+          q.gte(q.field("requestedAt"), start),
+          q.lte(q.field("requestedAt"), end)
         )
       )
       .collect();
@@ -440,8 +450,8 @@ export const getPrivacyComplianceStats = query({
       .query("dataExports")
       .filter(q => 
         q.and(
-          q.gte(q.field("requestedAt"), args.timeframe.start),
-          q.lte(q.field("requestedAt"), args.timeframe.end)
+          q.gte(q.field("requestedAt"), start),
+          q.lte(q.field("requestedAt"), end)
         )
       )
       .collect();
@@ -451,8 +461,8 @@ export const getPrivacyComplianceStats = query({
       .query("dataDeletions")
       .filter(q => 
         q.and(
-          q.gte(q.field("deletedAt"), args.timeframe.start),
-          q.lte(q.field("deletedAt"), args.timeframe.end)
+          q.gte(q.field("deletedAt"), start),
+          q.lte(q.field("deletedAt"), end)
         )
       )
       .collect();
@@ -478,7 +488,7 @@ export const getPrivacyComplianceStats = query({
         hard: deletions.filter(d => d.deletionType === "hard").length,
         totalRecordsDeleted: deletions.reduce((sum, d) => sum + d.deletedRecords, 0)
       },
-      averageProcessingTime: this.calculateAverageProcessingTime(requests)
+  averageProcessingTime: calculateAverageProcessingTime(requests)
     };
   }
 });

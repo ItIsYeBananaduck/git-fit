@@ -354,9 +354,10 @@ export const markMessageAsRead = mutation({
   },
   handler: async (ctx, args) => {
     // Find the recipient record
+    const messageIdVal = args.messageId;
     const recipient = await ctx.db
       .query("messageRecipients")
-      .withIndex("by_message", q => q.eq("messageId", args.messageId))
+      .withIndex("by_message", q => q.eq("messageId", messageIdVal))
       .filter(q => q.eq(q.field("userId"), args.userId))
       .first();
 
@@ -378,9 +379,10 @@ export const getUserUnreadMessages = query({
   },
   handler: async (ctx, args) => {
     // Get unread message recipients for this user
+    const userIdVal = args.userId;
     const unreadRecipients = await ctx.db
       .query("messageRecipients")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
+      .withIndex("by_user", q => q.eq("userId", userIdVal))
       .filter(q => q.neq(q.field("deliveryStatus"), "read"))
       .collect();
 

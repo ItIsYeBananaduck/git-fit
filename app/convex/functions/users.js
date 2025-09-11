@@ -38,9 +38,10 @@ export const createUser = mutation({
 export const getUserByEmail = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
+    const emailVal = args.email;
     return await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .withIndex("by_email", (q) => q.eq("email", emailVal))
       .first();
   },
 });
@@ -324,9 +325,10 @@ export const validateSession = query({
     token: v.string(),
   },
   handler: async (ctx, args) => {
+    const token = args.token;
     const session = await ctx.db
       .query("sessions")
-      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .withIndex("by_token", (q) => q.eq("token", token))
       .first();
 
     if (!session || !session.isActive) {
@@ -360,9 +362,10 @@ export const updateSessionActivity = mutation({
     token: v.string(),
   },
   handler: async (ctx, args) => {
+    const token = args.token;
     const session = await ctx.db
       .query("sessions")
-      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .withIndex("by_token", (q) => q.eq("token", token))
       .first();
 
     if (session && session.isActive) {
@@ -636,9 +639,10 @@ export const getUserSessions = query({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
+    const userId = args.userId;
     const sessions = await ctx.db
       .query("sessions")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
 
@@ -677,9 +681,10 @@ export const revokeAllSessions = mutation({
     exceptToken: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const userId = args.userId;
     const sessions = await ctx.db
       .query("sessions")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
 

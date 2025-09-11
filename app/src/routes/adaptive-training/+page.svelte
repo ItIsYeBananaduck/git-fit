@@ -4,6 +4,7 @@
 	import { user, isAuthenticated } from '$lib/stores/auth';
 	import AdaptiveWorkoutCard from '$lib/components/AdaptiveWorkoutCard.svelte';
 	import ProgressionAnalytics from '$lib/components/ProgressionAnalytics.svelte';
+	import AITrainingDashboard from '$lib/components/AITrainingDashboard.svelte';
 	import WHOOPDataDisplay from '$lib/components/WHOOPDataDisplay.svelte';
 	import OuraConnection from '$lib/components/OuraConnection.svelte';
 	import OuraDataDisplay from '$lib/components/OuraDataDisplay.svelte';
@@ -170,6 +171,11 @@
 					plateaus
 				</p>
 			</div>
+		</div>
+
+		<!-- AI Training Dashboard -->
+		<div class="mb-8">
+			<AITrainingDashboard />
 		</div>
 
 		<!-- Fitness Tracker Data Overview -->

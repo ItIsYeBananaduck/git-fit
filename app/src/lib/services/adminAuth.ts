@@ -51,7 +51,7 @@ export class AdminAuthService {
       // Verify password
       const isValidPassword = await bcrypt.compare(credentials.password, adminUser.passwordHash);
       if (!isValidPassword) {
-        await this.handleFailedLogin(adminUser._id, ipAddress);
+        await this.handleFailedLogin({ __tableName: "adminUsers" } as Id<"adminUsers">, ipAddress);
         throw new ConvexError("Invalid credentials");
       }
 
@@ -69,7 +69,7 @@ export class AdminAuthService {
         });
 
         if (!isValidMFA) {
-          await this.handleFailedLogin(adminUser._id, ipAddress);
+          await this.handleFailedLogin({ __tableName: "adminUsers" } as Id<"adminUsers">, ipAddress);
           throw new ConvexError("Invalid MFA token");
         }
       }

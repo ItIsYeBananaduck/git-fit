@@ -260,9 +260,10 @@ export const getExercises = query({
 export const getExerciseWithRecommendations = query({
   args: { exerciseId: v.string() },
   handler: async (ctx, args) => {
+    const exerciseId = args.exerciseId;
     const exercise = await ctx.db
       .query("exerciseDatabase")
-      .withIndex("by_exercise_id", (q) => q.eq("exerciseId", args.exerciseId))
+      .withIndex("by_exercise_id", (q) => q.eq("exerciseId", exerciseId))
       .first();
 
     if (!exercise) {

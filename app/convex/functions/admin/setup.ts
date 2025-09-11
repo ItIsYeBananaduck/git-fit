@@ -19,7 +19,7 @@ export const createFirstSuperAdmin = mutation({
       throw new Error("Admin system is already initialized");
     }
 
-    // Create the first super admin with all permissions
+    // Create the first super admin with all permissions (insert with placeholder createdBy)
     const adminId = await ctx.db.insert("adminUsers", {
       email: args.email,
       name: args.name,
@@ -33,13 +33,13 @@ export const createFirstSuperAdmin = mutation({
       failedLoginAttempts: 0,
       lockedUntil: undefined,
       createdAt: args.createdAt,
-      createdBy: adminId, // Self-created
+      createdBy: "system" as any, // temporary placeholder
       updatedAt: args.updatedAt,
       ipWhitelist: undefined,
       sessionTimeout: undefined,
     });
 
-    // Update the createdBy field to reference itself
+    // Patch createdBy to the generated id
     await ctx.db.patch(adminId, {
       createdBy: adminId,
     });

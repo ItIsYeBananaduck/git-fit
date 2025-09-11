@@ -54,7 +54,8 @@ export interface Permission {
   isSystemPermission: boolean;
 }
 
-export interface AdminRole {
+// Renamed to avoid conflict with the AdminRole union above
+export interface AdminRoleDef {
   name: string;
   displayName: string;
   description: string;
@@ -158,7 +159,7 @@ export interface ModerationAction {
   duration?: number;
   performedBy: Id<"adminUsers">;
   timestamp: string;
-  details?: any;
+  details?: string;
 }
 
 export interface UserFinancialSummary {
@@ -223,7 +224,7 @@ export interface ModerationItem {
   priority: "low" | "medium" | "high" | "urgent";
   status: "pending" | "under_review" | "approved" | "rejected" | "escalated";
   assignedTo?: Id<"adminUsers">;
-  content: any;
+  content: string;
   flags: string[];
   reviewNotes?: string;
   decision?: string;
@@ -239,7 +240,7 @@ export interface ModerationItem {
 export interface ModerationDecision {
   decision: "approve" | "reject" | "modify" | "escalate";
   reason: string;
-  modifications?: any;
+  modifications?: string;
   followUpActions?: string[];
   notifyUser: boolean;
 }
@@ -398,7 +399,7 @@ export interface UserJourney {
 
 export interface UserSegmentation {
   type: "demographic" | "behavioral" | "subscription" | "engagement";
-  criteria: Record<string, any>;
+  criteria: Record<string, string | number | boolean>;
 }
 
 // ============================================================================
@@ -592,7 +593,7 @@ export interface FinancialDetail {
 export interface ChartData {
   type: "line" | "bar" | "pie";
   title: string;
-  data: any[];
+  data: string[];
   labels: string[];
 }
 
@@ -735,7 +736,7 @@ export interface AuditLogEntry {
   action: string;
   resource: string;
   resourceId?: string;
-  details: any;
+  details: string;
   ipAddress: string;
   userAgent: string;
   timestamp: string;
@@ -749,7 +750,7 @@ export interface AdminAction {
   action: string;
   resource: string;
   resourceId?: string;
-  details: any;
+  details: string;
   ipAddress: string;
   userAgent: string;
 }
@@ -775,7 +776,7 @@ export interface SortOptions {
 }
 
 export interface FilterOptions {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface SearchOptions extends PaginationOptions {
@@ -804,10 +805,8 @@ export interface ValidationError {
 export interface ServiceError {
   code: string;
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 // Ensure Id type is exported correctly
-export type Id<TableName extends string> = {
-  __tableName: TableName;
-};
+// Use Convex-generated `Id` type from app/convex/_generated/dataModel instead of local re-definition.

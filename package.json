@@ -13,5 +13,8 @@
   "dependencies": {
     "convex": "^1.26.2",
     "lucide-svelte": "^0.542.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
   }
 }

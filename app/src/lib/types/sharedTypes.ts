@@ -54,6 +54,9 @@ export interface TrainingSession {
   targetStrain?: number; // target strain for this session
   actualStrain?: number; // actual strain achieved
   stoppedEarly?: boolean; // true if stopped due to strain target
+  completed?: boolean; // whether the session was completed
+  targetReps?: number; // target reps for the session
+  actualReps?: number; // actual reps completed
 }
 
 export interface TrainingParameters {
