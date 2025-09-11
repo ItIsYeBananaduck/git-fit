@@ -164,23 +164,8 @@ export class NutritionCalculator {
     let recommendations: string[] = [];
     let reason: NutritionAdjustment['reason'] = 'rest_day';
 
-    // Check if today is a training day
-    const today = new Date().toISOString().split('T')[0];
-    const isTrainingDay = recentTraining.some(session => 
-      session.date.split('T')[0] === today
-    );
-
-    if (isTrainingDay) {
-      reason = 'training_day';
-      // Training day adjustments
-      adjustments.carbsDelta = baseGoals.carbs * 0.1; // 10% more carbs
-      adjustments.proteinDelta = baseGoals.protein * 0.05; // 5% more protein
-      recommendations.push('🍌 Consume extra carbs before and after training');
-      recommendations.push('🥩 Include protein within 2 hours post-workout');
-    }
-
-    // Recovery-based adjustments
-    if (latestRecovery.recoveryScore < 40) {
+    // Recovery-based adjustments (check first as they have priority)
+    if (latestRecovery.recoveryScore <= 40) {
       reason = 'recovery_boost';
       // Poor recovery - boost nutrition
       adjustments.caloriesDelta += baseGoals.calories * 0.05; // 5% more calories
@@ -193,6 +178,21 @@ export class NutritionCalculator {
       // Great recovery - can maintain or slightly reduce if weight loss goal
       adjustments.caloriesDelta = -baseGoals.calories * 0.02; // 2% reduction
       recommendations.push('✅ Great recovery - maintain current nutrition plan');
+    }
+
+    // Check if today is a training day (only override if not already recovery boost)
+    const today = new Date().toISOString().split('T')[0];
+    const isTrainingDay = recentTraining.some(session => 
+      session.date.split('T')[0] === today
+    );
+
+    if (isTrainingDay && reason !== 'recovery_boost') {
+      reason = 'training_day';
+      // Training day adjustments
+      adjustments.carbsDelta = baseGoals.carbs * 0.1; // 10% more carbs
+      adjustments.proteinDelta = baseGoals.protein * 0.05; // 5% more protein
+      recommendations.push('🍌 Consume extra carbs before and after training');
+      recommendations.push('🥩 Include protein within 2 hours post-workout');
     }
 
     // High strain adjustments
@@ -208,7 +208,7 @@ export class NutritionCalculator {
       reason,
       adjustments,
       recommendations,
-      timing: isTrainingDay ? 'post_workout' : 'throughout_day'
+      timing: (isTrainingDay || reason === 'training_day') ? 'post_workout' : 'throughout_day'
     };
   }
 
