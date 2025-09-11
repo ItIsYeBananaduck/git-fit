@@ -103,12 +103,6 @@ export interface DeloadRecommendation {
   reasoning: string;
 }
 
-export interface RestAdjustment {
-  adjustedRestTime: number;
-  reason: string;
-  multiplier: number;
-}
-
 export interface SafetySignal {
   type: 'hrv_drop' | 'excessive_strain' | 'fatigue_spike' | 'pain_reported';
   severity: 'low' | 'moderate' | 'high';
