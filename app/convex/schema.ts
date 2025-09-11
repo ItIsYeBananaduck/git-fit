@@ -15,6 +15,8 @@ export default defineSchema({
     emailVerified: v.boolean(),
     isActive: v.boolean(),
     lastLogin: v.optional(v.string()),
+    failedLoginAttempts: v.optional(v.number()),
+    lockedUntil: v.optional(v.string()),
     // Client-specific fields
     dateOfBirth: v.optional(v.string()),
     height: v.optional(v.number()), // in cm
@@ -59,6 +61,15 @@ export default defineSchema({
     used: v.boolean(),
     createdAt: v.string(),
   }).index("by_token", ["token"]).index("by_email", ["email"]),
+
+  // Email verification tokens
+  emailVerifications: defineTable({
+    userId: v.id("users"),
+    token: v.string(),
+    expiresAt: v.string(),
+    usedAt: v.optional(v.string()),
+    createdAt: v.string(),
+  }).index("by_token", ["token"]).index("by_user", ["userId"]),
 
   // Fitness tracker data
   fitnessData: defineTable({

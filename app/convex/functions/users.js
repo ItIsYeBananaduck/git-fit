@@ -134,8 +134,8 @@ function isValidEmail(email) {
 }
 
 function isValidPassword(password) {
-  return password.length >= 8 && 
-         /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password);
+  // Policy: ≥7 characters, at least one letter and one digit
+  return password.length >= 7 && /(?=.*[A-Za-z])(?=.*\d)/.test(password);
 }
 
 // Authentication mutations
@@ -162,10 +162,27 @@ export const login = mutation({
       throw new ConvexError("Account is disabled. Please contact support.");
     }
 
+    // Enforce lockout
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+      throw new ConvexError("Too many failed attempts. Please try again later.");
+    }
+
     // Verify password
     const isValidPasswordCheck = await verifyPassword(args.password, user.passwordHash);
     if (!isValidPasswordCheck) {
+      // Record failed attempt and set lockout if threshold reached
+      const attempts = (user.failedLoginAttempts ?? 0) + 1;
+      const patch = { failedLoginAttempts: attempts, updatedAt: new Date().toISOString() };
+      if (attempts >= 5) {
+        patch.lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      }
+      await ctx.db.patch(user._id, patch);
       throw new ConvexError("Invalid email or password");
+    }
+
+    // Require email verification for email/password login
+    if (!user.emailVerified) {
+      throw new ConvexError("Please verify your email before signing in.");
     }
 
     // Invalidate existing sessions for this user
@@ -194,10 +211,12 @@ export const login = mutation({
       isActive: true,
     });
 
-    // Update last login
+    // Update last login and clear failed attempts/lockout
     await ctx.db.patch(user._id, {
       lastLogin: now,
       updatedAt: now,
+      failedLoginAttempts: 0,
+      lockedUntil: undefined,
     });
 
     // Remove password hash from response
@@ -301,6 +320,23 @@ export const register = mutation({
       lastActivity: now,
       isActive: true,
     });
+
+    // Issue email verification token (log in dev; send via email service in production)
+    try {
+      const verToken = generateToken(48);
+      await ctx.db.insert("emailVerifications", {
+        userId,
+        token: verToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: now,
+      });
+      if (process.env.NODE_ENV === 'development') {
+        const base = process.env.PUBLIC_APP_URL || 'http://localhost:5173';
+        console.log(`✉️  Email verification link for ${email}: ${base}/auth/verify-email/${verToken}`);
+      }
+    } catch (e) {
+      console.warn('Failed to create email verification token', e);
+    }
 
     // Get the created user
     const user = await ctx.db.get(userId);

@@ -407,14 +407,15 @@ export class AuthService {
   }
 
   private validatePassword(password: string): { isValid: boolean; error?: string } {
-    if (!password || password.length < 8) {
-      return { isValid: false, error: 'Password must be at least 8 characters long' };
+    if (!password || password.length < 7) {
+      return { isValid: false, error: 'Password must be at least 7 characters long' };
     }
 
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      return { 
-        isValid: false, 
-        error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' 
+    // At least one letter and one number
+    if (!/(?=.*[A-Za-z])(?=.*\d)/.test(password)) {
+      return {
+        isValid: false,
+        error: 'Password must contain at least one letter and one number'
       };
     }
 
