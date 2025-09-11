@@ -103,13 +103,6 @@ export interface DeloadRecommendation {
   reasoning: string;
 }
 
-export interface StrainMetrics {
-  currentStrain: number;
-  heartRate: number;
-  hrvDeviation: number;
-  perceivedExertion: number;
-}
-
 export interface RestAdjustment {
   adjustedRestTime: number;
   reason: string;
