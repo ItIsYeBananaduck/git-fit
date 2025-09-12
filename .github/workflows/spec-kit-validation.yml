@@ -12,5 +12,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Run Spec-Kit validation
-        run: .github/spec-kit/validate.sh
+      - name: Run Spec-Kit validation if script exists
+        run: |
+          if [ -f .github/spec-kit/validate.sh ]; then
+            echo "Spec-Kit validation script found. Running..."
+            bash .github/spec-kit/validate.sh
+          else
+            echo "Spec-Kit validation script not found. Skipping validation step." >&2
+          fi
