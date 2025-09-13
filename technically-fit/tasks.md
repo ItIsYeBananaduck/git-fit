@@ -29,7 +29,28 @@ This document breaks down the actionable tasks needed to implement the missing s
 - [x] Develop APIs for device data synchronization (Apple Watch, WHOOP, Samsung, Garmin, Fitbit)
 - [x] Implement device connection management with auto-reconnect
 - [x] Build real-time data collection pipelines for wearable metrics
-- [ ] Create widgets for quick access (iOS/Android)
+- [x] Create widgets for quick access (iOS/Android)
+
+### Wearable Workout UI
+
+- [x] Build simplified in-workout UI for wearables (Apple Watch + Android watches)
+  - Implement pre-set screen with rep/volume adjustment controls
+  - Create in-set screen showing live HR, SpO₂, and strain indicator
+  - Add 3 feedback buttons (Set Completed, Too Easy, Too Hard) - **Note: These buttons already exist on mobile, need to port to wearable**
+  - Design optional post-set transition summary
+- [ ] Implement Apple Watch complications
+  - Add readiness score complication (0-100 or emoji)
+  - Add baseline resting HR complication (30-day average)
+  - Add baseline SpO₂ complication (color-coded)
+  - Support Modular, Corner, and Graphic Circular layouts
+- [ ] Develop platform-specific implementations
+  - Apple Watch: Use HKLiveWorkoutBuilder, SwiftUI, CLKComplicationTemplate
+  - Android Wear OS: Use Jetpack Compose, Health Services API
+  - Support digital crown/scroll gestures for adjustments
+- [ ] Integrate strain logic with workout feedback
+  - Connect wearable feedback buttons to existing mobile adaptive AI algorithm
+  - Update strain calculations based on real-time metrics
+  - Implement haptic feedback for transitions
 
 ## Data Collection & Storage
 

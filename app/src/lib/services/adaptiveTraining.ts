@@ -18,6 +18,7 @@ export interface WorkoutSession {
   plannedParams: TrainingParameters;
   actualParams?: TrainingParameters;
   completedReps?: number[];
+  setCompletions?: SetCompletion[]; // New: detailed set completion tracking
   perceivedEffort?: number; // RPE 1-10
   recoveryBefore?: number; // WHOOP recovery score
   strainAfter?: number; // WHOOP strain score
@@ -25,6 +26,14 @@ export interface WorkoutSession {
   targetStrain?: number; // target strain for this session
   actualStrain?: number; // actual strain achieved
   stoppedEarly?: boolean; // true if stopped due to strain target
+}
+
+export interface SetCompletion {
+  setNumber: number;
+  repsCompleted: number;
+  difficulty: 'easy' | 'moderate' | 'hard';
+  timestamp: string;
+  restDuration?: number; // actual rest time before this set
 }
 
 export interface ProgressionRule {
@@ -47,14 +56,19 @@ export class AdaptiveTrainingEngine {
   }
 
   /**
-   * Calculate daily training recommendations based on current recovery
-   * Only adjusts rest periods and safety recommendations in real-time
+   * Enhanced daily training recommendation with feedback prioritization
    */
   getDailyTrainingRecommendation(
     recovery: number, 
     strain: number, 
     hrv: number, 
-    recentSessions: WorkoutSession[]
+    recentSessions: WorkoutSession[],
+    availableDataSources: {
+      hasRecovery: boolean;
+      hasStrain: boolean;
+      hasHRV: boolean;
+      hasUserFeedback: boolean;
+    } = { hasRecovery: true, hasStrain: true, hasHRV: true, hasUserFeedback: true }
   ): {
     recommendation: string;
     intensity: 'rest' | 'light' | 'moderate' | 'high';
@@ -66,6 +80,8 @@ export class AdaptiveTrainingEngine {
     shouldDeload: boolean;
     targetStrain: number;
     strainAlert?: string;
+    feedbackConfidence: number;
+    dataSourceWeights: Record<string, number>;
   } {
     const reasoning: string[] = [];
     const safetyAlerts: string[] = [];
@@ -77,67 +93,93 @@ export class AdaptiveTrainingEngine {
     let targetStrain = this.calculateTargetStrain(recovery, strain, recentSessions);
     let strainAlert: string | undefined;
 
-    // Recovery-based rest adjustments and safety recommendations
-    if (recovery < 30) {
+    // Calculate data source weights and feedback confidence
+    const dataWeights = this.calculateDataSourceWeights(availableDataSources, recentSessions);
+    const feedbackAnalysis = this.analyzeUserFeedback(recentSessions);
+    const feedbackConfidence = feedbackAnalysis.confidence;
+
+    reasoning.push(`Data sources: ${this.formatDataSources(availableDataSources)}`);
+    reasoning.push(`Feedback confidence: ${Math.round(feedbackConfidence * 100)}%`);
+
+    // Recovery-based adjustments (weighted by data availability)
+    if (availableDataSources.hasRecovery && recovery < 30) {
       intensity = 'rest';
       shouldStop = true;
       injuryRisk = 'high';
       safetyAlerts.push('🚫 Stop all training - complete rest required');
       reasoning.push(`Recovery ${recovery}% - complete rest day mandatory`);
-    } else if (recovery < 40) {
+    } else if (availableDataSources.hasRecovery && recovery < 40) {
       intensity = 'light';
       restMultiplier = 1.5;
       injuryRisk = 'high';
       safetyAlerts.push('⚠️ High injury risk - consider stopping after warm-up');
       safetyAlerts.push('🩹 Monitor for any pain or discomfort');
       reasoning.push(`Recovery ${recovery}% - extend rest periods by 50%`);
-    } else if (recovery < 55) {
+    } else if (availableDataSources.hasRecovery && recovery < 55) {
       intensity = 'light';
       restMultiplier = 1.3;
       injuryRisk = 'moderate';
       safetyAlerts.push('⚠️ Moderate injury risk - stop if feeling fatigued');
       reasoning.push(`Recovery ${recovery}% - extend rest periods by 30%`);
-    } else if (recovery < 70) {
+    } else if (availableDataSources.hasRecovery && recovery < 70) {
       intensity = 'moderate';
       restMultiplier = 1.1;
       injuryRisk = 'low';
       reasoning.push(`Recovery ${recovery}% - slightly longer rest periods`);
-    } else {
+    } else if (availableDataSources.hasRecovery) {
       intensity = 'high';
       restMultiplier = 0.9;
       injuryRisk = 'low';
       reasoning.push(`Recovery ${recovery}% - can reduce rest periods slightly`);
+    } else {
+      // No recovery data - rely on user feedback
+      reasoning.push('No recovery data - using user feedback for intensity guidance');
+      intensity = this.determineIntensityFromFeedback(feedbackAnalysis);
+      restMultiplier = this.calculateRestFromFeedback(feedbackAnalysis);
     }
 
-    // Strain-based rest adjustments
-    if (strain > 18) {
+    // Strain-based adjustments (if available)
+    if (availableDataSources.hasStrain && strain > 18) {
       restMultiplier *= 1.4;
       safetyAlerts.push('⚠️ Yesterday was high strain - prioritize recovery between sets');
       reasoning.push(`High strain (${strain}) - extending rest periods significantly`);
-    } else if (strain > 15) {
+    } else if (availableDataSources.hasStrain && strain > 15) {
       restMultiplier *= 1.2;
       reasoning.push(`Moderate strain (${strain}) - slightly longer rest`);
     }
 
-    // HRV-based safety alerts
-    const avgHrv = this.calculateRecentAverage(recentSessions, 'hrv', 7);
-    if (hrv < avgHrv * 0.85) {
-      restMultiplier *= 1.3;
-      injuryRisk = injuryRisk === 'low' ? 'moderate' : 'high';
-      safetyAlerts.push('📉 HRV significantly below average - increase rest and monitor closely');
-      reasoning.push(`HRV ${hrv.toFixed(1)}ms vs avg ${avgHrv.toFixed(1)}ms - extended rest needed`);
+    // HRV-based safety alerts (if available)
+    if (availableDataSources.hasHRV) {
+      const avgHrv = this.calculateRecentAverage(recentSessions, 'hrv', 7);
+      if (hrv < avgHrv * 0.85) {
+        restMultiplier *= 1.3;
+        injuryRisk = injuryRisk === 'low' ? 'moderate' : 'high';
+        safetyAlerts.push('📉 HRV significantly below average - increase rest and monitor closely');
+        reasoning.push(`HRV ${hrv.toFixed(1)}ms vs avg ${avgHrv.toFixed(1)}ms - extended rest needed`);
+      }
     }
 
     // Multi-factor injury risk assessment
-    if (recovery < 40 && strain > 16) {
+    if (availableDataSources.hasRecovery && availableDataSources.hasStrain && recovery < 40 && strain > 16) {
       shouldStop = true;
       injuryRisk = 'high';
       safetyAlerts.push('🛑 STOP: Low recovery + high strain = high injury risk');
     }
 
+    // User feedback-based safety checks (when health data is limited)
+    if (!availableDataSources.hasRecovery && !availableDataSources.hasStrain && feedbackAnalysis.recentDifficulty > 2.5) {
+      intensity = 'light';
+      restMultiplier *= 1.3;
+      safetyAlerts.push('⚠️ Recent sets felt very hard - taking it easy today');
+      reasoning.push('User feedback indicates high perceived effort - conservative approach');
+    }
+
     // Deload week assessment
     const weeksOfTraining = this.calculateWeeksOfTraining(recentSessions);
-    const avgRecoveryTrend = this.calculateRecentAverage(recentSessions, 'recovery', 14);
+    const avgRecoveryTrend = availableDataSources.hasRecovery 
+      ? this.calculateRecentAverage(recentSessions, 'recovery', 14)
+      : this.calculateFeedbackBasedRecoveryTrend(recentSessions);
+
     if (weeksOfTraining >= 3 && (avgRecoveryTrend < 45 || this.isDeloadWeekScheduled())) {
       shouldDeload = true;
       safetyAlerts.push('🔄 Deload week recommended - reduce intensity and focus on recovery');
@@ -145,11 +187,11 @@ export class AdaptiveTrainingEngine {
     }
 
     // Strain target calculation and alert
-    if (strain > targetStrain * 0.9) {
+    if (availableDataSources.hasStrain && strain > targetStrain * 0.9) {
       strainAlert = `⚡ Approaching strain target (${strain.toFixed(1)}/${targetStrain}) - prepare to stop`;
     }
 
-    const recommendation = this.generateRecommendationText(intensity, recovery, strain);
+    const recommendation = this.generateRecommendationText(intensity, recovery, strain, availableDataSources);
 
     return {
       recommendation,
@@ -161,7 +203,9 @@ export class AdaptiveTrainingEngine {
       reasoning,
       shouldDeload,
       targetStrain,
-      strainAlert
+      strainAlert,
+      feedbackConfidence,
+      dataSourceWeights: dataWeights
     };
   }
 
@@ -230,17 +274,25 @@ export class AdaptiveTrainingEngine {
   }
 
   /**
-   * Track long-term progression and adjust baseline parameters
+   * Enhanced progression calculation with feedback prioritization
    */
   calculateProgressionAdjustments(
     exercise: string,
     recentSessions: WorkoutSession[],
-    timeframe: number = 28 // days
+    timeframe: number = 28,
+    availableDataSources: {
+      hasRecovery: boolean;
+      hasStrain: boolean;
+      hasHRV: boolean;
+      hasUserFeedback: boolean;
+    } = { hasRecovery: true, hasStrain: true, hasHRV: true, hasUserFeedback: true }
   ): {
     loadProgression: number;
     volumeProgression: number;
     shouldProgress: boolean;
     reasoning: string;
+    feedbackConfidence: number;
+    dataCompleteness: number;
   } {
     const exerciseSessions = recentSessions
       .filter(s => s.exerciseId === exercise)
@@ -251,14 +303,29 @@ export class AdaptiveTrainingEngine {
         loadProgression: 0,
         volumeProgression: 0,
         shouldProgress: false,
-        reasoning: 'Need more training data (minimum 6 sessions)'
+        reasoning: 'Need more training data (minimum 6 sessions)',
+        feedbackConfidence: 0,
+        dataCompleteness: 0
       };
     }
 
-    // Calculate adaptation metrics
-    const recoveryTrend = this.calculateRecoveryTrend(exerciseSessions);
+    // Calculate data completeness score
+    const dataCompleteness = this.calculateDataCompleteness(availableDataSources, exerciseSessions);
+
+    // Enhanced feedback analysis
+    const feedbackAnalysis = this.analyzeUserFeedback(exerciseSessions);
+    const difficultyAnalysis = this.analyzeDifficultyFeedback(exerciseSessions);
+
+    // Calculate adaptation metrics (weighted by data availability)
+    const recoveryTrend = availableDataSources.hasRecovery
+      ? this.calculateRecoveryTrend(exerciseSessions)
+      : this.calculateFeedbackBasedRecoveryTrend(exerciseSessions) / 100; // Convert to -1 to 1 range
+
     const completionRate = this.calculateCompletionRate(exerciseSessions);
-    const effortTrend = this.calculateEffortTrend(exerciseSessions);
+    const effortTrend = availableDataSources.hasRecovery
+      ? this.calculateEffortTrend(exerciseSessions)
+      : this.calculateFeedbackBasedEffortTrend(exerciseSessions);
+
     const consistencyScore = this.calculateConsistencyScore(exerciseSessions);
 
     let shouldProgress = false;
@@ -266,28 +333,74 @@ export class AdaptiveTrainingEngine {
     let volumeProgression = 0;
     let reasoning = '';
 
-    // Progression criteria
-    if (completionRate > 0.85 && recoveryTrend > -0.1 && effortTrend < 0.5 && consistencyScore > 0.8) {
+    // Enhanced progression criteria with feedback prioritization
+    const healthDataScore = (recoveryTrend + 1) * 50; // Convert to 0-100 scale
+    const feedbackScore = (3 - difficultyAnalysis.averageDifficulty) * 33.33; // Convert difficulty to recovery-like score
+
+    // Weight the scores based on data availability
+    const healthDataWeight = dataCompleteness;
+    const feedbackWeight = 1 - dataCompleteness;
+    const combinedRecoveryScore = (healthDataScore * healthDataWeight) + (feedbackScore * feedbackWeight);
+
+    if (completionRate > 0.85 && combinedRecoveryScore > 60 && consistencyScore > 0.8) {
+      // Check difficulty feedback for more nuanced progression
+      if (difficultyAnalysis.easyPercentage > 0.6 && feedbackAnalysis.confidence > 0.4) {
+        // Sets are consistently too easy - increase load more aggressively
+        shouldProgress = true;
+        loadProgression = dataCompleteness > 0.5 ? 0.05 : 0.03; // More conservative without health data
+        reasoning = `Strong adaptation + ${Math.round(difficultyAnalysis.easyPercentage * 100)}% easy sets - ${dataCompleteness > 0.5 ? 'significant' : 'moderate'} load increase`;
+      } else if (difficultyAnalysis.easyPercentage > 0.4 && feedbackAnalysis.confidence > 0.3) {
+        // Sets are mostly easy - standard progression
+        shouldProgress = true;
+        loadProgression = 0.025;
+        reasoning = 'Strong adaptation - increasing load';
+      } else if (difficultyAnalysis.hardPercentage > 0.4 && feedbackAnalysis.confidence > 0.4) {
+        // Sets are too hard - reduce load
+        shouldProgress = true;
+        loadProgression = -0.025;
+        reasoning = `${Math.round(difficultyAnalysis.hardPercentage * 100)}% hard sets - reducing load for recovery`;
+      } else if (feedbackAnalysis.trend === 'improving' && feedbackAnalysis.confidence > 0.5) {
+        // Feedback shows improvement - can progress
+        shouldProgress = true;
+        volumeProgression = 1;
+        reasoning = 'User feedback shows improvement - adding volume';
+      } else {
+        // Sets are appropriately challenging or data is inconclusive
+        shouldProgress = completionRate > 0.9 && combinedRecoveryScore > 70;
+        if (shouldProgress) {
+          volumeProgression = 1;
+          reasoning = 'Sets appropriately challenging - adding volume';
+        } else {
+          reasoning = `Maintaining current parameters (completion: ${(completionRate * 100).toFixed(0)}%, combined recovery: ${combinedRecoveryScore.toFixed(0)}%)`;
+        }
+      }
+    } else if (completionRate > 0.9 && combinedRecoveryScore > 70) {
       shouldProgress = true;
-      loadProgression = 0.025; // 2.5% load increase
-      reasoning = 'Strong adaptation - increasing load';
-    } else if (completionRate > 0.9 && recoveryTrend > 0.1) {
-      shouldProgress = true;
-      volumeProgression = 1; // add 1 rep
+      volumeProgression = 1;
       reasoning = 'Excellent performance - adding volume';
-    } else if (completionRate < 0.7 || recoveryTrend < -0.3) {
+    } else if (completionRate < 0.7 || combinedRecoveryScore < 40) {
       shouldProgress = true;
-      loadProgression = -0.05; // 5% load decrease
+      loadProgression = -0.05;
       reasoning = 'Poor adaptation - reducing load';
     } else {
-      reasoning = `Maintaining current parameters (completion: ${(completionRate * 100).toFixed(0)}%, recovery trend: ${recoveryTrend.toFixed(2)})`;
+      reasoning = `Maintaining current parameters (completion: ${(completionRate * 100).toFixed(0)}%, combined recovery: ${combinedRecoveryScore.toFixed(0)}%)`;
+    }
+
+    // Adjust progression based on feedback confidence
+    if (feedbackAnalysis.confidence < 0.3 && dataCompleteness < 0.5) {
+      // Low confidence in both health data and feedback - be conservative
+      loadProgression *= 0.5;
+      volumeProgression = Math.max(0, volumeProgression - 1);
+      reasoning += ' (conservative approach due to limited data)';
     }
 
     return {
       loadProgression,
       volumeProgression,
       shouldProgress,
-      reasoning
+      reasoning,
+      feedbackConfidence: feedbackAnalysis.confidence,
+      dataCompleteness
     };
   }
 
@@ -418,6 +531,45 @@ export class AdaptiveTrainingEngine {
     return Math.max(0, Math.min(1, 1 - (variance / 10)));
   }
 
+  /**
+   * Analyze difficulty feedback from set completions
+   */
+  private analyzeDifficultyFeedback(sessions: WorkoutSession[]): {
+    easyPercentage: number;
+    moderatePercentage: number;
+    hardPercentage: number;
+    averageDifficulty: number;
+    totalSets: number;
+  } {
+    const allCompletions = sessions
+      .flatMap(s => s.setCompletions || [])
+      .filter(c => c !== undefined);
+
+    if (allCompletions.length === 0) {
+      return {
+        easyPercentage: 0,
+        moderatePercentage: 0,
+        hardPercentage: 0,
+        averageDifficulty: 2, // Default to moderate
+        totalSets: 0
+      };
+    }
+
+    const easyCount = allCompletions.filter(c => c.difficulty === 'easy').length;
+    const moderateCount = allCompletions.filter(c => c.difficulty === 'moderate').length;
+    const hardCount = allCompletions.filter(c => c.difficulty === 'hard').length;
+
+    const totalSets = allCompletions.length;
+
+    return {
+      easyPercentage: easyCount / totalSets,
+      moderatePercentage: moderateCount / totalSets,
+      hardPercentage: hardCount / totalSets,
+      averageDifficulty: (easyCount * 1 + moderateCount * 2 + hardCount * 3) / totalSets,
+      totalSets
+    };
+  }
+
   private calculateTargetStrain(recovery: number, yesterdayStrain: number, sessions: WorkoutSession[]): number {
     // Base target strain calculation
     let baseTarget = 12; // Default moderate target
@@ -451,7 +603,7 @@ export class AdaptiveTrainingEngine {
     return weekNumber === 3; // Every 4th week
   }
 
-  private generateRecommendationText(intensity: string, recovery: number, strain: number): string {
+  private generateRecommendationText(intensity: string, recovery: number, strain: number, availableDataSources?: any): string {
     const base = {
       'rest': 'Complete rest and recovery',
       'light': 'Light activity and mobility work',
@@ -459,11 +611,261 @@ export class AdaptiveTrainingEngine {
       'high': 'High intensity training optimal'
     }[intensity];
 
-    const context = recovery < 50 ? 'Focus on recovery today' :
-                   recovery > 70 ? 'Your body is ready to be challenged' :
-                   'Maintain steady training progress';
+    let context = '';
+    if (availableDataSources?.hasRecovery) {
+      context = recovery < 50 ? 'Focus on recovery today' :
+               recovery > 70 ? 'Your body is ready to be challenged' :
+               'Maintain steady training progress';
+    } else {
+      context = 'Using your feedback to guide training intensity';
+    }
 
     return `${base}. ${context}`;
+  }
+
+  /**
+   * Calculate weights for different data sources based on availability
+   */
+  private calculateDataSourceWeights(
+    availableDataSources: { hasRecovery: boolean; hasStrain: boolean; hasHRV: boolean; hasUserFeedback: boolean },
+    recentSessions: WorkoutSession[]
+  ): Record<string, number> {
+    const weights: Record<string, number> = {
+      recovery: availableDataSources.hasRecovery ? 1.0 : 0.0,
+      strain: availableDataSources.hasStrain ? 1.0 : 0.0,
+      hrv: availableDataSources.hasHRV ? 0.8 : 0.0,
+      userFeedback: availableDataSources.hasUserFeedback ? 0.9 : 0.0
+    };
+
+    // Normalize weights so they sum to 1.0
+    const totalWeight = Object.values(weights).reduce((sum, w) => sum + w, 0);
+    if (totalWeight > 0) {
+      Object.keys(weights).forEach(key => {
+        weights[key] = weights[key] / totalWeight;
+      });
+    }
+
+    // Boost user feedback weight when health data is limited
+    const healthDataCount = [availableDataSources.hasRecovery, availableDataSources.hasStrain, availableDataSources.hasHRV].filter(Boolean).length;
+    if (healthDataCount <= 1 && availableDataSources.hasUserFeedback) {
+      weights.userFeedback *= 1.5; // Increase feedback weight when health data is sparse
+    }
+
+    return weights;
+  }
+
+  /**
+   * Analyze user feedback from recent sessions
+   */
+  private analyzeUserFeedback(sessions: WorkoutSession[]): {
+    recentDifficulty: number;
+    trend: 'improving' | 'stable' | 'declining';
+    confidence: number;
+    consistency: number;
+  } {
+    const recentSessions = sessions.slice(0, 10); // Last 10 sessions
+    const allCompletions = recentSessions.flatMap(s => s.setCompletions || []);
+
+    if (allCompletions.length === 0) {
+      return {
+        recentDifficulty: 2, // Default moderate
+        trend: 'stable',
+        confidence: 0,
+        consistency: 0
+      };
+    }
+
+    // Calculate recent difficulty average (1=easy, 2=moderate, 3=hard)
+    const recentCompletions = allCompletions.slice(0, 20); // Last 20 sets
+    const difficultyScores = recentCompletions.map(c => {
+      switch (c.difficulty) {
+        case 'easy': return 1;
+        case 'moderate': return 2;
+        case 'hard': return 3;
+        default: return 2;
+      }
+    });
+
+    const recentDifficulty = difficultyScores.reduce((sum, score) => sum + score, 0) / difficultyScores.length;
+
+    // Calculate trend
+    const firstHalf = difficultyScores.slice(0, Math.floor(difficultyScores.length / 2));
+    const secondHalf = difficultyScores.slice(Math.floor(difficultyScores.length / 2));
+
+    const firstAvg = firstHalf.length > 0 ? firstHalf.reduce((sum, score) => sum + score, 0) / firstHalf.length : 2;
+    const secondAvg = secondHalf.length > 0 ? secondHalf.reduce((sum, score) => sum + score, 0) / secondHalf.length : 2;
+
+    let trend: 'improving' | 'stable' | 'declining' = 'stable';
+    if (secondAvg < firstAvg - 0.2) trend = 'improving'; // Getting easier
+    if (secondAvg > firstAvg + 0.2) trend = 'declining'; // Getting harder
+
+    // Calculate confidence based on data quantity and consistency
+    const dataPoints = difficultyScores.length;
+    const variance = difficultyScores.reduce((sum, score) => sum + Math.pow(score - recentDifficulty, 2), 0) / dataPoints;
+    const consistency = Math.max(0, 1 - variance / 2); // Lower variance = higher consistency
+
+    const confidence = Math.min(1.0, (dataPoints / 20) * consistency);
+
+    return {
+      recentDifficulty,
+      trend,
+      confidence,
+      consistency
+    };
+  }
+
+  /**
+   * Format available data sources for display
+   */
+  private formatDataSources(availableDataSources: { hasRecovery: boolean; hasStrain: boolean; hasHRV: boolean; hasUserFeedback: boolean }): string {
+    const sources: string[] = [];
+    if (availableDataSources.hasRecovery) sources.push('Recovery');
+    if (availableDataSources.hasStrain) sources.push('Strain');
+    if (availableDataSources.hasHRV) sources.push('HRV');
+    if (availableDataSources.hasUserFeedback) sources.push('User Feedback');
+
+    return sources.length > 0 ? sources.join(', ') : 'None';
+  }
+
+  /**
+   * Determine training intensity based on user feedback when health data is unavailable
+   */
+  private determineIntensityFromFeedback(feedbackAnalysis: any): 'rest' | 'light' | 'moderate' | 'high' {
+    const { recentDifficulty, trend, confidence } = feedbackAnalysis;
+
+    // Low confidence = conservative approach
+    if (confidence < 0.3) {
+      return 'light';
+    }
+
+    if (recentDifficulty <= 1.3) {
+      // Sets feeling very easy
+      return trend === 'improving' ? 'high' : 'moderate';
+    } else if (recentDifficulty <= 2.3) {
+      // Sets feeling moderate
+      return 'moderate';
+    } else {
+      // Sets feeling hard
+      return trend === 'declining' ? 'light' : 'moderate';
+    }
+  }
+
+  /**
+   * Calculate rest multiplier based on user feedback
+   */
+  private calculateRestFromFeedback(feedbackAnalysis: any): number {
+    const { recentDifficulty, trend } = feedbackAnalysis;
+
+    let multiplier = 1.0;
+
+    if (recentDifficulty <= 1.3) {
+      multiplier = 0.9; // Can reduce rest when sets feel easy
+    } else if (recentDifficulty <= 2.3) {
+      multiplier = 1.0; // Standard rest for moderate sets
+    } else {
+      multiplier = 1.2; // Increase rest when sets feel hard
+    }
+
+    // Adjust based on trend
+    if (trend === 'declining') {
+      multiplier *= 1.1; // Extra rest if getting harder
+    } else if (trend === 'improving') {
+      multiplier *= 0.95; // Slightly less rest if getting easier
+    }
+
+    return multiplier;
+  }
+
+  /**
+   * Calculate data completeness score based on available data sources
+   */
+  private calculateDataCompleteness(
+    availableDataSources: {
+      hasRecovery: boolean;
+      hasStrain: boolean;
+      hasHRV: boolean;
+      hasUserFeedback: boolean;
+    },
+    sessions: WorkoutSession[]
+  ): number {
+    let score = 0;
+    let totalSources = 4;
+
+    if (availableDataSources.hasRecovery) score += 0.25;
+    if (availableDataSources.hasStrain) score += 0.25;
+    if (availableDataSources.hasHRV) score += 0.25;
+    if (availableDataSources.hasUserFeedback) score += 0.25;
+
+    // Bonus for having multiple sessions with feedback
+    const sessionsWithFeedback = sessions.filter(s =>
+      s.setCompletions && s.setCompletions.length > 0
+    ).length;
+
+    if (sessionsWithFeedback > sessions.length * 0.5) {
+      score += 0.1; // Bonus for feedback consistency
+    }
+
+    return Math.min(1, score);
+  }
+
+  /**
+   * Calculate effort trend based on feedback when health data is unavailable
+   */
+  private calculateFeedbackBasedEffortTrend(sessions: WorkoutSession[]): number {
+    const recentSessions = sessions.slice(0, 10); // Last 10 sessions
+    const difficultyScores: number[] = [];
+
+    recentSessions.forEach(session => {
+      if (session.setCompletions) {
+        session.setCompletions.forEach(completion => {
+          // Convert difficulty string to effort score (1=easy, 2=moderate, 3=hard)
+          let difficultyScore = 2; // default moderate
+          switch (completion.difficulty) {
+            case 'easy': difficultyScore = 1; break;
+            case 'moderate': difficultyScore = 2; break;
+            case 'hard': difficultyScore = 3; break;
+          }
+          difficultyScores.push(difficultyScore);
+        });
+      }
+    });
+
+    if (difficultyScores.length < 3) return 0.5; // Neutral if insufficient data
+
+    // Calculate trend in difficulty (increasing difficulty = increasing effort)
+    const recent = difficultyScores.slice(-5);
+    const earlier = difficultyScores.slice(0, -5);
+
+    if (earlier.length === 0) return 0.5;
+
+    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+    const earlierAvg = earlier.reduce((a, b) => a + b, 0) / earlier.length;
+
+    // Normalize to 0-1 range (higher = more effort)
+    const trend = (recentAvg - earlierAvg) / 2; // Divide by 2 to keep in reasonable range
+    return Math.max(0, Math.min(1, 0.5 + trend));
+  }
+
+  /**
+   * Calculate recovery trend based on user feedback when health data is unavailable
+   */
+  private calculateFeedbackBasedRecoveryTrend(sessions: WorkoutSession[]): number {
+    const feedbackAnalysis = this.analyzeUserFeedback(sessions);
+
+    // Convert difficulty trend to recovery-like score (0-100)
+    // Easy sets = good recovery (high score), Hard sets = poor recovery (low score)
+    const baseScore = 60; // Neutral recovery score
+
+    if (feedbackAnalysis.recentDifficulty <= 1.3) {
+      // Sets feeling easy = good recovery
+      return baseScore + 20;
+    } else if (feedbackAnalysis.recentDifficulty <= 2.3) {
+      // Sets feeling moderate = normal recovery
+      return baseScore;
+    } else {
+      // Sets feeling hard = poor recovery
+      return baseScore - 20;
+    }
   }
 
   /**

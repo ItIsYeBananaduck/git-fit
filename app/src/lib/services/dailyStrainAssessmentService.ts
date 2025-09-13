@@ -6,6 +6,7 @@
  */
 
 import type { RecoveryData } from '../types/sharedTypes';
+import { widgetService, TrafficLight, AlertSeverity, RecommendationStatus } from './widgetService';
 
 export interface DailyStrainInputs {
   userId: string;
@@ -454,7 +455,12 @@ export class DailyStrainAssessmentService {
     };
 
     // Run assessment
-    return await this.assessDailyStrain(inputs);
+    const assessment = await this.assessDailyStrain(inputs);
+
+    // Update widget with assessment results
+    await this.updateWidgetWithAssessment(assessment);
+
+    return assessment;
   }
 
   /**
@@ -473,5 +479,76 @@ export class DailyStrainAssessmentService {
     // This would export strain assessment data for external analysis
     console.log(`Exporting strain data for user ${userId} from ${startDate} to ${endDate}`);
     return [];
+  }
+
+  /**
+   * Update widget with strain assessment results
+   */
+  private async updateWidgetWithAssessment(assessment: StrainAssessment): Promise<void> {
+    try {
+      // Convert assessment to widget-compatible format
+      const widgetAssessment = {
+        overallStatus: assessment.overallStatus,
+        compositeScore: assessment.compositeScore,
+        zones: {
+          hrZone: this.convertTrafficLight(assessment.zones.hrZone),
+          spo2Zone: this.convertTrafficLight(assessment.zones.spo2Zone)
+        },
+        deltas: {
+          hrDelta: assessment.deltas.hrDelta,
+          spo2Delta: assessment.deltas.spo2Delta,
+          hrvDelta: 0 // Not available in current assessment
+        },
+        healthAlerts: assessment.healthAlerts.map(alert => ({
+          message: alert.message,
+          severity: this.convertAlertSeverity(alert.severity),
+          requiresAttention: alert.requiresAttention,
+          recommendation: alert.recommendation
+        })),
+        trainingRecommendation: {
+          status: this.convertRecommendationStatus(assessment.trainingRecommendation.status),
+          reasoning: assessment.trainingRecommendation.reasoning,
+          modifications: assessment.trainingRecommendation.modifications,
+          loadReductionPercent: assessment.trainingRecommendation.loadReductionPercent,
+          alternativeActivities: assessment.trainingRecommendation.alternativeActivities
+        },
+        confidence: assessment.confidence,
+        timestamp: assessment.date.getTime()
+      };
+
+      await widgetService.updateWidgetWithAssessment(widgetAssessment);
+    } catch (error) {
+      console.error('Failed to update widget with assessment:', error);
+      // Don't throw - widget update failure shouldn't break assessment
+    }
+  }
+
+  private convertTrafficLight(zone: 'green' | 'yellow' | 'red'): TrafficLight {
+    switch (zone) {
+      case 'green': return TrafficLight.GREEN;
+      case 'yellow': return TrafficLight.YELLOW;
+      case 'red': return TrafficLight.RED;
+      default: return TrafficLight.GREEN;
+    }
+  }
+
+  private convertAlertSeverity(severity: 'low' | 'medium' | 'high' | 'critical'): AlertSeverity {
+    switch (severity) {
+      case 'low': return AlertSeverity.LOW;
+      case 'medium': return AlertSeverity.MEDIUM;
+      case 'high': return AlertSeverity.HIGH;
+      case 'critical': return AlertSeverity.HIGH; // Map critical to high for widget
+      default: return AlertSeverity.MEDIUM;
+    }
+  }
+
+  private convertRecommendationStatus(status: 'no_change' | 'reduce_load' | 'modify_session' | 'full_rest'): RecommendationStatus {
+    switch (status) {
+      case 'no_change': return RecommendationStatus.NORMAL;
+      case 'reduce_load': return RecommendationStatus.REDUCE_LOAD;
+      case 'modify_session': return RecommendationStatus.REDUCE_LOAD; // Map to reduce_load
+      case 'full_rest': return RecommendationStatus.REST;
+      default: return RecommendationStatus.NORMAL;
+    }
   }
 }
