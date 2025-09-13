@@ -1,4 +1,4 @@
-import type { WHOOPRecovery, WHOOPStrain } from '$lib/api/whoop';
+import type { StrainAssessment } from './dailyStrainAssessmentService';
 
 export interface TrainingParameters {
   load: number; // percentage of 1RM or RPE scale
@@ -464,5 +464,312 @@ export class AdaptiveTrainingEngine {
                    'Maintain steady training progress';
 
     return `${base}. ${context}`;
+  }
+
+  /**
+   * Integrate daily strain assessment with training recommendations
+   */
+  getStrainAdjustedRecommendation(
+    strainAssessment: StrainAssessment,
+    recovery: number,
+    baseStrain: number,
+    baseHrv: number,
+    recentSessions: WorkoutSession[]
+  ): {
+    recommendation: string;
+    intensity: 'rest' | 'light' | 'moderate' | 'high';
+    restMultiplier: number;
+    shouldStop: boolean;
+    injuryRisk: 'low' | 'moderate' | 'high';
+    safetyAlerts: string[];
+    reasoning: string[];
+    shouldDeload: boolean;
+    targetStrain: number;
+    strainAlert?: string;
+    strainAssessment: StrainAssessment;
+  } {
+    // Start with base recommendation
+    const baseRec = this.getDailyTrainingRecommendation(
+      recovery,
+      baseStrain,
+      baseHrv,
+      recentSessions
+    );
+
+    // Apply strain assessment adjustments
+    const adjustedRec = this.applyStrainAssessmentAdjustments(baseRec, strainAssessment);
+
+    return {
+      ...adjustedRec,
+      strainAssessment
+    };
+  }
+
+  /**
+   * Apply strain assessment adjustments to base recommendation
+   */
+  private applyStrainAssessmentAdjustments(
+    baseRec: ReturnType<AdaptiveTrainingEngine['getDailyTrainingRecommendation']>,
+    strainAssessment: StrainAssessment
+  ): ReturnType<AdaptiveTrainingEngine['getDailyTrainingRecommendation']> {
+    const adjusted = { ...baseRec };
+    const { overallStatus, compositeScore, healthAlerts, trainingRecommendation } = strainAssessment;
+
+    // Override intensity based on strain assessment
+    switch (overallStatus) {
+      case 'high_risk':
+        adjusted.intensity = 'rest';
+        adjusted.shouldStop = true;
+        adjusted.injuryRisk = 'high';
+        break;
+      case 'compromised':
+        adjusted.intensity = 'light';
+        adjusted.injuryRisk = adjusted.injuryRisk === 'low' ? 'moderate' : 'high';
+        break;
+      case 'moderate':
+        // Keep moderate or reduce to light if current is high
+        if (adjusted.intensity === 'high') {
+          adjusted.intensity = 'moderate';
+        }
+        break;
+      case 'ready':
+        // Keep base recommendation
+        break;
+    }
+
+    // Apply training recommendation modifications
+    if (trainingRecommendation.status === 'reduce_load' && trainingRecommendation.loadReductionPercent) {
+      adjusted.restMultiplier *= (1 + trainingRecommendation.loadReductionPercent / 100);
+    }
+
+    // Add strain assessment alerts
+    healthAlerts.forEach(alert => {
+      adjusted.safetyAlerts.push(`🚨 ${alert.message}`);
+    });
+
+    // Add training recommendation modifications
+    trainingRecommendation.modifications.forEach(mod => {
+      adjusted.safetyAlerts.push(`💡 ${mod}`);
+    });
+
+    // Update reasoning with strain assessment
+    adjusted.reasoning.push(`Strain assessment: ${overallStatus} (score: ${compositeScore})`);
+    adjusted.reasoning.push(`Training recommendation: ${trainingRecommendation.reasoning}`);
+
+    // Adjust target strain based on assessment
+    if (overallStatus === 'high_risk') {
+      adjusted.targetStrain = Math.round(adjusted.targetStrain * 0.3);
+    } else if (overallStatus === 'compromised') {
+      adjusted.targetStrain = Math.round(adjusted.targetStrain * 0.6);
+    } else if (overallStatus === 'moderate') {
+      adjusted.targetStrain = Math.round(adjusted.targetStrain * 0.8);
+    }
+
+    return adjusted;
+  }
+
+  /**
+   * Generate comprehensive daily training plan with strain assessment
+   */
+  generateDailyTrainingPlan(
+    strainAssessment: StrainAssessment,
+    plannedWorkouts: any[],
+    userProfile: any
+  ): {
+    canTrain: boolean;
+    recommendedWorkouts: any[];
+    modifications: string[];
+    restDayAlternatives: string[];
+    monitoringPoints: string[];
+    nextAssessmentTime: Date;
+  } {
+    const { overallStatus, trainingRecommendation, healthAlerts } = strainAssessment;
+
+    // Determine if training is recommended
+    const canTrain = overallStatus !== 'high_risk';
+
+    // Apply modifications to planned workouts
+    const recommendedWorkouts = plannedWorkouts.map(workout => {
+      return this.modifyWorkoutForStrain(workout, strainAssessment);
+    });
+
+    // Generate rest day alternatives if needed
+    const restDayAlternatives = overallStatus === 'high_risk' || overallStatus === 'compromised'
+      ? this.generateRestDayAlternatives(strainAssessment)
+      : [];
+
+    // Generate monitoring points
+    const monitoringPoints = this.generateMonitoringPoints(strainAssessment);
+
+    // Calculate next assessment time
+    const nextAssessmentTime = new Date();
+    nextAssessmentTime.setHours(6, 0, 0, 0); // Next morning at 6 AM
+    nextAssessmentTime.setDate(nextAssessmentTime.getDate() + 1);
+
+    return {
+      canTrain,
+      recommendedWorkouts,
+      modifications: trainingRecommendation.modifications,
+      restDayAlternatives,
+      monitoringPoints,
+      nextAssessmentTime
+    };
+  }
+
+  /**
+   * Modify workout based on strain assessment
+   */
+  private modifyWorkoutForStrain(workout: any, strainAssessment: StrainAssessment): any {
+    const { overallStatus, trainingRecommendation } = strainAssessment;
+    const modifiedWorkout = { ...workout };
+
+    switch (overallStatus) {
+      case 'high_risk':
+        // Replace with rest or very light activity
+        return {
+          ...workout,
+          type: 'rest',
+          duration: 0,
+          exercises: [],
+          note: 'Rest day - high risk detected'
+        };
+
+      case 'compromised':
+        // Replace with mobility or light activity
+        if (trainingRecommendation.alternativeActivities) {
+          return {
+            ...workout,
+            type: 'recovery',
+            duration: Math.round(workout.duration * 0.5),
+            exercises: trainingRecommendation.alternativeActivities,
+            note: 'Modified for recovery - compromised status'
+          };
+        }
+        break;
+
+      case 'moderate':
+        // Reduce load and volume
+        if (trainingRecommendation.loadReductionPercent) {
+          modifiedWorkout.loadReduction = trainingRecommendation.loadReductionPercent;
+          modifiedWorkout.note = `Reduced load by ${trainingRecommendation.loadReductionPercent}% - moderate strain`;
+        }
+        break;
+
+      case 'ready':
+        // Keep as planned
+        modifiedWorkout.note = 'Ready for planned workout';
+        break;
+    }
+
+    return modifiedWorkout;
+  }
+
+  /**
+   * Generate rest day alternatives
+   */
+  private generateRestDayAlternatives(strainAssessment: StrainAssessment): string[] {
+    const { trainingRecommendation } = strainAssessment;
+
+    if (trainingRecommendation.alternativeActivities) {
+      return trainingRecommendation.alternativeActivities;
+    }
+
+    return [
+      'Light walking (20-30 minutes)',
+      'Gentle yoga or stretching',
+      'Meditation or deep breathing exercises',
+      'Reading or relaxation activities',
+      'Light household activities',
+      'Nature walk or fresh air time'
+    ];
+  }
+
+  /**
+   * Generate monitoring points for the day
+   */
+  private generateMonitoringPoints(strainAssessment: StrainAssessment): string[] {
+    const { overallStatus, healthAlerts, zones } = strainAssessment;
+    const monitoringPoints: string[] = [];
+
+    // Add health alert monitoring
+    healthAlerts.forEach(alert => {
+      if (alert.requiresAttention) {
+        monitoringPoints.push(`Monitor: ${alert.recommendation}`);
+      }
+    });
+
+    // Add zone-specific monitoring
+    if (zones.hrZone === 'red') {
+      monitoringPoints.push('Monitor resting heart rate throughout the day');
+    }
+
+    if (zones.spo2Zone === 'red') {
+      monitoringPoints.push('Monitor blood oxygen levels, avoid high altitude if possible');
+    }
+
+    // Add general monitoring based on status
+    switch (overallStatus) {
+      case 'high_risk':
+        monitoringPoints.push('Monitor for illness symptoms (fever, fatigue, body aches)');
+        monitoringPoints.push('Track energy levels and sleep quality');
+        break;
+      case 'compromised':
+        monitoringPoints.push('Monitor workout performance and perceived effort');
+        monitoringPoints.push('Track heart rate response during activity');
+        break;
+      case 'moderate':
+        monitoringPoints.push('Monitor recovery between sets');
+        monitoringPoints.push('Note any unusual fatigue or discomfort');
+        break;
+    }
+
+    return monitoringPoints;
+  }
+
+  /**
+   * Get strain assessment summary for dashboard
+   */
+  getStrainAssessmentSummary(strainAssessment: StrainAssessment): {
+    status: string;
+    statusColor: 'green' | 'yellow' | 'orange' | 'red';
+    keyMetrics: Record<string, any>;
+    recommendations: string[];
+    alerts: string[];
+  } {
+    const { overallStatus, compositeScore, zones, trainingRecommendation, healthAlerts } = strainAssessment;
+
+    // Determine status color
+    const statusColor = {
+      'ready': 'green' as const,
+      'moderate': 'yellow' as const,
+      'compromised': 'orange' as const,
+      'high_risk': 'red' as const
+    }[overallStatus];
+
+    // Key metrics
+    const keyMetrics = {
+      'Overall Status': overallStatus.charAt(0).toUpperCase() + overallStatus.slice(1),
+      'Composite Score': `${compositeScore}/100`,
+      'HR Zone': zones.hrZone.toUpperCase(),
+      'SpO₂ Zone': zones.spo2Zone.toUpperCase(),
+      'Confidence': `${strainAssessment.confidence}%`
+    };
+
+    // Recommendations
+    const recommendations = [
+      trainingRecommendation.reasoning,
+      ...trainingRecommendation.modifications.slice(0, 2) // Limit to 2 modifications
+    ];
+
+    // Alerts
+    const alerts = healthAlerts.map(alert => alert.message);
+
+    return {
+      status: overallStatus,
+      statusColor,
+      keyMetrics,
+      recommendations,
+      alerts
+    };
   }
 }
