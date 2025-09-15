@@ -9,6 +9,14 @@ export default defineConfig({
                 strictPort: true,
                 allowedHosts: true
         },
+        resolve: {
+                alias: {
+                        $lib: '/src/lib',
+                        $components: '/src/lib/components',
+                        $services: '/src/lib/services',
+                        $utils: '/src/lib/utils'
+                }
+        },
         test: {
                 expect: { requireAssertions: true },
                 projects: [

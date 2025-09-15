@@ -11,6 +11,10 @@
 		"strict": true,
 		"moduleResolution": "node",
 		"module": "es2022",
-		"target": "es2022"
+		"target": "es2022",
+		"baseUrl": "./src",
+		"paths": {
+			"$lib/*": ["lib/*"]
+		}
 	}
 }

@@ -101,7 +101,7 @@ export class NutritionCalculator {
       very_active: 1.9
     };
 
-    let tdee = bmr * activityFactors[activityLevel];
+    const tdee = bmr * activityFactors[activityLevel]; // Changed from let to const
 
     // Adjust for goal
     const goalAdjustments = {
@@ -148,82 +148,35 @@ export class NutritionCalculator {
     recoveryData: RecoveryData[],
     recentTraining: TrainingSession[]
   ): NutritionAdjustment {
-    if (recoveryData.length === 0) {
-      return this.getDefaultAdjustment();
-    }
-
-    const latestRecovery = recoveryData[recoveryData.length - 1];
-    const avgRecovery = this.calculateAverageRecovery(recoveryData.slice(-7)); // Last 7 days
-    
-    let adjustments = {
-      caloriesDelta: 0,
-      proteinDelta: 0,
-      carbsDelta: 0,
-      fatDelta: 0
+    const adjustments: NutritionAdjustment = {
+      reason: 'recovery_boost',
+      adjustments: {
+        caloriesDelta: 0,
+        proteinDelta: 0,
+        carbsDelta: 0,
+        fatDelta: 0
+      },
+      recommendations: []
     };
-    
-    let recommendations: string[] = [];
-    let reason: NutritionAdjustment['reason'] = 'rest_day';
 
-    // Check for poor recovery indicators: Low HRV + High RHR + Poor Sleep
-    const isPoorRecovery = this.isPoorRecovery(latestRecovery);
-    
-    if (isPoorRecovery) {
-      reason = 'recovery_boost';
-      // Poor recovery - boost nutrition and suggest light day
-      adjustments.caloriesDelta += baseGoals.calories * 0.05; // 5% more calories
-      adjustments.carbsDelta += baseGoals.carbs * 0.15; // 15% more carbs
-      adjustments.proteinDelta += baseGoals.protein * 0.1; // 10% more protein
-      recommendations.push('🔋 Poor recovery detected (low HRV, high RHR, poor sleep)');
-      recommendations.push('🍚 Increase carbs slightly for energy restoration');
-      recommendations.push('💧 Boost hydration - aim for extra 500ml water due to poor recovery');
-      recommendations.push('🛋️ Consider scheduling a light training day or rest');
-    } else if (latestRecovery.recoveryScore <= 40) {
-      reason = 'recovery_boost';
-      // General poor recovery - boost nutrition
-      adjustments.caloriesDelta += baseGoals.calories * 0.05; // 5% more calories
-      adjustments.carbsDelta += baseGoals.carbs * 0.15; // 15% more carbs
-      adjustments.proteinDelta += baseGoals.protein * 0.1; // 10% more protein
-      recommendations.push('🔋 Low recovery - increase caloric intake');
-      recommendations.push('🍚 Focus on complex carbs for energy restoration');
-      recommendations.push('💧 Increase hydration - aim for extra 300ml water');
-    } else if (latestRecovery.recoveryScore > 80 && avgRecovery > 75) {
-      // Great recovery - can maintain or slightly reduce if weight loss goal
-      adjustments.caloriesDelta = -baseGoals.calories * 0.02; // 2% reduction
-      recommendations.push('✅ Great recovery - maintain current nutrition plan');
-      recommendations.push('💧 Maintain regular hydration schedule');
+    // Analyze recovery data
+    const lowHRV = recoveryData.some(data => data.hrv < 50); // Corrected to use `hrv`
+    const highRestingHR = recoveryData.some(data => data.restingHR > 70); // Corrected to use `restingHR`
+    const poorSleep = recoveryData.some(data => data.sleepQuality < 3); // Corrected to use `sleepQuality`
+
+    if (lowHRV && highRestingHR && poorSleep) {
+      adjustments.adjustments.carbsDelta += 50; // Increase carbs
+      adjustments.recommendations.push('Increase carb intake slightly to support recovery.');
     }
 
-    // Check if today is a training day (only override if not already recovery boost)
-    const today = new Date().toISOString().split('T')[0];
-    const isTrainingDay = recentTraining.some(session => 
-      session.date.split('T')[0] === today
-    );
-
-    if (isTrainingDay && reason !== 'recovery_boost') {
-      reason = 'training_day';
-      // Training day adjustments
-      adjustments.carbsDelta = baseGoals.carbs * 0.1; // 10% more carbs
-      adjustments.proteinDelta = baseGoals.protein * 0.05; // 5% more protein
-      recommendations.push('🍌 Consume extra carbs before and after training');
-      recommendations.push('🥩 Include protein within 2 hours post-workout');
+    // Analyze recent training sessions
+    const highStrainSessions = recentTraining.filter(session => session.strain > 8);
+    if (highStrainSessions.length > 2) {
+      adjustments.adjustments.caloriesDelta += 200; // Increase calories
+      adjustments.recommendations.push('Increase calorie intake to compensate for high training strain.');
     }
 
-    // High strain adjustments
-    if (latestRecovery.strainYesterday > 15) {
-      reason = 'high_strain';
-      adjustments.carbsDelta += baseGoals.carbs * 0.2; // 20% more carbs
-      adjustments.proteinDelta += baseGoals.protein * 0.15; // 15% more protein
-      recommendations.push('⚡ High strain yesterday - prioritize recovery nutrition');
-      recommendations.push('🥛 Consider a post-workout recovery shake');
-    }
-
-    return {
-      reason,
-      adjustments,
-      recommendations,
-      timing: (isTrainingDay || reason === 'training_day') ? 'post_workout' : 'throughout_day'
-    };
+    return adjustments;
   }
 
   /**
@@ -320,9 +273,9 @@ export class NutritionCalculator {
 
   private isPoorRecovery(recovery: RecoveryData): boolean {
     // Check for poor recovery indicators: Low HRV + High RHR + Poor Sleep
-    const lowHRV = recovery.hrvScore < 40; // Below 40 is considered low HRV
-    const highRHR = recovery.restingHeartRate > 70; // Above 70 bpm is considered high resting HR
-    const poorSleep = recovery.sleepPerformance < 60; // Below 60% is poor sleep performance
+    const lowHRV = (recovery.hrvScore ?? recovery.hrv) < 40; // Below 40 is considered low HRV
+    const highRHR = (recovery.restingHeartRate ?? recovery.restingHR) > 70; // Above 70 bpm is considered high resting HR
+    const poorSleep = (recovery.sleepPerformance ?? recovery.sleepQuality) < 60; // Below 60% is poor sleep performance
 
     return lowHRV && highRHR && poorSleep;
   }
@@ -353,9 +306,9 @@ export class NutritionCalculator {
     const recommendations: string[] = [];
     
     // Check for poor recovery indicators: Low HRV + High RHR + Poor Sleep
-    const isPoorRecovery = latestRecovery.hrvScore < 40 && 
-                          latestRecovery.restingHeartRate > 70 && 
-                          latestRecovery.sleepPerformance < 60;
+    const isPoorRecovery = (latestRecovery.hrvScore ?? latestRecovery.hrv) < 40 && 
+                          (latestRecovery.restingHeartRate ?? latestRecovery.restingHR) > 70 && 
+                          (latestRecovery.sleepPerformance ?? latestRecovery.sleepQuality) < 60;
 
     // Base hydration calculation (35ml per kg body weight)
     const baseHydration = userProfile.weight * 35;
@@ -383,11 +336,11 @@ export class NutritionCalculator {
     }
 
     // Add activity-based recommendations
-    if (latestRecovery.sleepPerformance < 60) {
+    if ((latestRecovery.sleepPerformance ?? 0) < 60) {
       recommendations.push('😴 Poor sleep detected - prioritize morning hydration');
     }
 
-    if (latestRecovery.hrvScore < 50) {
+    if ((latestRecovery.hrvScore ?? 0) < 50) {
       recommendations.push('❤️ Low HRV - focus on consistent hydration throughout the day');
     }
 

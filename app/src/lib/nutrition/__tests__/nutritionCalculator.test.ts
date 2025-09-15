@@ -57,9 +57,9 @@ describe('NutritionCalculator', () => {
         userId: 'user1',
         date: '2024-01-01',
         recoveryScore: 40, // Poor recovery
-        hrvScore: 35,
-        restingHeartRate: 65,
-        sleepPerformance: 60,
+        hrv: 35, // Updated to match RecoveryData
+        restingHR: 65, // Updated to match RecoveryData
+        sleepQuality: 3, // Updated to match RecoveryData
         strainYesterday: 10,
         baselineDeviation: -10,
         trend: 'declining' as const
@@ -103,7 +103,9 @@ describe('NutritionCalculator', () => {
           fiber: 2,
           sugar: 3,
           sodium: 100
-        }
+        },
+        strain: 5, // Added missing property
+        exercises: ['bench_press'] // Added missing property
       }];
 
       const goodRecovery = [{

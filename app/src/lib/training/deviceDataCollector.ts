@@ -5,6 +5,8 @@
  * Purpose: Integrate and process data from multiple wearable devices
  */
 
+import type { RecoveryData } from '../types/sharedTypes';
+
 export interface DeviceDataCollector {
   /**
    * Connect to a wearable device
@@ -75,14 +77,6 @@ export interface RealtimeMetrics {
 export interface DateRange {
   startDate: string;
   endDate: string;
-}
-
-export interface RecoveryData {
-  date: string;
-  recoveryScore: number;
-  hrvScore: number;
-  restingHeartRate: number;
-  sleepPerformance: number;
 }
 
 export interface StrainMetrics {

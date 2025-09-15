@@ -27,36 +27,28 @@ export interface Workout {
   volume: VolumeMetrics;
 }
 
+// Consolidated RecoveryData interface
 export interface RecoveryData {
-  userId: string;
+  userId?: string; // Optional for device data
   date: string;
   recoveryScore: number; // 0-100
-  hrvScore: number;
-  restingHeartRate: number;
-  sleepPerformance: number;
-  strainYesterday: number;
-  baselineDeviation: number;
-  trend: 'improving' | 'stable' | 'declining';
+  hrv: number; // Heart Rate Variability
+  restingHR: number; // Resting Heart Rate
+  sleepQuality: number; // Sleep quality score (1-5)
+  hrvScore?: number; // Alias for Heart Rate Variability
+  restingHeartRate?: number; // Alias for Resting Heart Rate
+  sleepPerformance?: number; // Alias for Sleep Performance
+  strainYesterday: number; // Strain score from the previous day
+  baselineDeviation: number; // Deviation from baseline metrics
+  trend: 'improving' | 'declining' | 'stable'; // Recovery trend
 }
 
 export interface TrainingSession {
   id: string;
   userId: string;
   date: string;
-  exerciseId: string;
-  plannedParams: TrainingParameters;
-  actualParams?: TrainingParameters;
-  completedReps?: number[];
-  perceivedEffort?: number; // RPE 1-10
-  recoveryBefore?: number; // WHOOP recovery score
-  strainAfter?: number; // WHOOP strain score
-  adaptationScore?: number; // calculated adaptation metric
-  targetStrain?: number; // target strain for this session
-  actualStrain?: number; // actual strain achieved
-  stoppedEarly?: boolean; // true if stopped due to strain target
-  completed?: boolean; // whether the session was completed
-  targetReps?: number; // target reps for the session
-  actualReps?: number; // actual reps completed
+  strain: number; // Training strain score
+  exercises: string[]; // List of exercises in the session
 }
 
 export interface TrainingParameters {

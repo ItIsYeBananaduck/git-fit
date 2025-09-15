@@ -817,3 +817,17 @@ export interface ServiceError {
 // Ensure Id type is exported correctly
 // Use Convex-generated `Id` type from app/convex/_generated/dataModel instead of local re-definition.
 export type { Id } from "../../../../convex/_generated/dataModel";
+
+export interface AuditSearchCriteria {
+  adminId?: Id<'adminUsers'>;
+  resourceId?: string;
+  outcome?: 'success' | 'failure' | 'partial';
+  ipAddress?: string;
+  searchText?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  limit?: number;
+  offset?: number;
+}

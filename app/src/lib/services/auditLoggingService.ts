@@ -138,7 +138,7 @@ export class AuditLoggingService {
         action: action.action,
         resource: action.resource,
         resourceId: action.resourceId,
-        details: action.details,
+        details: JSON.stringify(action.details), // Convert details to string
         ipAddress: action.ipAddress,
         userAgent: action.userAgent,
         timestamp: new Date().toISOString(),

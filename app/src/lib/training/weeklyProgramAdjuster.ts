@@ -5,6 +5,8 @@
  * Purpose: Dynamically adjust training programs based on user progress and feedback.
  */
 
+import type { RecoveryData } from '../types/sharedTypes';
+
 export interface WeeklyProgramAdjuster {
   /**
    * Analyze user progress over the past week.
@@ -68,9 +70,4 @@ export interface Exercise {
   sets: number;
   reps: number;
   load: number;
-}
-
-export interface RecoveryData {
-  date: string;
-  recoveryScore: number;
 }
