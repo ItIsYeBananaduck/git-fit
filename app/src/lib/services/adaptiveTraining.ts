@@ -56,12 +56,40 @@ export class AdaptiveTrainingEngine {
   }
 
   /**
+   * Adjust rest interval based on how quickly user returns to baseline or stays strained
+   */
+  adjustRestBasedOnBaselineReturn(
+    baseline: { hr: number; spo2: number },
+    inWorkout: { hr: number; spo2: number },
+    lastRestDuration: number,
+    timeToBaseline: number // seconds to return to baseline after set
+  ): number {
+    // If user returns to baseline quickly (< 60s), decrease rest by 20%
+    if (
+      timeToBaseline < 60 &&
+      Math.abs(inWorkout.hr - baseline.hr) < 5 &&
+      Math.abs(inWorkout.spo2 - baseline.spo2) < 2
+    ) {
+      return Math.max(20, lastRestDuration * 0.8);
+    }
+    // If user stays strained (> 120s), increase rest by 30%
+    if (
+      timeToBaseline > 120 ||
+      Math.abs(inWorkout.hr - baseline.hr) > 15 ||
+      Math.abs(inWorkout.spo2 - baseline.spo2) > 5
+    ) {
+      return Math.min(300, lastRestDuration * 1.3);
+    }
+    // Otherwise, keep rest the same
+    return lastRestDuration;
+  }
+  /**
    * Enhanced daily training recommendation with feedback prioritization
    */
   getDailyTrainingRecommendation(
-    recovery: number, 
-    strain: number, 
-    hrv: number, 
+    recovery: number,
+    strain: number,
+    hrv: number,
     recentSessions: WorkoutSession[],
     availableDataSources: {
       hasRecovery: boolean;
@@ -176,7 +204,7 @@ export class AdaptiveTrainingEngine {
 
     // Deload week assessment
     const weeksOfTraining = this.calculateWeeksOfTraining(recentSessions);
-    const avgRecoveryTrend = availableDataSources.hasRecovery 
+    const avgRecoveryTrend = availableDataSources.hasRecovery
       ? this.calculateRecentAverage(recentSessions, 'recovery', 14)
       : this.calculateFeedbackBasedRecoveryTrend(recentSessions);
 
@@ -251,7 +279,7 @@ export class AdaptiveTrainingEngine {
     progress: number; // 0-1 scale
   } {
     const progress = Math.min(1, currentStrain / targetStrain);
-    
+
     if (currentStrain >= targetStrain) {
       return {
         shouldStop: true,
@@ -265,7 +293,7 @@ export class AdaptiveTrainingEngine {
         progress
       };
     }
-    
+
     return {
       shouldStop: false,
       message: `Strain progress: ${currentStrain.toFixed(1)}/${targetStrain} (${Math.round(progress * 100)}%)`,
@@ -470,13 +498,13 @@ export class AdaptiveTrainingEngine {
 
     const recent = sessions.slice(0, 10);
     const adaptationScores = recent.map(s => s.adaptationScore || 0);
-    
+
     // Simple linear trend calculation
     let trend = 0;
     for (let i = 1; i < adaptationScores.length; i++) {
       trend += adaptationScores[i] - adaptationScores[i - 1];
     }
-    
+
     return trend / (adaptationScores.length - 1);
   }
 
@@ -486,7 +514,7 @@ export class AdaptiveTrainingEngine {
 
     const early = recoveries.slice(-3).reduce((a, b) => a + b, 0) / 3;
     const recent = recoveries.slice(0, 3).reduce((a, b) => a + b, 0) / 3;
-    
+
     return (recent - early) / 100; // normalize to -1 to 1 range
   }
 
@@ -509,7 +537,7 @@ export class AdaptiveTrainingEngine {
 
     const early = efforts.slice(-3).reduce((a, b) => a + b, 0) / 3;
     const recent = efforts.slice(0, 3).reduce((a, b) => a + b, 0) / 3;
-    
+
     return (recent - early) / 10; // normalize RPE difference
   }
 
@@ -518,7 +546,7 @@ export class AdaptiveTrainingEngine {
 
     const dates = sessions.map(s => new Date(s.date));
     const intervals = [];
-    
+
     for (let i = 1; i < dates.length; i++) {
       const days = (dates[i - 1].getTime() - dates[i].getTime()) / (1000 * 60 * 60 * 24);
       intervals.push(days);
@@ -526,7 +554,7 @@ export class AdaptiveTrainingEngine {
 
     const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
     const variance = intervals.reduce((sum, interval) => sum + Math.pow(interval - avgInterval, 2), 0) / intervals.length;
-    
+
     // Lower variance = higher consistency score (0-1 scale)
     return Math.max(0, Math.min(1, 1 - (variance / 10)));
   }
@@ -573,27 +601,27 @@ export class AdaptiveTrainingEngine {
   private calculateTargetStrain(recovery: number, yesterdayStrain: number, sessions: WorkoutSession[]): number {
     // Base target strain calculation
     let baseTarget = 12; // Default moderate target
-    
+
     // Adjust based on recovery
     if (recovery > 70) baseTarget = 16; // Can push harder
     else if (recovery > 50) baseTarget = 14; // Moderate push
     else if (recovery > 30) baseTarget = 10; // Easy day
     else baseTarget = 6; // Very light
-    
+
     // Adjust based on yesterday's strain
     if (yesterdayStrain > 16) baseTarget *= 0.8; // Reduce if high strain yesterday
     else if (yesterdayStrain < 8) baseTarget *= 1.1; // Can increase if low strain
-    
+
     return Math.round(baseTarget);
   }
 
   private calculateWeeksOfTraining(sessions: WorkoutSession[]): number {
     if (sessions.length < 6) return 0;
-    
+
     const firstSession = sessions[sessions.length - 1];
     const lastSession = sessions[0];
     const daysDiff = (new Date(lastSession.date).getTime() - new Date(firstSession.date).getTime()) / (1000 * 60 * 60 * 24);
-    
+
     return Math.floor(daysDiff / 7);
   }
 
@@ -614,8 +642,8 @@ export class AdaptiveTrainingEngine {
     let context = '';
     if (availableDataSources?.hasRecovery) {
       context = recovery < 50 ? 'Focus on recovery today' :
-               recovery > 70 ? 'Your body is ready to be challenged' :
-               'Maintain steady training progress';
+        recovery > 70 ? 'Your body is ready to be challenged' :
+          'Maintain steady training progress';
     } else {
       context = 'Using your feedback to guide training intensity';
     }

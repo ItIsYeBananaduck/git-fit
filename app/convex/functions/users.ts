@@ -1,6 +1,27 @@
-import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
+
+import { mutation, query } from "../_generated/server";
 import { ConvexError } from "convex/values";
+
+// Save medical screening mutation
+export const saveMedicalScreening = mutation({
+  args: {
+    userId: v.id("users"),
+    injuries: v.optional(v.array(v.string())),
+    conditions: v.optional(v.array(v.string())),
+    notes: v.optional(v.string())
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, {
+      medicalScreening: {
+        injuries: args.injuries || [],
+        conditions: args.conditions || [],
+        notes: args.notes || ''
+      }
+    });
+    return { success: true };
+  }
+});
 
 // User management functions
 export const createUser = mutation({
@@ -57,27 +78,27 @@ export const getUserById = query({
 });
 
 export const getTrainers = query({
-  args: { 
+  args: {
     specialty: v.optional(v.string()),
-    verifiedOnly: v.optional(v.boolean()) 
+    verifiedOnly: v.optional(v.boolean())
   },
   handler: async (ctx, args) => {
     let query = ctx.db
       .query("users")
       .withIndex("by_role", (q) => q.eq("role", "trainer"));
-    
+
     if (args.verifiedOnly) {
       query = query.filter((q) => q.eq(q.field("isVerified"), true));
     }
-    
+
     const trainers = await query.collect();
-    
+
     if (args.specialty) {
-      return trainers.filter(trainer => 
+      return trainers.filter(trainer =>
         trainer.specialties?.includes(args.specialty!)
       );
     }
-    
+
     return trainers;
   },
 });
@@ -101,12 +122,12 @@ export const updateUserProfile = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
-    
+
     await ctx.db.patch(args.userId, {
       ...args.updates,
       updatedAt: new Date().toISOString(),
     });
-    
+
     return { success: true };
   },
 });
@@ -138,8 +159,8 @@ function isValidEmail(email: string) {
 }
 
 function isValidPassword(password: string) {
-  return password.length >= 8 && 
-         /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password);
+  return password.length >= 8 &&
+    /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password);
 }
 
 // Authentication mutations
@@ -445,7 +466,7 @@ export const requestPasswordReset = mutation({
       // Don't fail the request if email sending fails
     }
 
-    return { 
+    return {
       success: true,
       // In development, return the token for testing
       ...(process.env.NODE_ENV === 'development' && { token: resetToken })
@@ -466,19 +487,19 @@ export const validatePasswordResetToken = query({
       .first();
 
     if (!resetToken || resetToken.used) {
-      return { 
-        valid: false, 
+      return {
+        valid: false,
         reason: "invalid_token",
-        message: "Invalid or expired reset token" 
+        message: "Invalid or expired reset token"
       };
     }
 
     // Check if token is expired
     if (new Date(resetToken.expiresAt) < new Date()) {
-      return { 
-        valid: false, 
+      return {
+        valid: false,
         reason: "expired",
-        message: "Reset token has expired" 
+        message: "Reset token has expired"
       };
     }
 
@@ -489,14 +510,14 @@ export const validatePasswordResetToken = query({
       .first();
 
     if (!user) {
-      return { 
-        valid: false, 
+      return {
+        valid: false,
         reason: "user_not_found",
-        message: "User not found" 
+        message: "User not found"
       };
     }
 
-    return { 
+    return {
       valid: true,
       email: resetToken.email,
       expiresAt: resetToken.expiresAt
@@ -667,7 +688,7 @@ export const revokeSession = mutation({
   },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
-    
+
     if (!session || session.userId !== args.userId) {
       throw new ConvexError("Session not found or unauthorized");
     }
@@ -708,7 +729,7 @@ export const cleanupExpiredSessions = mutation({
   args: {},
   handler: async (ctx) => {
     const now = new Date().toISOString();
-    
+
     const expiredSessions = await ctx.db
       .query("sessions")
       .withIndex("by_expires", (q) => q.lt("expiresAt", now))
@@ -721,9 +742,9 @@ export const cleanupExpiredSessions = mutation({
       cleanedCount++;
     }
 
-    return { 
-      success: true, 
-      cleanedSessions: cleanedCount 
+    return {
+      success: true,
+      cleanedSessions: cleanedCount
     };
   },
 });
@@ -733,10 +754,10 @@ export const cleanupExpiredPasswordResets = mutation({
   args: {},
   handler: async (ctx) => {
     const now = new Date().toISOString();
-    
+
     const expiredTokens = await ctx.db
       .query("passwordResets")
-      .filter((q) => 
+      .filter((q) =>
         q.and(
           q.lt(q.field("expiresAt"), now),
           q.eq(q.field("used"), false)
@@ -750,9 +771,9 @@ export const cleanupExpiredPasswordResets = mutation({
       cleanedCount++;
     }
 
-    return { 
-      success: true, 
-      cleanedTokens: cleanedCount 
+    return {
+      success: true,
+      cleanedTokens: cleanedCount
     };
   },
 });

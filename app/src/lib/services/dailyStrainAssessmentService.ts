@@ -63,6 +63,34 @@ export interface HealthAlert {
 }
 
 export class DailyStrainAssessmentService {
+  /**
+   * Composite strain calculation using baseline comparison, session intensity, cumulative fatigue, and user feedback
+   */
+  public calculateCompositeStrain(
+    baselineHR: number,
+    baselineSpO2: number,
+    avgHR: number,
+    avgSpO2: number,
+    intensityScore: number,
+    fatigueTrend: number,
+    feedbackModifier: number
+  ): number {
+    // Weights for each component
+    const alpha = 0.4;
+    const beta = 0.3;
+    const gamma = 0.2;
+    const delta = 0.1;
+    // Baseline comparison
+    const baselineComponent = (avgHR - baselineHR) + (baselineSpO2 - avgSpO2);
+    // Composite strain formula
+    const strain =
+      alpha * baselineComponent +
+      beta * intensityScore +
+      gamma * fatigueTrend +
+      delta * feedbackModifier;
+    // Normalize and cap between 0-100
+    return Math.max(0, Math.min(100, Math.round(strain)));
+  }
   private readonly HR_GREEN_MAX_DELTA = 4; // bpm
   private readonly HR_YELLOW_MAX_DELTA = 9; // bpm
   private readonly SPO2_GREEN_MAX_DELTA = 1; // %

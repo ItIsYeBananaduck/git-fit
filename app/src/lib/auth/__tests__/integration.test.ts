@@ -65,7 +65,7 @@ describe('Authentication Integration Tests', () => {
     vi.clearAllMocks();
     localStorage.clear();
     await authStore.logout();
-    
+
     // Get fresh mock reference
     mockConvex = await import('$lib/convex');
   });

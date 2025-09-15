@@ -1,7 +1,13 @@
-import { defineSchema, defineTable} from "convex/server";
+import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  wearableFeedback: defineTable({
+    userId: v.id("users"),
+    timestamp: v.string(),
+    feedback: v.string(), // e.g. "Set Completed", "Too Easy", "Too Hard"
+    summary: v.optional(v.any()), // e.g. { avgHR, avgSpO2, strain, sessionDuration }
+  }).index("by_user", ["userId"]).index("by_user_and_time", ["userId", "timestamp"]),
   // Users table - handles both clients and trainers
   users: defineTable({
     email: v.string(),
@@ -37,6 +43,12 @@ export default defineSchema({
       dataSharing: v.optional(v.boolean()),
       timezone: v.optional(v.string()),
     })),
+    // Medical screening: injuries, conditions, notes
+    medicalScreening: v.optional(v.object({
+      injuries: v.optional(v.array(v.string())),
+      conditions: v.optional(v.array(v.string())),
+      notes: v.optional(v.string()),
+    })),
   }).index("by_email", ["email"]).index("by_role", ["role"]).index("by_active", ["isActive"]),
 
   // User sessions for authentication
@@ -64,9 +76,9 @@ export default defineSchema({
   fitnessData: defineTable({
     userId: v.id("users"),
     dataType: v.union(
-      v.literal("steps"), 
-      v.literal("heartRate"), 
-      v.literal("sleep"), 
+      v.literal("steps"),
+      v.literal("heartRate"),
+      v.literal("sleep"),
       v.literal("calories"),
       v.literal("distance"),
       v.literal("activeMinutes"),

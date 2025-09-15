@@ -24,7 +24,9 @@ class StrainAssessmentWidgetBridge {
             status: widgetData.status,
             compositeScore: widgetData.compositeScore,
             nextWorkout: widgetData.nextWorkout,
-            intensity: widgetData.intensity
+            intensity: widgetData.intensity,
+            baselineHR: widgetData.baselineHR,
+            baselineSpO2: widgetData.baselineSpO2
         )
     }
 
@@ -41,12 +43,17 @@ class StrainAssessmentWidgetBridge {
         let nextWorkout = extractNextWorkout(assessment.trainingRecommendation)
         let intensity = calculateIntensity(assessment.overallStatus, assessment.trainingRecommendation)
 
+        // Use average HR and SpO2 from assessment deltas/zones or add logic to compute averages
+        let baselineHR = Int(assessment.deltas.hrDelta) // Replace with actual average if available
+        let baselineSpO2 = Int(assessment.deltas.spo2Delta) // Replace with actual average if available
         return StrainWidgetData(
             status: status,
             compositeScore: compositeScore,
             nextWorkout: nextWorkout,
             intensity: intensity,
-            lastUpdated: Date()
+            lastUpdated: Date(),
+            baselineHR: baselineHR,
+            baselineSpO2: baselineSpO2
         )
     }
 

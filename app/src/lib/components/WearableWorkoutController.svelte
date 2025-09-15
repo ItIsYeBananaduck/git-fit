@@ -4,6 +4,40 @@
 	import WearableInSet from './WearableInSet.svelte';
 	import WearableFeedbackButtons from './WearableFeedbackButtons.svelte';
 	import WearablePostSet from './WearablePostSet.svelte';
+	import StrainMonitor from './StrainMonitor.svelte';
+	import { DailyStrainAssessmentService } from '../services/dailyStrainAssessmentService';
+	// Example: Replace with real baseline and readiness data from user profile or API
+	const baselineHR = 60;
+	const baselineSpO2 = 97;
+	let readiness = 70; // e.g. recovery score, 0-100
+	let hrv = 50; // placeholder
+	let yesterdayStrain = 12; // placeholder
+
+	const strainService = new DailyStrainAssessmentService();
+	let currentStrain = 0;
+	let targetStrain = Math.round(8 + readiness / 10 + hrv / 20 + yesterdayStrain / 2);
+	let lastFeedback = 0;
+
+	function updateStrainAfterSet(setData, feedback) {
+		// Intensity: simple proxy (can be improved)
+		const intensityScore = (setData.reps * (setData.avgHeartRate - baselineHR)) / 10;
+		// Fatigue: can use rolling average of HRV or session RPE
+		const fatigueTrend = 0; // placeholder
+		// Feedback: map 'easy'= -2, 'moderate'=0, 'hard'=+2
+		let feedbackModifier = 0;
+		if (feedback === 'easy') feedbackModifier = -2;
+		else if (feedback === 'hard') feedbackModifier = 2;
+		lastFeedback = feedbackModifier;
+		currentStrain += strainService.calculateCompositeStrain(
+			baselineHR,
+			baselineSpO2,
+			setData.avgHeartRate,
+			liveMetrics.spo2,
+			intensityScore,
+			fatigueTrend,
+			feedbackModifier
+		);
+	}
 
 	export let workout = {
 		exercise: '',
@@ -67,6 +101,8 @@
 	function handleFeedback(event) {
 		const { difficulty } = event.detail;
 
+		// Update strain with feedback
+		updateStrainAfterSet(currentSetData, difficulty);
 		// Send feedback to adaptive training engine
 		dispatch('setFeedback', {
 			setNumber: currentSet,
@@ -74,7 +110,6 @@
 			setData: currentSetData,
 			liveMetrics
 		});
-
 		// Move to post-set summary
 		currentScreen = 'post-set';
 	}
@@ -152,6 +187,7 @@
 </script>
 
 <div class="wearable-workout-container">
+	<StrainMonitor {targetStrain} onStrainReached={handleEndWorkout} bind:currentStrain />
 	{#if currentScreen === 'pre-set'}
 		<WearablePreSet
 			exercise={workout.exercise}

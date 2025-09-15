@@ -12,9 +12,11 @@
   "packageManager": "pnpm@10.13.1",
   "dependencies": {
     "convex": "^1.26.2",
-    "lucide-svelte": "^0.542.0"
+    "lucide-svelte": "^0.542.0",
+    "stripe": "^18.5.0"
   },
   "devDependencies": {
+    "@types/node": "^24.4.0",
     "typescript": "5.9.2",
     "vitest": "^3.2.4"
   }

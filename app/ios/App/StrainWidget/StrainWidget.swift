@@ -17,6 +17,8 @@ struct StrainWidgetData: Codable {
     let nextWorkout: String?
     let intensity: String
     let lastUpdated: Date
+    let baselineHR: Int
+    let baselineSpO2: Int
 
     enum StrainStatus: String, Codable {
         case ready = "ready"
@@ -159,6 +161,23 @@ struct SmallStrainWidgetView: View {
                     .foregroundColor(.primary)
                     .lineLimit(1)
             }
+
+            HStack(spacing: 8) {
+                VStack {
+                    Text("HR")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text("\(data.baselineHR)")
+                        .font(.caption2)
+                }
+                VStack {
+                    Text("SpO₂")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text("\(data.baselineSpO2)%")
+                        .font(.caption2)
+                }
+            }
         }
         .padding(12)
         .background(Color(.systemBackground))
@@ -186,6 +205,23 @@ struct MediumStrainWidgetView: View {
                 Text("Strain: \(data.compositeScore)/100")
                     .font(.caption)
                     .foregroundColor(.secondary)
+
+                HStack(spacing: 8) {
+                    VStack {
+                        Text("HR")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text("\(data.baselineHR)")
+                            .font(.caption2)
+                    }
+                    VStack {
+                        Text("SpO₂")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text("\(data.baselineSpO2)%")
+                            .font(.caption2)
+                    }
+                }
             }
 
             Spacer()
@@ -240,6 +276,23 @@ struct LargeStrainWidgetView: View {
                     Text("Last updated: \(formattedTime(data.lastUpdated))")
                         .font(.caption)
                         .foregroundColor(.secondary)
+
+                    HStack(spacing: 12) {
+                        VStack {
+                            Text("HR")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Text("\(data.baselineHR)")
+                                .font(.caption2)
+                        }
+                        VStack {
+                            Text("SpO₂")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Text("\(data.baselineSpO2)%")
+                                .font(.caption2)
+                        }
+                    }
                 }
 
                 Spacer()

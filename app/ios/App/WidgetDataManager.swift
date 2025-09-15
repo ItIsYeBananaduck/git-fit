@@ -19,11 +19,13 @@ class WidgetDataManager {
     // MARK: - Data Models
 
     struct StrainData: Codable {
-        let status: StrainStatus
-        let compositeScore: Int
-        let nextWorkout: String?
-        let intensity: String
-        let lastUpdated: Date
+    let status: StrainStatus
+    let compositeScore: Int
+    let nextWorkout: String?
+    let intensity: String
+    let lastUpdated: Date
+    let baselineHR: Int
+    let baselineSpO2: Int
 
         enum StrainStatus: String, Codable {
             case ready = "ready"
@@ -38,16 +40,20 @@ class WidgetDataManager {
     /// Update widget data with current strain assessment
     func updateWidgetData(
         status: StrainStatus,
-        compositeScore: Int,
-        nextWorkout: String?,
-        intensity: String
+    compositeScore: Int,
+    nextWorkout: String?,
+    intensity: String,
+    baselineHR: Int,
+    baselineSpO2: Int
     ) {
         let data = StrainData(
             status: status,
             compositeScore: compositeScore,
             nextWorkout: nextWorkout,
             intensity: intensity,
-            lastUpdated: Date()
+            lastUpdated: Date(),
+            baselineHR: baselineHR,
+            baselineSpO2: baselineSpO2
         )
 
         saveWidgetData(data)

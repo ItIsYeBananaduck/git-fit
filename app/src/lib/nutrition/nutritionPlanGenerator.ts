@@ -1,4 +1,5 @@
-import type { NutritionGoals, NutritionInfo } from './nutritionCalculator';
+import type { NutritionGoals } from './nutritionCalculator';
+import type { NutritionTelemetryEvent } from './nutritionTelemetry';
 import type { RecoveryData, TrainingSession } from '../types/sharedTypes';
 
 interface UserProfile {
@@ -76,11 +77,21 @@ export interface MealPlanPreferences {
  */
 export class NutritionPlanGenerator {
   private nutritionCalculator: NutritionCalculator;
+  private telemetryLogger?: (event: NutritionTelemetryEvent) => void;
 
-  constructor() {
+  constructor(telemetryLogger?: (event: NutritionTelemetryEvent) => void) {
     this.nutritionCalculator = new NutritionCalculator();
+    this.telemetryLogger = telemetryLogger;
   }
 
+  /**
+   * Log telemetry event (decision outcome, anonymized input)
+   */
+  private logTelemetry(event: NutritionTelemetryEvent) {
+    if (this.telemetryLogger) {
+      this.telemetryLogger(event);
+    }
+  }
   /**
    * Generate a comprehensive meal plan for a user
    */
@@ -106,6 +117,26 @@ export class NutritionPlanGenerator {
 
     // Calculate total nutrition for the plan
     const totalNutrition = this.calculatePlanTotals(days);
+
+    // Log telemetry: anonymized input and decision outcome
+    this.logTelemetry({
+      eventType: 'generate_meal_plan',
+      anonymizedInput: {
+        age: userProfile.age,
+        sex: userProfile.sex,
+        goals,
+        preferences,
+        recoveryData,
+        trainingSchedule,
+        duration
+      },
+      outcome: {
+        planName,
+        recommendations,
+        totalNutrition
+      },
+      timestamp: new Date().toISOString()
+    });
 
     return {
       name: planName,
@@ -470,7 +501,7 @@ export class NutritionPlanGenerator {
     progressData: { date: string; actual: number; target: number }[]
   ): Promise<GeneratedMealPlan> {
     // Analyze feedback and progress to identify areas for improvement
-    const optimizations = this.analyzeFeedbackAndProgress(userFeedback, progressData);
+    const optimizations = this.analyzeFeedbackAndProgress(userFeedback);
 
     // Apply optimizations to the plan
     const optimizedPlan = { ...existingPlan };
@@ -478,10 +509,30 @@ export class NutritionPlanGenerator {
     // Add optimization recommendations
     optimizedPlan.recommendations.push(...optimizations);
 
+    // Log telemetry: anonymized input and decision outcome
+    this.logTelemetry({
+      eventType: 'optimize_meal_plan',
+      anonymizedInput: {
+        userFeedback,
+        progressData,
+        existingPlan: {
+          name: existingPlan.name,
+          duration: existingPlan.duration,
+          goals: existingPlan.goals,
+          preferences: existingPlan.preferences
+        }
+      },
+      outcome: {
+        optimizations,
+        recommendations: optimizedPlan.recommendations
+      },
+      timestamp: new Date().toISOString()
+    });
+
     return optimizedPlan;
   }
 
-  private analyzeFeedbackAndProgress(feedback: string[], progress: { date: string; actual: number; target: number }[]): string[] {
+  private analyzeFeedbackAndProgress(feedback: string[]): string[] {
     const optimizations: string[] = [];
 
     // Analyze common feedback patterns
