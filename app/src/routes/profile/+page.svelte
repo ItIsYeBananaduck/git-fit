@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { user, isAuthenticated, authStore } from '$lib/stores/auth';
+	import type { ClientProfile } from '$lib/types/auth';
 
 	// Redirect to login if not authenticated
 	$: if (!$isAuthenticated && $user === null) {
@@ -44,11 +45,17 @@
 	];
 
 	function toggleGoal(goalId: string) {
-		if (editedUser && editedUser.goals) {
-			if (editedUser.goals.includes(goalId)) {
-				editedUser.goals = editedUser.goals.filter((g) => g !== goalId);
+		if (
+			editedUser &&
+			editedUser.role === 'client' &&
+			editedUser.profile &&
+			'goals' in editedUser.profile
+		) {
+			const clientProfile = editedUser.profile as ClientProfile;
+			if (clientProfile.goals.includes(goalId)) {
+				clientProfile.goals = clientProfile.goals.filter((g) => g !== goalId);
 			} else {
-				editedUser.goals = [...editedUser.goals, goalId];
+				clientProfile.goals = [...clientProfile.goals, goalId];
 			}
 		}
 	}
@@ -95,26 +102,29 @@
 			{#if isEditing}
 				<div class="space-y-4">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+						<label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
 						<input
+							id="name"
 							type="text"
 							bind:value={editedUser.name}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						/>
 					</div>
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+						<label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
 						<input
+							id="email"
 							type="email"
 							bind:value={editedUser.email}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						/>
 					</div>
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+						<label for="dateOfBirth" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
 						<input
+							id="dateOfBirth"
 							type="date"
-							bind:value={editedUser.dateOfBirth}
+							bind:value={(editedUser.profile as ClientProfile).dateOfBirth}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						/>
 					</div>
@@ -123,20 +133,27 @@
 				<div class="space-y-4">
 					<div class="flex justify-between">
 						<span class="text-gray-600">Name:</span>
-						<span class="font-medium">{user.name}</span>
+						<span class="font-medium">{$user?.name}</span>
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-600">Email:</span>
-						<span class="font-medium">{user.email}</span>
+						<span class="font-medium">{$user?.email}</span>
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-600">Date of Birth:</span>
-						<span class="font-medium">{new Date(user.dateOfBirth).toLocaleDateString()}</span>
+						<span class="font-medium"
+							>{($user?.profile as ClientProfile)?.dateOfBirth
+								? new Date(($user?.profile as ClientProfile).dateOfBirth!).toLocaleDateString()
+								: 'Not set'}</span
+						>
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-600">Age:</span>
 						<span class="font-medium"
-							>{new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear()}</span
+							>{($user?.profile as ClientProfile)?.dateOfBirth
+								? new Date().getFullYear() -
+									new Date(($user?.profile as ClientProfile).dateOfBirth!).getFullYear()
+								: 'Not set'}</span
 						>
 					</div>
 				</div>
@@ -151,26 +168,29 @@
 				<div class="space-y-4">
 					<div class="grid grid-cols-2 gap-4">
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
+							<label for="height" class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
 							<input
+								id="height"
 								type="number"
-								bind:value={editedUser.height}
+								bind:value={(editedUser.profile as ClientProfile).height}
 								class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 							/>
 						</div>
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
+							<label for="weight" class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
 							<input
+								id="weight"
 								type="number"
-								bind:value={editedUser.weight}
+								bind:value={(editedUser.profile as ClientProfile).weight}
 								class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 							/>
 						</div>
 					</div>
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Fitness Level</label>
+						<label for="fitnessLevel" class="block text-sm font-medium text-gray-700 mb-1">Fitness Level</label>
 						<select
-							bind:value={editedUser.fitnessLevel}
+							id="fitnessLevel"
+							bind:value={(editedUser.profile as ClientProfile).fitnessLevel}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						>
 							{#each fitnessLevels as level}
@@ -183,19 +203,33 @@
 				<div class="space-y-4">
 					<div class="flex justify-between">
 						<span class="text-gray-600">Height:</span>
-						<span class="font-medium">{user.height} cm</span>
+						<span class="font-medium"
+							>{($user?.profile as ClientProfile)?.height || 'Not set'} cm</span
+						>
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-600">Weight:</span>
-						<span class="font-medium">{user.weight} kg</span>
+						<span class="font-medium"
+							>{($user?.profile as ClientProfile)?.weight || 'Not set'} kg</span
+						>
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-600">BMI:</span>
-						<span class="font-medium">{(user.weight / (user.height / 100) ** 2).toFixed(1)}</span>
+						<span class="font-medium"
+							>{($user?.profile as ClientProfile)?.height &&
+							($user?.profile as ClientProfile)?.weight
+								? (
+										($user?.profile as ClientProfile).weight! /
+										(($user?.profile as ClientProfile).height! / 100) ** 2
+									).toFixed(1)
+								: 'Not available'}</span
+						>
 					</div>
 					<div class="flex justify-between">
 						<span class="text-gray-600">Fitness Level:</span>
-						<span class="font-medium capitalize">{user.fitnessLevel}</span>
+						<span class="font-medium capitalize"
+							>{($user?.profile as ClientProfile)?.fitnessLevel || 'Not set'}</span
+						>
 					</div>
 				</div>
 			{/if}
@@ -212,7 +246,7 @@
 					<button
 						on:click={() => toggleGoal(goal.id)}
 						class="p-3 rounded-lg border-2 transition-colors text-sm font-medium
-							{editedUser.goals.includes(goal.id)
+							{(editedUser?.profile as ClientProfile)?.goals?.includes(goal.id)
 							? 'border-primary bg-primary text-white'
 							: 'border-gray-300 text-gray-700 hover:border-gray-400'}"
 					>
@@ -222,7 +256,7 @@
 			</div>
 		{:else}
 			<div class="flex flex-wrap gap-2">
-				{#each user.goals as goalId}
+				{#each ($user?.profile as ClientProfile)?.goals || [] as goalId}
 					{@const goal = availableGoals.find((g) => g.id === goalId)}
 					{#if goal}
 						<span

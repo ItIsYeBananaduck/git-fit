@@ -19,8 +19,8 @@ export const load: PageServerLoad = async ({ url, platform }) => {
   }
 
   // Get environment variables
-  const FITBIT_CLIENT_ID = platform?.env?.FITBIT_CLIENT_ID || process.env.FITBIT_CLIENT_ID;
-  const FITBIT_CLIENT_SECRET = platform?.env?.FITBIT_CLIENT_SECRET || process.env.FITBIT_CLIENT_SECRET;
+  const FITBIT_CLIENT_ID = process.env.FITBIT_CLIENT_ID;
+  const FITBIT_CLIENT_SECRET = process.env.FITBIT_CLIENT_SECRET;
 
   if (!FITBIT_CLIENT_ID || !FITBIT_CLIENT_SECRET) {
     console.error('Missing Fitbit OAuth credentials');

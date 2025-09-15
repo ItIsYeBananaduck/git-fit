@@ -12,7 +12,7 @@
 		DetailedUserProfile,
 		BulkUserAction
 	} from '$lib/types/admin';
-	import type { Id } from '../../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// State
 	let users: UserSearchResult[] = [];

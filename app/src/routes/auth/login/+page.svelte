@@ -10,7 +10,7 @@
 	let loading = false;
 	let error = '';
 	let showPassword = false;
-	
+
 	// Form validation states
 	let emailError = '';
 	let passwordError = '';
@@ -24,7 +24,7 @@
 	$: if (emailTouched) {
 		emailError = validateEmail(email);
 	}
-	
+
 	$: if (passwordTouched) {
 		passwordError = validatePassword(password);
 	}
@@ -144,7 +144,9 @@
 							bind:value={email}
 							on:blur={handleEmailBlur}
 							on:keypress={handleKeyPress}
-							class="appearance-none block w-full px-3 py-2 border {emailError && emailTouched ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} rounded-md placeholder-gray-400 focus:outline-none sm:text-sm"
+							class="appearance-none block w-full px-3 py-2 border {emailError && emailTouched
+								? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+								: 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} rounded-md placeholder-gray-400 focus:outline-none sm:text-sm"
 							placeholder="Enter your email"
 							disabled={loading}
 							aria-invalid={emailError && emailTouched ? 'true' : 'false'}
@@ -169,7 +171,10 @@
 							bind:value={password}
 							on:blur={handlePasswordBlur}
 							on:keypress={handleKeyPress}
-							class="appearance-none block w-full px-3 py-2 pr-10 border {passwordError && passwordTouched ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} rounded-md placeholder-gray-400 focus:outline-none sm:text-sm"
+							class="appearance-none block w-full px-3 py-2 pr-10 border {passwordError &&
+							passwordTouched
+								? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+								: 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} rounded-md placeholder-gray-400 focus:outline-none sm:text-sm"
 							placeholder="Enter your password"
 							disabled={loading}
 							aria-invalid={passwordError && passwordTouched ? 'true' : 'false'}
@@ -267,7 +272,10 @@
 					<button
 						type="submit"
 						disabled={loading || !isFormValid}
-						class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white {loading || !isFormValid ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+						class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white {loading ||
+						!isFormValid
+							? 'bg-gray-400 cursor-not-allowed'
+							: 'bg-blue-600 hover:bg-blue-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
 					>
 						{#if loading}
 							<svg
@@ -301,7 +309,7 @@
 			<div class="mt-6">
 				<div class="relative">
 					<div class="absolute inset-0 flex items-center">
-						<div class="w-full border-t border-gray-300" />
+						<div class="w-full border-t border-gray-300"></div>
 					</div>
 					<div class="relative flex justify-center text-sm">
 						<span class="px-2 bg-white text-gray-500">Or continue with</span>

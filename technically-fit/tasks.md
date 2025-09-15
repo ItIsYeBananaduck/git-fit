@@ -10,7 +10,7 @@ This document breaks down the actionable tasks needed to implement the missing s
 - [x] Add hydration recommendations based on recovery metrics
 - [x] Create make-up logic for missed protein targets
 - [x] Add safety rails for health flags (diabetes/heart history logic)
-- [ ] Enforce trainer data sharing for tailored plans
+- [x] Enforce trainer data sharing for tailored plans
 - [ ] Integrate payments & distribution logic (Apple fee strategy, web checkout, PWA fallback)
 - [ ] Implement IP & secrecy protections (API hardening, device attestation, secrets management)
 - [ ] Add model governance (versioned models, canary rollout)

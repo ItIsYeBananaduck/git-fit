@@ -123,25 +123,6 @@
 		margin-bottom: 32px;
 	}
 
-	.status-icon {
-		width: 64px;
-		height: 64px;
-		margin: 0 auto 24px;
-	}
-
-	.status-icon.loading {
-		color: #3b82f6;
-		animation: spin 1s linear infinite;
-	}
-
-	.status-icon.success {
-		color: #10b981;
-	}
-
-	.status-icon.error {
-		color: #ef4444;
-	}
-
 	@keyframes spin {
 		from {
 			transform: rotate(0deg);

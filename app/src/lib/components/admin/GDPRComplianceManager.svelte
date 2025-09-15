@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { supportService } from '../../services/supportService';
-	import type { Id } from '../../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -185,7 +185,7 @@
 					<p class="text-sm text-red-800">{error}</p>
 				</div>
 				<div class="ml-auto pl-3">
-					<button on:click={clearMessages} class="text-red-400 hover:text-red-600">
+					<button on:click={clearMessages} aria-label="Clear messages" class="text-red-400 hover:text-red-600">
 						<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
 							<path
 								fill-rule="evenodd"
@@ -215,7 +215,7 @@
 					<p class="text-sm text-green-800">{success}</p>
 				</div>
 				<div class="ml-auto pl-3">
-					<button on:click={clearMessages} class="text-green-400 hover:text-green-600">
+					<button on:click={clearMessages} aria-label="Clear messages" class="text-green-400 hover:text-green-600">
 						<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
 							<path
 								fill-rule="evenodd"

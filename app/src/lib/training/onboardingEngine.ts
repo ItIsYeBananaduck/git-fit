@@ -70,6 +70,10 @@ export interface UserProfile {
   height: number;
   weight: number;
   sex: string;
+  userId: string; // Unique identifier for the user
+  trainingExperience?: string; // Optional: User's training experience level
+  goals?: string[]; // Optional: User's fitness goals
+  medicalConditions?: MedicalCondition[]; // Optional: List of medical conditions
 }
 
 export interface FitnessAssessment {

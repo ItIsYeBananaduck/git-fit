@@ -3,70 +3,86 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { ChevronDown, Plus, Scan, Search, Target, TrendingUp } from 'lucide-svelte';
+  import { api } from '$lib/convex/_generated/api';
+  import type { Id } from '$lib/convex/_generated/dataModel';
   
   import { NutritionCalculator } from '$lib/nutrition/nutritionCalculator';
   import { FoodDatabaseService } from '$lib/nutrition/foodDatabaseService';
   import { BarcodeScanner } from '$lib/nutrition/barcodeScanner';
   import type { NutritionGoals, FoodEntry, NutritionInfo, FoodItem } from '$lib/nutrition/nutritionCalculator';
 
+  // Convex client
+  import { useQuery, useMutation } from 'convex-svelte';
+  import { getAuthUser } from '$lib/stores/auth';
+
   // Component state
   let nutritionCalculator: NutritionCalculator;
   let foodService: FoodDatabaseService;
   let barcodeScanner: BarcodeScanner;
   
+  let currentUser: any = null;
   let currentGoals: NutritionGoals | null = null;
-  let dailyEntries: FoodEntry[] = [];
+  let dailyEntries: any[] = [];
   let dailyTotals: NutritionInfo | null = null;
   let goalProgress: any = null;
   
   let showFoodSearch = false;
   let showBarcodeScanner = false;
   let searchQuery = '';
-  let searchResults: FoodItem[] = [];
+  let searchResults: any[] = [];
   let isSearching = false;
   
   let selectedMealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' = 'breakfast';
   let videoElement: HTMLVideoElement;
 
+  // Convex queries and mutations
+  $: userId = currentUser?._id;
+  $: today = new Date().toISOString().split('T')[0];
+  
+  $: nutritionGoals = useQuery(api.nutrition.getNutritionGoals, userId ? { userId } : 'skip');
+  $: activeGoal = useQuery(api.nutrition.getActiveNutritionGoal, userId ? { userId } : 'skip');
+  $: foodEntries = useQuery(api.nutrition.getFoodEntries, userId && today ? { userId, date: today } : 'skip');
+  $: dailyNutritionTotals = useQuery(api.nutrition.getDailyNutritionTotals, userId && today ? { userId, date: today } : 'skip');
+  
+  const addFoodEntryMutation = useMutation(api.nutrition.addFoodEntry);
+  const deleteFoodEntryMutation = useMutation(api.nutrition.deleteFoodEntry);
+  const searchFoodsQuery = useQuery(api.nutrition.searchFoods, searchQuery ? { query: searchQuery, limit: 10 } : 'skip');
+
   // Initialize services
-  onMount(() => {
+  onMount(async () => {
     nutritionCalculator = new NutritionCalculator();
     foodService = new FoodDatabaseService();
     barcodeScanner = new BarcodeScanner(foodService);
     
+    // Get current user
+    currentUser = await getAuthUser();
+    
     loadNutritionData();
   });
 
-  async function loadNutritionData() {
-    // TODO: Load from backend
-    // For now, calculate sample goals
-    currentGoals = nutritionCalculator.calculateBaseGoals(
-      30, // age
-      70, // weight (kg)  
-      175, // height (cm)
-      'male', // sex
-      'moderate', // activity level
-      'gain_muscle' // goal
-    );
-    
-    // Calculate daily totals
-    if (dailyEntries.length > 0) {
-      dailyTotals = nutritionCalculator.calculateDailyTotals(dailyEntries);
-      
-      if (currentGoals) {
-        goalProgress = nutritionCalculator.analyzeGoalProgress(currentGoals, dailyTotals);
-      }
-    } else {
-      dailyTotals = {
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-        fiber: 0,
-        sugar: 0,
-        sodium: 0
-      };
+  // Reactive statements for data updates
+  $: if (activeGoal && activeGoal()) {
+    currentGoals = activeGoal();
+  }
+
+  $: if (foodEntries && foodEntries()) {
+    dailyEntries = foodEntries();
+  }
+
+  $: if (dailyNutritionTotals && dailyNutritionTotals()) {
+    dailyTotals = dailyNutritionTotals();
+    if (currentGoals) {
+      goalProgress = nutritionCalculator.analyzeGoalProgress(currentGoals, dailyTotals);
     }
+  }
+
+  $: if (searchFoodsQuery && searchFoodsQuery()) {
+    searchResults = searchFoodsQuery();
+  }
+
+  async function loadNutritionData() {
+    // Data is loaded reactively via Convex queries
+    // Additional client-side calculations can be done here if needed
   }
 
   async function searchFoods() {
@@ -74,8 +90,8 @@
     
     isSearching = true;
     try {
-      const results = await foodService.searchFoods(searchQuery, 1, 10);
-      searchResults = results.items;
+      // Search is handled reactively via Convex query
+      // Additional client-side filtering can be done here if needed
     } catch (error) {
       console.error('Food search error:', error);
     } finally {
@@ -104,30 +120,40 @@
     }
   }
 
-  async function addFoodToLog(food: FoodItem, servingGrams: number) {
-    const nutrition = nutritionCalculator.calculateNutritionForServing(food, servingGrams);
-    
-    const entry: FoodEntry = {
-      id: `entry_${Date.now()}`,
-      userId: 'current_user', // TODO: Get from auth context
-      foodId: food.id,
-      servingSize: servingGrams,
-      mealType: selectedMealType,
-      date: new Date().toISOString(),
-      nutrition
-    };
+  async function addFoodToLog(food: any, servingGrams: number) {
+    if (!currentUser) {
+      alert('Please log in to add food entries');
+      return;
+    }
 
-    dailyEntries = [...dailyEntries, entry];
-    await loadNutritionData();
-    
-    // Close search/scanner
-    showFoodSearch = false;
-    showBarcodeScanner = false;
+    try {
+      const nutrition = nutritionCalculator.calculateNutritionForServing(food, servingGrams);
+      
+      await addFoodEntryMutation({
+        userId: currentUser._id,
+        foodId: food.id,
+        servingSize: servingGrams,
+        mealType: selectedMealType,
+        date: today,
+        time: new Date().toTimeString().split(' ')[0], // HH:MM:SS format
+      });
+
+      // Close search/scanner
+      showFoodSearch = false;
+      showBarcodeScanner = false;
+    } catch (error) {
+      console.error('Error adding food entry:', error);
+      alert('Failed to add food entry. Please check your permissions.');
+    }
   }
 
-  function removeFoodEntry(entryId: string) {
-    dailyEntries = dailyEntries.filter(entry => entry.id !== entryId);
-    loadNutritionData();
+  async function removeFoodEntry(entryId: string) {
+    try {
+      await deleteFoodEntryMutation({ entryId });
+    } catch (error) {
+      console.error('Error removing food entry:', error);
+      alert('Failed to remove food entry. Please check your permissions.');
+    }
   }
 
   function getProgressColor(percentage: number): string {
@@ -238,10 +264,10 @@
         </div>
 
         {#each dailyEntries.filter(entry => entry.mealType === mealType) as entry}
-          <!-- TODO: Get food name from food service -->
+          <!-- Display food entry with backend data -->
           <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
             <div>
-              <div class="font-medium">Food Item</div>
+              <div class="font-medium">{entry.food?.name || 'Unknown Food'}</div>
               <div class="text-sm text-gray-600">{entry.servingSize}g</div>
             </div>
             <div class="text-right">
@@ -253,7 +279,7 @@
               </div>
             </div>
             <button
-              on:click={() => removeFoodEntry(entry.id)}
+              on:click={() => removeFoodEntry(entry._id)}
               class="text-red-600 hover:text-red-700 ml-4"
             >
               ×

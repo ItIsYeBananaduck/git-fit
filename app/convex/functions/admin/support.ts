@@ -2,7 +2,7 @@
 
 import { v } from "convex/values";
 import { mutation, query } from "../../_generated/server";
-import { Id } from "../../_generated/dataModel";
+import type { Id } from "../../_generated/dataModel";
 
 // Support Tickets Table Schema (to be added to schema.ts)
 // supportTickets: defineTable({

@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import { advancedAnalyticsService } from '$lib/services/advancedAnalyticsService';
 	import type { UserBehaviorAnalytics, ConversionFunnel } from '$lib/types/admin';
-	import UserBehaviorAnalytics from './UserBehaviorAnalytics.svelte';
+	import type { Id } from 'convex/_generated/dataModel';
+	import UserBehaviorAnalyticsComponent from './UserBehaviorAnalytics.svelte';
 	import ConversionFunnelAnalytics from './ConversionFunnelAnalytics.svelte';
 	import CohortAnalysis from './CohortAnalysis.svelte';
 	import CustomReportBuilder from './CustomReportBuilder.svelte';
@@ -54,7 +55,7 @@
 			userBehaviorData = await advancedAnalyticsService.getUserBehaviorAnalytics(
 				dateRange,
 				'role',
-				adminId
+				adminId as Id<'adminUsers'>
 			);
 		} catch (err) {
 			console.error('Failed to load user behavior data:', err);
@@ -66,7 +67,7 @@
 			conversionFunnelData = await advancedAnalyticsService.getConversionFunnelAnalytics(
 				'signup',
 				dateRange,
-				adminId
+				adminId as Id<'adminUsers'>
 			);
 		} catch (err) {
 			console.error('Failed to load conversion funnel data:', err);
@@ -79,7 +80,7 @@
 				'monthly',
 				dateRange.start,
 				dateRange.end,
-				adminId
+				adminId as Id<'adminUsers'>
 			);
 		} catch (err) {
 			console.error('Failed to load cohort data:', err);
@@ -132,7 +133,7 @@
 	{:else}
 		<div class="tab-content">
 			{#if activeTab === 'behavior'}
-				<UserBehaviorAnalytics
+				<UserBehaviorAnalyticsComponent
 					data={userBehaviorData}
 					{dateRange}
 					{adminId}

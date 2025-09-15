@@ -2,7 +2,7 @@
 // Note: This is a simplified approach for the demo
 // In production, you'd use the official Convex React client
 
-// Resolve Convex URL from various env locations (Vite vs Node vs browser)
+// Resolve Convex URL from various env locations (Vite vs Node vs runtime).
 const CONVEX_URL =
   process.env.VITE_CONVEX_URL ||
   process.env.PUBLIC_CONVEX_URL ||
@@ -13,11 +13,11 @@ if (!CONVEX_URL) {
   // Don't throw during SSR/dev — log a warning and continue with a dummy URL.
   // This allows the dev server to start while env files are validated separately.
   // Frontend code should guard against missing/invalid Convex config in production.
-  console.warn('Warning: Missing CONVEX_URL environment variable. Convex calls will be mocked in dev.');
+  console.warn("Warning: Missing CONVEX_URL environment variable. Convex calls will be mocked in dev.");
 }
 
 // Mock implementations for admin functions
-export const mockAdminFunctions = {
+const mockAdminFunctions = {
   moderation: {
     getModerationQueue: async () => ({
       items: [],
@@ -28,12 +28,12 @@ export const mockAdminFunctions = {
     assignModerationItem: async () => ({ success: true }),
     reviewContent: async () => ({ success: true }),
     reviewModerationItem: async () => ({ success: true }),
-    createModerationItem: async () => 'mock_id',
+    createModerationItem: async () => "mock_id",
     escalateModerationItem: async () => ({ success: true }),
     getContentPolicies: async () => [],
     updateContentPolicy: async () => ({ success: true }),
-    flagContent: async () => ({ success: true, moderationItemId: 'mock_id', priority: 'medium' }),
-    setContentPolicy: async () => 'mock_policy_id',
+    flagContent: async () => ({ success: true, moderationItemId: "mock_id", priority: "medium" }),
+    setContentPolicy: async () => "mock_policy_id",
     getContentAnalytics: async () => ({
       totalItems: 0,
       pendingReview: 0,
@@ -68,7 +68,7 @@ export const mockAdminFunctions = {
     approveProfile: async () => ({ success: true }),
     rejectProfile: async () => ({ success: true }),
     modifyProfile: async () => ({ success: true }),
-    createUserReport: async () => 'mock_report_id',
+    createUserReport: async () => "mock_report_id",
     getUserReports: async () => ({
       reports: [],
       total: 0,
@@ -77,11 +77,11 @@ export const mockAdminFunctions = {
     investigateUserReport: async () => ({ success: true }),
     flagInappropriateContentAuto: async () => ({
       success: true,
-      moderationItemId: 'mock_id',
-      priority: 'medium'
+      moderationItemId: "mock_id",
+      priority: "medium"
     }),
     getModerationActions: async () => [],
-    createModerationAppeal: async () => 'mock_appeal_id',
+    createModerationAppeal: async () => "mock_appeal_id",
     getContentAnalyticsDetailed: async () => ({
       totalItems: 0,
       byType: {},
@@ -95,7 +95,7 @@ export const mockAdminFunctions = {
       appealRate: 0
     }),
     createModerationAction: async (args: { action: string; reason: string; duration?: number; performedBy: string; timestamp: string; details: Record<string, unknown> }) => ({
-      id: 'mock_action_id',
+      id: "mock_action_id",
       action: args.action,
       reason: args.reason,
       duration: args.duration,
@@ -117,80 +117,15 @@ export const mockAdminFunctions = {
       actionsByType: {},
       actionsByUser: {},
       recentActivity: []
-    }),
-    logFailedLogin: async () => ({ success: true }),
-    getAdminAuditLog: async () => ({
-      entries: [],
-      total: 0,
-      hasMore: false
-    }),
-    getAuditLogByTimeRange: async () => []
-  },
-  analytics: {
-    getDashboardMetrics: async () => ({
-      userMetrics: {
-        totalUsers: 1000,
-        activeUsers: 500
-      },
-      revenueMetrics: {
-        totalRevenue: 50000,
-        monthlyRevenue: 5000
-      },
-      engagementMetrics: {
-        averageSessionDuration: 30,
-        dailyActiveUsers: 200
-      }
-    }),
-    getUserGrowthAnalytics: async () => ({
-      totalNewUsers: 100,
-      userRetention: 85,
-      growthRate: 15,
-      dailyActiveUsers: [
-        { date: '2024-01-01', value: 200 },
-        { date: '2024-01-02', value: 220 }
-      ]
-    }),
-    getRevenueAnalytics: async () => ({
-      totalRevenue: 50000,
-      monthlyRevenue: 5000,
-      revenueBySource: {},
-      growthRate: 10
-    }),
-    getEngagementMetrics: async () => ({
-      averageSessionDuration: 30,
-      dailyActiveUsers: [
-        { date: '2024-01-01', value: 200 },
-        { date: '2024-01-02', value: 220 }
-      ],
-      featureUsage: {},
-      userRetention: 85
-    }),
-    saveCustomDashboard: async () => ({
-      success: true,
-      dashboardId: 'mock_dashboard_id'
-    }),
-    getCustomDashboards: async () => ({
-      dashboards: [],
-      total: 0,
-      hasMore: false
-    }),
-    scheduleReport: async () => ({
-      success: true,
-      scheduleId: 'mock_schedule_id'
-    }),
-    getReportHistory: async () => ({
-      reports: [],
-      total: 0,
-      hasMore: false
     })
   },
   auth: {
     authenticateAdmin: async () => ({
       success: true,
       adminUser: {
-        id: 'mock_admin',
-        email: 'admin@example.com',
-        role: 'super_admin'
+        id: "mock_admin",
+        email: "admin@example.com",
+        role: "super_admin"
       }
     }),
     getAdminUsers: async () => ({
@@ -200,84 +135,10 @@ export const mockAdminFunctions = {
     }),
     createAdminUser: async () => ({
       success: true,
-      adminUserId: 'mock_admin_id'
+      adminUserId: "mock_admin_id"
     }),
     updateAdminUser: async () => ({ success: true }),
-    deactivateAdminUser: async () => ({ success: true }),
-    getAdminByEmail: async (args: { email: string }) => ({
-      _id: 'mock_admin_id',
-      email: args.email,
-      name: 'Mock Admin',
-      role: 'super_admin',
-      passwordHash: 'mock_hash',
-      isActive: true,
-      failedLoginAttempts: 0,
-      lockedUntil: null,
-      lastLogin: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      mfaEnabled: false,
-      mfaSecret: null,
-      permissions: ['all'],
-      createdBy: 'system',
-      ipWhitelist: [],
-      sessionTimeout: 28800000
-    }),
-    getAdminById: async (args: { adminId: string }) => ({
-      _id: args.adminId,
-      email: 'admin@example.com',
-      name: 'Mock Admin',
-      role: 'super_admin',
-      passwordHash: 'mock_hash',
-      isActive: true,
-      failedLoginAttempts: 0,
-      lockedUntil: null,
-      lastLogin: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      mfaEnabled: false,
-      mfaSecret: null,
-      permissions: ['all'],
-      createdBy: 'system',
-      ipWhitelist: [],
-      sessionTimeout: 28800000
-    }),
-    getAllAdminUsers: async () => ({
-      page: [],
-      total: 0,
-      hasMore: false
-    }),
-    createFirstSuperAdmin: async () => 'mock_first_admin_id',
-    createAdminSession: async () => ({
-      _id: 'mock_session_id',
-      adminId: 'mock_admin_id',
-      token: 'mock_session_token',
-      ipAddress: '127.0.0.1',
-      userAgent: 'Mock Browser',
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-      isActive: true,
-      lastActivity: new Date().toISOString()
-    }),
-    updateAdminLoginSuccess: async () => ({ success: true }),
-    getAdminSession: async () => ({
-      _id: 'mock_session_id',
-      adminId: 'mock_admin_id',
-      token: 'mock_session_token',
-      ipAddress: '127.0.0.1',
-      userAgent: 'Mock Browser',
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-      isActive: true,
-      lastActivity: new Date().toISOString()
-    }),
-    revokeAdminSession: async () => ({ success: true }),
-    updateSessionActivity: async () => ({ success: true }),
-    updateFailedLoginAttempts: async () => ({ success: true }),
-    updateAdminPermissions: async () => ({ success: true }),
-    revokeAllAdminSessions: async () => ({ success: true }),
-    storeMFASecret: async () => ({ success: true }),
-    enableMFA: async () => ({ success: true })
+    deactivateAdminUser: async () => ({ success: true })
   },
   communication: {
     sendNotification: async () => ({ success: true }),
@@ -288,7 +149,7 @@ export const mockAdminFunctions = {
     }),
     createAnnouncement: async () => ({
       success: true,
-      announcementId: 'mock_announcement_id'
+      announcementId: "mock_announcement_id"
     }),
     getAnnouncements: async () => ({
       announcements: [],
@@ -298,11 +159,11 @@ export const mockAdminFunctions = {
     updateAnnouncement: async () => ({ success: true }),
     deleteAnnouncement: async () => ({ success: true }),
     sendPlatformAnnouncement: async () => ({
-      announcementId: 'mock_announcement_id',
+      announcementId: "mock_announcement_id",
       recipientCount: 0
     }),
     sendTargetedMessage: async () => ({
-      messageId: 'mock_message_id',
+      messageId: "mock_message_id",
       recipientCount: 0
     }),
     getAnalytics: async () => ({
@@ -322,21 +183,21 @@ export const mockAdminFunctions = {
     }),
     processDataRequest: async () => ({ success: true }),
     getPrivacySettings: async () => ({
-      dataRetention: '1_year',
-      exportFormat: 'json',
+      dataRetention: "1_year",
+      exportFormat: "json",
       anonymizeData: true
     }),
     updatePrivacySettings: async () => ({ success: true }),
     exportUserData: async () => ({
       success: true,
-      exportId: 'mock_export_id',
-      downloadUrl: 'mock_url',
+      exportId: "mock_export_id",
+      downloadUrl: "mock_url",
       expiresAt: new Date().toISOString()
     }),
     deleteUserData: async () => ({ success: true }),
     handleGDPRRequest: async () => ({
-      requestId: 'mock_request_id',
-      status: 'processing',
+      requestId: "mock_request_id",
+      status: "processing",
       estimatedCompletion: new Date().toISOString()
     })
   },
@@ -346,26 +207,20 @@ export const mockAdminFunctions = {
       total: 0,
       hasMore: false
     }),
-    getAllAdminRoles: async () => [],
-    getAllAdminPermissions: async () => [],
     createRole: async () => ({
       success: true,
-      roleId: 'mock_role_id'
+      roleId: "mock_role_id"
     }),
     updateRole: async () => ({ success: true }),
     deleteRole: async () => ({ success: true }),
     assignRole: async () => ({ success: true }),
-    revokeRole: async () => ({ success: true }),
-    getRolePermissions: async () => ({
-      permissions: ['read', 'write', 'admin']
-    }),
-    initializeDefaultRolesAndPermissions: async () => ({ success: true })
+    revokeRole: async () => ({ success: true })
   },
   setup: {
     initializeAdminSystem: async () => ({ success: true }),
     getSystemStatus: async () => ({
       initialized: true,
-      version: '1.0.0',
+      version: "1.0.0",
       lastUpdated: new Date().toISOString()
     }),
     updateSystemSettings: async () => ({ success: true }),
@@ -373,8 +228,7 @@ export const mockAdminFunctions = {
       maintenanceMode: false,
       debugMode: false,
       maxUsers: 1000
-    }),
-    resetAdminSystem: async () => ({ success: true })
+    })
   },
   support: {
     getSupportTickets: async () => ({
@@ -383,12 +237,12 @@ export const mockAdminFunctions = {
       hasMore: false
     }),
     createSupportTicket: async () => ({
-      id: 'mock_ticket_id',
-      userId: 'mock_user',
-      subject: 'Mock ticket',
-      status: 'open',
-      priority: 'medium',
-      category: 'general',
+      id: "mock_ticket_id",
+      userId: "mock_user",
+      subject: "Mock ticket",
+      status: "open",
+      priority: "medium",
+      category: "general",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       messages: []
@@ -403,20 +257,20 @@ export const mockAdminFunctions = {
       averageResolutionTime: 0
     }),
     addTicketMessage: async () => ({
-      id: 'mock_message_id',
-      ticketId: 'mock_ticket',
-      senderId: 'mock_sender',
-      message: 'Mock message',
+      id: "mock_message_id",
+      ticketId: "mock_ticket",
+      senderId: "mock_sender",
+      message: "Mock message",
       timestamp: new Date().toISOString(),
       isInternal: false
     }),
     getSupportTicketDetails: async () => ({
-      id: 'mock_ticket_id',
-      userId: 'mock_user',
-      subject: 'Mock ticket',
-      status: 'open',
-      priority: 'medium',
-      category: 'general',
+      id: "mock_ticket_id",
+      userId: "mock_user",
+      subject: "Mock ticket",
+      status: "open",
+      priority: "medium",
+      category: "general",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       messages: []
@@ -448,10 +302,10 @@ export const mockAdminFunctions = {
       results: []
     }),
     getUserBasicInfo: async () => ({
-      id: 'mock_user',
-      email: 'user@example.com',
-      name: 'Mock User',
-      role: 'client',
+      id: "mock_user",
+      email: "user@example.com",
+      name: "Mock User",
+      role: "client",
       createdAt: new Date().toISOString(),
       isActive: true,
       profile: {
@@ -459,16 +313,16 @@ export const mockAdminFunctions = {
         bio: null,
         location: null,
         fitnessGoals: [],
-        experienceLevel: 'beginner'
+        experienceLevel: "beginner"
       }
     }),
     getUserSubscriptionInfo: async () => ({
-      status: 'active',
-      tier: 'premium',
+      status: "active",
+      tier: "premium",
       startDate: new Date().toISOString(),
       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       autoRenew: true,
-      paymentMethod: 'card'
+      paymentMethod: "card"
     }),
     getUserActivityMetrics: async () => ({
       lastLogin: new Date().toISOString(),
@@ -476,7 +330,7 @@ export const mockAdminFunctions = {
       averageSessionDuration: 30,
       featureUsage: {},
       engagementScore: 0.8,
-      retentionCohort: 'active'
+      retentionCohort: "active"
     }),
     getUserSupportHistory: async () => [],
     getUserModerationHistory: async () => [],
@@ -484,7 +338,7 @@ export const mockAdminFunctions = {
       totalSpent: 99.99,
       totalRefunds: 0,
       averageOrderValue: 99.99,
-      paymentMethods: ['card'],
+      paymentMethods: ["card"],
       lastPayment: new Date().toISOString(),
       outstandingBalance: 0
     }),
@@ -496,11 +350,11 @@ export const mockAdminFunctions = {
     }),
     createImpersonationSession: async () => ({ success: true }),
     getImpersonationSession: async () => ({
-      sessionId: 'mock_session',
-      adminId: 'mock_admin',
-      userId: 'mock_user',
+      sessionId: "mock_session",
+      adminId: "mock_admin",
+      userId: "mock_user",
       startTime: new Date().toISOString(),
-      reason: 'Support'
+      reason: "Support"
     }),
     endImpersonationSession: async () => ({ success: true }),
     getUserActivityTimeline: async () => [],
@@ -510,18 +364,19 @@ export const mockAdminFunctions = {
   }
 };
 
-// Create a simple mock API that doesn't import the generated API
+// Create a completely separate mock API that doesn't inherit from generated API
 const mockApi = {
   functions: {
     admin: mockAdminFunctions,
+    // Add other non-admin functions as needed
     users: {
       login: async () => ({
         success: true,
         user: {
-          _id: 'mock_user_id',
-          email: 'user@example.com',
-          name: 'Mock User',
-          role: 'client',
+          _id: "mock_user_id",
+          email: "user@example.com",
+          name: "Mock User",
+          role: "client",
           emailVerified: true,
           lastLogin: new Date().toISOString(),
           isActive: true,
@@ -532,19 +387,19 @@ const mockApi = {
             bio: null,
             location: null,
             fitnessGoals: [],
-            experienceLevel: 'beginner'
+            experienceLevel: "beginner"
           }
         },
-        token: 'mock_jwt_token'
+        token: "mock_jwt_token"
       }),
       logout: async () => ({ success: true }),
       validateSession: async () => ({
         valid: true,
         user: {
-          _id: 'mock_user_id',
-          email: 'user@example.com',
-          name: 'Mock User',
-          role: 'client',
+          _id: "mock_user_id",
+          email: "user@example.com",
+          name: "Mock User",
+          role: "client",
           emailVerified: true,
           lastLogin: new Date().toISOString(),
           isActive: true,
@@ -555,43 +410,30 @@ const mockApi = {
             bio: null,
             location: null,
             fitnessGoals: [],
-            experienceLevel: 'beginner'
+            experienceLevel: "beginner"
           }
         }
       }),
-      requestPasswordReset: async () => ({ success: true, token: 'mock_reset_token' }),
+      requestPasswordReset: async () => ({ success: true, token: "mock_reset_token" }),
       resetPassword: async () => ({ success: true }),
       updateUserProfile: async () => ({ success: true }),
       changePassword: async () => ({ success: true })
     }
   },
-  // Also expose admin functions at top level for backward compatibility
   admin: mockAdminFunctions
 };
 
 // Export the API structure
-export const api = {
-  ...mockApi,
-  // Override with admin functions at top level
-  admin: mockAdminFunctions
-};
+export const api = mockApi;
 
 // Mock convex client with proper typing
 export const convex = {
-  query: async (fn: unknown, ...args: unknown[]) => {
+  query: async (fn: (...args: unknown[]) => Promise<unknown>, ...args: unknown[]) => {
     // Mock query implementation - just call the function directly
-    if (typeof fn === 'function') {
-      return await (fn as (...args: unknown[]) => Promise<unknown>)(...args);
-    }
-    // If it's a FunctionReference, try to call it as a function
-    return await (fn as (...args: unknown[]) => Promise<unknown>)(...args);
+    return await fn(...args);
   },
-  mutation: async (fn: unknown, ...args: unknown[]) => {
+  mutation: async (fn: (...args: unknown[]) => Promise<unknown>, ...args: unknown[]) => {
     // Mock mutation implementation - just call the function directly
-    if (typeof fn === 'function') {
-      return await (fn as (...args: unknown[]) => Promise<unknown>)(...args);
-    }
-    // If it's a FunctionReference, try to call it as a function
-    return await (fn as (...args: unknown[]) => Promise<unknown>)(...args);
+    return await fn(...args);
   },
 };

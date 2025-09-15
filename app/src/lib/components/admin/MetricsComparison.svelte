@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { analyticsService } from '../../services/analyticsService';
-	import type { Id } from '../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -75,7 +75,7 @@
 		return '→';
 	}
 
-	function getMetricValue(data: any, type: string): number {
+	function getMetricValue(data: any, type: 'users' | 'revenue' | 'engagement'): number {
 		switch (type) {
 			case 'users':
 				return data?.totalNewUsers || 0;
@@ -103,7 +103,7 @@
 			{#each comparisonTypes as type}
 				<button
 					on:click={() => {
-						metricType = type.value;
+						metricType = type.value as 'users' | 'revenue' | 'engagement';
 						loadComparisonData();
 					}}
 					class="px-3 py-1 text-sm rounded-md transition-colors {metricType === type.value
@@ -222,17 +222,17 @@
 						{#each Object.entries(comparisonData.current.acquisitionChannels) as [channel, count]}
 							<div class="text-center">
 								<div class="text-lg font-semibold text-gray-900">
-									{formatNumber(count)}
+									{formatNumber(count as number)}
 								</div>
 								<div class="text-xs text-gray-600 capitalize">{channel}</div>
 								{#if comparisonData.previous.acquisitionChannels?.[channel]}
 									<div
 										class="text-xs {getChangeColor(
-											count - comparisonData.previous.acquisitionChannels[channel]
+											(count as number) - comparisonData.previous.acquisitionChannels[channel]
 										)}"
 									>
 										{formatPercentage(
-											((count - comparisonData.previous.acquisitionChannels[channel]) /
+											(((count as number) - comparisonData.previous.acquisitionChannels[channel]) /
 												comparisonData.previous.acquisitionChannels[channel]) *
 												100
 										)}
@@ -271,17 +271,17 @@
 						{#each Object.entries(comparisonData.current.revenueBySource) as [source, amount]}
 							<div class="text-center">
 								<div class="text-lg font-semibold text-gray-900">
-									{formatCurrency(amount)}
+									{formatCurrency(amount as number)}
 								</div>
 								<div class="text-xs text-gray-600 capitalize">{source.replace('_', ' ')}</div>
 								{#if comparisonData.previous.revenueBySource?.[source]}
 									<div
 										class="text-xs {getChangeColor(
-											amount - comparisonData.previous.revenueBySource[source]
+											(amount as number) - comparisonData.previous.revenueBySource[source]
 										)}"
 									>
 										{formatPercentage(
-											((amount - comparisonData.previous.revenueBySource[source]) /
+											(((amount as number) - comparisonData.previous.revenueBySource[source]) /
 												comparisonData.previous.revenueBySource[source]) *
 												100
 										)}
@@ -301,7 +301,10 @@
 					<div class="text-center">
 						<div class="text-lg font-semibold text-gray-900">
 							{formatNumber(
-								comparisonData.current.dailyActiveUsers?.reduce((sum, d) => sum + d.value, 0) || 0
+								comparisonData.current.dailyActiveUsers?.reduce(
+									(sum: number, d: { value: number }) => sum + d.value,
+									0
+								) || 0
 							)}
 						</div>
 						<div class="text-xs text-gray-600">Total DAU</div>

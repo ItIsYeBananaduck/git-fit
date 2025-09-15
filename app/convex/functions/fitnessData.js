@@ -71,7 +71,7 @@ export const getFitnessData = query({
       });
     }
     
-    return data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   },
 });
 
@@ -100,7 +100,7 @@ export const getLatestFitnessData = query({
       )
       .collect();
     
-    return data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0] || null;
+    return data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0] || null;
   },
 });
 

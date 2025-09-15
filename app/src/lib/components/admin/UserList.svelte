@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { UserSearchResult } from '$lib/types/admin';
-	import type { Id } from '../../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	export let users: UserSearchResult[] = [];
 	export let loading = false;

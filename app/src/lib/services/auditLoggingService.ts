@@ -5,7 +5,6 @@ import type {
   AuditLogEntry,
   AdminAction,
   TimeFrame,
-  SearchOptions,
   ApiResponse,
   AdminUser
 } from "../types/admin";
@@ -34,7 +33,7 @@ export interface SecurityAlert {
   severity: "low" | "medium" | "high" | "critical";
   adminId?: Id<"adminUsers">;
   description: string;
-  details: any;
+  details: Record<string, unknown>;
   timestamp: string;
   acknowledged: boolean;
   acknowledgedBy?: Id<"adminUsers">;
@@ -134,7 +133,7 @@ export class AuditLoggingService {
       const severity = this.determineSeverity(action.action);
       const category = this.determineCategory(action.resource);
 
-      await convex.mutation(api.admin.audit.logAdminAction, {
+      await convex.mutation(api.functions.admin.audit.logAdminAction, {
         adminId,
         action: action.action,
         resource: action.resource,
@@ -150,7 +149,7 @@ export class AuditLoggingService {
       });
 
       // Check for suspicious activity patterns
-      await this.checkSuspiciousActivity(adminId, action);
+      await this.checkSuspiciousActivity(adminId);
 
     } catch (error) {
       console.error("Failed to log admin action:", error);
@@ -163,7 +162,7 @@ export class AuditLoggingService {
    */
   async searchAuditLogs(criteria: AuditSearchCriteria): Promise<ApiResponse<AuditLogEntry[]>> {
     try {
-      const logs = await convex.query(api.admin.audit.getAdminAuditLog, {
+      const logs = await convex.query(api.functions.admin.audit.getAdminAuditLog, {
         adminId: criteria.adminId,
         startTime: criteria.timeframe?.start,
         endTime: criteria.timeframe?.end,
@@ -173,7 +172,7 @@ export class AuditLoggingService {
         category: criteria.category,
         limit: criteria.limit || 100,
         offset: criteria.offset || 0
-      });
+      }) as AuditLogEntry[];
 
       // Apply additional client-side filtering
       let filteredLogs = logs;
@@ -226,17 +225,17 @@ export class AuditLoggingService {
    */
   async getAuditStatistics(timeframe?: TimeFrame): Promise<AuditStatistics> {
     try {
-      const stats = await convex.query(api.admin.audit.getAuditStatistics, {
+      const stats = await convex.query(api.functions.admin.audit.getAuditStatistics, {
         startTime: timeframe?.start,
         endTime: timeframe?.end
-      });
+      }) as AuditStatistics;
 
       // Get additional statistics
-      const logs = await convex.query(api.admin.audit.getAdminAuditLog, {
+      const logs = await convex.query(api.functions.admin.audit.getAdminAuditLog, {
         startTime: timeframe?.start,
         endTime: timeframe?.end,
         limit: 1000
-      });
+      }) as AuditLogEntry[];
 
       // Calculate top actions and resources
       const actionCounts = logs.reduce((acc, log) => {
@@ -297,14 +296,14 @@ export class AuditLoggingService {
     timeframe?: TimeFrame
   ): Promise<AdminActivitySummary> {
     try {
-      const logs = await convex.query(api.admin.audit.getAdminAuditLog, {
+      const logs = await convex.query(api.functions.admin.audit.getAdminAuditLog, {
         adminId,
         startTime: timeframe?.start,
         endTime: timeframe?.end,
         limit: 1000
-      });
+      }) as AuditLogEntry[];
 
-      const admin = await convex.query(api.admin.auth.getAdminById, { adminId });
+      const admin = await convex.query(api.functions.admin.auth.getAdminById, { adminId }) as AdminUser | null;
       
       const actionsByCategory = logs.reduce((acc, log) => {
         acc[log.category] = (acc[log.category] || 0) + 1;
@@ -348,10 +347,10 @@ export class AuditLoggingService {
    */
   async getRecentCriticalActions(hours: number = 24, limit: number = 20): Promise<AuditLogEntry[]> {
     try {
-      return await convex.query(api.admin.audit.getRecentCriticalActions, {
+      return await convex.query(api.functions.admin.audit.getRecentCriticalActions, {
         hours,
         limit
-      });
+      }) as AuditLogEntry[];
     } catch (error) {
       console.error("Failed to get recent critical actions:", error);
       return [];
@@ -382,7 +381,7 @@ export class AuditLoggingService {
       const csvRows = [headers.join(",")];
 
       for (const log of logs) {
-        const admin = await convex.query(api.admin.auth.getAdminById, { adminId: log.adminId });
+        const admin = await convex.query(api.functions.admin.auth.getAdminById, { adminId: log.adminId }) as AdminUser | null;
         const row = [
           log.timestamp,
           log.adminId,
@@ -412,8 +411,7 @@ export class AuditLoggingService {
    * Check for suspicious activity patterns
    */
   private async checkSuspiciousActivity(
-    adminId: Id<"adminUsers">, 
-    action: AdminAction
+    adminId: Id<"adminUsers">
   ): Promise<void> {
     try {
       const now = new Date();
@@ -421,14 +419,14 @@ export class AuditLoggingService {
       for (const pattern of AuditLoggingService.SUSPICIOUS_PATTERNS) {
         const windowStart = new Date(now.getTime() - pattern.timeWindow * 60 * 1000);
         
-        const recentLogs = await convex.query(api.admin.audit.getAdminAuditLog, {
+        const recentLogs = await convex.query(api.functions.admin.audit.getAdminAuditLog, {
           adminId,
           startTime: windowStart.toISOString(),
           endTime: now.toISOString(),
           limit: 100
-        });
+        }) as AuditLogEntry[];
 
-        const matchingActions = this.getMatchingActions(recentLogs, pattern, action);
+        const matchingActions = this.getMatchingActions(recentLogs, pattern);
         
         if (matchingActions >= pattern.threshold) {
           await this.createSecurityAlert({
@@ -458,8 +456,7 @@ export class AuditLoggingService {
    */
   private getMatchingActions(
     logs: AuditLogEntry[], 
-    pattern: SuspiciousActivityPattern, 
-    currentAction: AdminAction
+    pattern: SuspiciousActivityPattern
   ): number {
     switch (pattern.pattern) {
       case "multiple_failed_logins":
@@ -499,7 +496,7 @@ export class AuditLoggingService {
         return logs.filter(log => 
           log.action.includes("export") || 
           log.action.includes("download") ||
-          log.details?.export === true
+          (typeof log.details === 'string' && JSON.parse(log.details)?.export === true)
         ).length;
 
       default:
@@ -514,8 +511,8 @@ export class AuditLoggingService {
     try {
       // In a real implementation, this would store alerts in the database
       // For now, we'll log it as a critical audit entry
-      await convex.mutation(api.admin.audit.logAdminAction, {
-        adminId: alert.adminId || "system" as any,
+      await convex.mutation(api.functions.admin.audit.logAdminAction, {
+        adminId: alert.adminId || "system" as Id<"adminUsers">,
         action: "security_alert_created",
         resource: "security",
         resourceId: alert.type,
@@ -585,18 +582,18 @@ export class AuditLoggingService {
     timeframe?: TimeFrame
   ): Promise<number> {
     try {
-      const logs = await convex.query(api.admin.audit.getAdminAuditLog, {
+      const logs = await convex.query(api.functions.admin.audit.getAdminAuditLog, {
         adminId,
         startTime: timeframe?.start,
         endTime: timeframe?.end,
         severity: "critical",
         limit: 100
-      });
+      }) as AuditLogEntry[];
 
       return logs.filter(log => 
         log.action === "security_alert_created" ||
         log.outcome === "failure" ||
-        log.details?.suspicious === true
+        (typeof log.details === 'string' && JSON.parse(log.details)?.suspicious === true)
       ).length;
 
     } catch (error) {

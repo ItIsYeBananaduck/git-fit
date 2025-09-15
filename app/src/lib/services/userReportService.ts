@@ -39,7 +39,7 @@ export interface ModerationAction {
   reason: string;
   performedBy: Id<"adminUsers">;
   performedAt: string;
-  details: any;
+  details: Record<string, unknown>;
 }
 
 export interface ContentAnalytics {
@@ -71,10 +71,10 @@ export class UserReportService {
     }
   ): Promise<{ reportId: Id<"moderationQueue"> }> {
     try {
-      const reportId = await convex.mutation(api.admin.moderation.createUserReport, {
+      const reportId = await convex.mutation(api.functions.admin.moderation.createUserReport, {
         ...reportData,
         createdAt: new Date().toISOString()
-      });
+      }) as Id<"moderationQueue">;
 
       return { reportId };
     } catch (error) {
@@ -105,11 +105,15 @@ export class UserReportService {
         throw new ConvexError("Insufficient permissions to view user reports");
       }
 
-      const result = await convex.query(api.admin.moderation.getUserReports, {
+      const result = await convex.query(api.functions.admin.moderation.getUserReports, {
         ...filters,
         limit,
         offset
-      });
+      }) as {
+        reports: UserReport[];
+        total: number;
+        hasMore: boolean;
+      };
 
       // Log report access
       await adminAuthService.logAdminAction(adminId, {
@@ -124,7 +128,7 @@ export class UserReportService {
       });
 
       return {
-        reports: result.reports as UserReport[],
+        reports: result.reports,
         total: result.total,
         hasMore: result.hasMore
       };
@@ -151,7 +155,7 @@ export class UserReportService {
         throw new ConvexError("Insufficient permissions to investigate user reports");
       }
 
-      await convex.mutation(api.admin.moderation.investigateUserReport, {
+      await convex.mutation(api.functions.admin.moderation.investigateUserReport, {
         reportId,
         investigatorId: investigation.investigatorId,
         investigationNotes: `Investigation findings: ${investigation.findings}`,
@@ -194,17 +198,20 @@ export class UserReportService {
     contentData: {
       contentId: string;
       contentType: "message" | "exercise" | "profile" | "review";
-      contentData: any;
+      contentData: Record<string, unknown>;
       flagReason: string;
       confidenceScore: number;
       detectionMethod: string;
     }
   ): Promise<{ moderationItemId: Id<"moderationQueue">; priority: string }> {
     try {
-      const result = await convex.mutation(api.admin.moderation.flagInappropriateContentAuto, {
+      const result = await convex.mutation(api.functions.admin.moderation.flagInappropriateContentAuto, {
         ...contentData,
         createdAt: new Date().toISOString()
-      });
+      }) as {
+        moderationItemId: Id<"moderationQueue">;
+        priority: string;
+      };
 
       return {
         moderationItemId: result.moderationItemId,
@@ -239,10 +246,10 @@ export class UserReportService {
         throw new ConvexError("Insufficient permissions to view moderation actions");
       }
 
-      const actions = await convex.query(api.admin.moderation.getModerationActions, {
+      const actions = await convex.query(api.functions.admin.moderation.getModerationActions, {
         ...filters,
         limit
-      });
+      }) as ModerationAction[];
 
       // Log action history access
       await adminAuthService.logAdminAction(adminId, {
@@ -277,10 +284,10 @@ export class UserReportService {
     }
   ): Promise<{ appealId: Id<"moderationQueue"> }> {
     try {
-      const appealId = await convex.mutation(api.admin.moderation.createModerationAppeal, {
+      const appealId = await convex.mutation(api.functions.admin.moderation.createModerationAppeal, {
         ...appealData,
         createdAt: new Date().toISOString()
-      });
+      }) as Id<"moderationQueue">;
 
       return { appealId };
     } catch (error) {
@@ -308,11 +315,11 @@ export class UserReportService {
         }
       }
 
-      const analytics = await convex.query(api.admin.moderation.getContentAnalyticsDetailed, {
+      const analytics = await convex.query(api.functions.admin.moderation.getContentAnalyticsDetailed, {
         startDate: timeframe.start,
         endDate: timeframe.end,
         contentType
-      });
+      }) as ContentAnalytics;
 
       if (adminId) {
         // Log analytics access

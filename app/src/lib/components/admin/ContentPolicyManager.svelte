@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { contentModerationService } from '../../services/contentModerationService';
 	import type { ContentPolicy, PolicyRule } from '../../types/admin';
-	import type { Id } from '../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -116,7 +116,11 @@
 
 	function openRuleModal(rule?: PolicyRule, index?: number) {
 		if (rule && index !== undefined) {
-			ruleForm = { ...rule };
+			ruleForm = { 
+				...rule,
+				pattern: rule.pattern || '',
+				keywords: rule.keywords || []
+			};
 			editingRuleIndex = index;
 		} else {
 			ruleForm = {
@@ -555,8 +559,8 @@
 						</label>
 					</div>
 
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">
+					<div aria-label="Rules ({policyForm.rules.length})">
+						<label aria-hidden="true" class="block text-sm font-medium text-gray-700 mb-2">
 							Rules ({policyForm.rules.length})
 						</label>
 						{#if policyForm.rules.length === 0}
@@ -687,9 +691,10 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">Keywords</label>
+						<label for="keywords" class="block text-sm font-medium text-gray-700 mb-2">Keywords</label>
 						<div class="flex space-x-2 mb-2">
 							<input
+								id="keywords"
 								type="text"
 								bind:value={keywordInput}
 								on:keydown={(e) => e.key === 'Enter' && addKeyword()}

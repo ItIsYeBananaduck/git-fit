@@ -5,6 +5,7 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import { api } from "../../../convex/_generated/api";
 import { convex } from "$lib/convex";
 import { adminAuthService } from "./adminAuth";
+import { mockAdminFunctions } from "$lib/convex";
 
 export interface DashboardMetrics {
   userMetrics: {
@@ -69,20 +70,47 @@ export interface EngagementMetrics {
     returnVisitorRate: number;
   };
   featureUsage: Record<string, number>;
-  userJourneys: any[];
+  userJourneys: { step: string; duration: number; completed: boolean }[];
 }
 
 export interface CustomDashboard {
   dashboardId: string;
   name: string;
-  layout: any;
-  widgets: any[];
+  layout: Record<string, unknown>; // Replace with a more specific type if the structure of layout is known
+  widgets: Widget[]; // Replace Widget with the actual type or define an interface for widgets
   isDefault: boolean;
   createdAt: string;
 }
 
+export interface Widget {
+  id: string;
+  type: string;
+  title: string;
+  position: { x: number; y: number; width: number; height: number };
+  config: Record<string, unknown>;
+}
+
+export interface SubscriptionInfo {
+  callback: (data: DashboardMetrics | GrowthAnalytics | RevenueAnalytics | EngagementMetrics) => void;
+  type: "dashboard" | "users" | "revenue" | "engagement";
+  adminId: Id<"adminUsers">;
+  realTime: boolean;
+  interval?: NodeJS.Timeout;
+}
+
+export interface DashboardLayout {
+  columns: number;
+  rows: number;
+  widgets: Array<{
+    id: string;
+    type: string;
+    position: { x: number; y: number; width: number; height: number };
+    config: Record<string, unknown>;
+  }>;
+}
+
 export class AnalyticsService {
-  private subscriptions = new Map<string, any>();
+  private subscriptions = new Map<string, SubscriptionInfo>();
 
   /**
    * Get dashboard metrics
@@ -100,9 +128,9 @@ export class AnalyticsService {
         }
       }
 
-      const metrics = await convex.query(api.admin.analytics.getDashboardMetrics, {
+      const metrics = await convex.query(api.functions.admin.analytics.getDashboardMetrics, {
         timeframe
-      });
+      }) as DashboardMetrics;
 
       if (adminId) {
         // Log analytics access
@@ -141,11 +169,11 @@ export class AnalyticsService {
         }
       }
 
-      const analytics = await convex.query(api.admin.analytics.getUserGrowthAnalytics, {
+      const analytics = await convex.query(api.functions.admin.analytics.getUserGrowthAnalytics, {
         period,
         startDate,
         endDate
-      });
+      }) as GrowthAnalytics;
 
       if (adminId) {
         await adminAuthService.logAdminAction(adminId, {
@@ -183,11 +211,11 @@ export class AnalyticsService {
         }
       }
 
-      const analytics = await convex.query(api.admin.analytics.getRevenueAnalytics, {
+      const analytics = await convex.query(api.functions.admin.analytics.getRevenueAnalytics, {
         period,
         startDate,
         endDate
-      });
+      }) as RevenueAnalytics;
 
       if (adminId) {
         await adminAuthService.logAdminAction(adminId, {
@@ -225,11 +253,11 @@ export class AnalyticsService {
         }
       }
 
-      const metrics = await convex.query(api.admin.analytics.getEngagementMetrics, {
+      const metrics = await convex.query(api.functions.admin.analytics.getEngagementMetrics, {
         period,
         startDate,
         endDate
-      });
+      }) as EngagementMetrics;
 
       if (adminId) {
         await adminAuthService.logAdminAction(adminId, {
@@ -256,7 +284,7 @@ export class AnalyticsService {
   async subscribeToMetrics(
     subscriptionType: "dashboard" | "users" | "revenue" | "engagement",
     adminId: Id<"adminUsers">,
-    callback: (data: any) => void
+    callback: (data: DashboardMetrics | GrowthAnalytics | RevenueAnalytics | EngagementMetrics) => void
   ): Promise<string> {
     try {
       const canViewAnalytics = await adminAuthService.validateAdminPermissions(adminId, "read", "analytics");
@@ -341,8 +369,8 @@ export class AnalyticsService {
    */
   async saveCustomDashboard(
     dashboardName: string,
-    layout: any,
-    widgets: any[],
+    layout: DashboardLayout,
+    widgets: Widget[],
     adminId: Id<"adminUsers">,
     isDefault: boolean = false
   ): Promise<{ dashboardId: string }> {
@@ -352,13 +380,13 @@ export class AnalyticsService {
         throw new ConvexError("Insufficient permissions to manage dashboards");
       }
 
-      const dashboard = await convex.mutation(api.admin.analytics.saveCustomDashboard, {
+      const dashboard = await mockAdminFunctions.analytics.saveCustomDashboard({
         adminId,
         dashboardName,
         layout,
         widgets,
         isDefault
-      });
+      }) as { dashboardId: string };
 
       await adminAuthService.logAdminAction(adminId, {
         action: "custom_dashboard_saved",
@@ -392,9 +420,9 @@ export class AnalyticsService {
         throw new ConvexError("Insufficient permissions to view dashboards");
       }
 
-      const dashboards = await convex.query(api.admin.analytics.getCustomDashboards, {
+      const dashboards = await mockAdminFunctions.analytics.getCustomDashboards({
         adminId
-      });
+      }) as CustomDashboard[];
 
       await adminAuthService.logAdminAction(adminId, {
         action: "custom_dashboards_viewed",
@@ -421,7 +449,7 @@ export class AnalyticsService {
     currentPeriod: { start: string; end: string },
     previousPeriod: { start: string; end: string },
     adminId: Id<"adminUsers">
-  ): Promise<{ current: any; previous: any; change: number; changePercent: number }> {
+  ): Promise<{ current: GrowthAnalytics | RevenueAnalytics | EngagementMetrics; previous: GrowthAnalytics | RevenueAnalytics | EngagementMetrics; change: number; changePercent: number }> {
     try {
       const canViewAnalytics = await adminAuthService.validateAdminPermissions(adminId, "read", "analytics");
       if (!canViewAnalytics) {
@@ -446,13 +474,17 @@ export class AnalyticsService {
       }
 
       // Calculate change (simplified - would need specific metric extraction)
-      const currentValue = metricType === "users" ? currentData.totalNewUsers :
-                          metricType === "revenue" ? currentData.totalRevenue :
-                          currentData.dailyActiveUsers.reduce((sum, d) => sum + d.value, 0);
+      const currentValue = metricType === "users"
+        ? (currentData as GrowthAnalytics).totalNewUsers
+        : metricType === "revenue"
+        ? (currentData as RevenueAnalytics).totalRevenue
+        : (currentData as EngagementMetrics).dailyActiveUsers.reduce((sum: number, d: { date: string; value: number }) => sum + d.value, 0);
 
-      const previousValue = metricType === "users" ? previousData.totalNewUsers :
-                           metricType === "revenue" ? previousData.totalRevenue :
-                           previousData.dailyActiveUsers.reduce((sum, d) => sum + d.value, 0);
+      const previousValue = metricType === "users"
+        ? (previousData as GrowthAnalytics).totalNewUsers
+        : metricType === "revenue"
+        ? (previousData as RevenueAnalytics).totalRevenue
+        : (previousData as EngagementMetrics).dailyActiveUsers.reduce((sum: number, d: { date: string; value: number }) => sum + d.value, 0);
 
       const change = currentValue - previousValue;
       const changePercent = previousValue > 0 ? (change / previousValue) * 100 : 0;
@@ -498,7 +530,7 @@ export class AnalyticsService {
     }
 
     // Clean up legacy subscriptions
-    this.subscriptions.forEach((subscription, subscriptionId) => {
+    this.subscriptions.forEach((subscription) => {
       if (subscription.interval) {
         clearInterval(subscription.interval);
       }

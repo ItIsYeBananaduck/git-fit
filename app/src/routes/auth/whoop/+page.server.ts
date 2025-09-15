@@ -4,8 +4,8 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, platform }) => {
   // Get environment variables
-  const WHOOP_CLIENT_ID = platform?.env?.WHOOP_CLIENT_ID || process.env.WHOOP_CLIENT_ID;
-  const WHOOP_CLIENT_SECRET = platform?.env?.WHOOP_CLIENT_SECRET || process.env.WHOOP_CLIENT_SECRET;
+  const WHOOP_CLIENT_ID = process.env.WHOOP_CLIENT_ID;
+  const WHOOP_CLIENT_SECRET = process.env.WHOOP_CLIENT_SECRET;
   
   if (!WHOOP_CLIENT_ID || !WHOOP_CLIENT_SECRET) {
     throw new Error('WHOOP API credentials not configured');

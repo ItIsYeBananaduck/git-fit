@@ -74,3 +74,27 @@ export interface TrainingSplit {
   daysPerWeek: number;
   focusAreas: string[];
 }
+
+export interface NotificationPreferences {
+  allowHighPriority: boolean;
+  allowMediumPriority: boolean;
+  allowLowPriority: boolean;
+  highPriority: boolean;
+  mediumPriority: boolean;
+  lowPriority: boolean;
+  warnings: boolean;
+  info: boolean;
+  fatigueAlerts: boolean;
+  recoveryReminders: boolean;
+}
+
+export interface FatigueNotification {
+  id: string;
+  type: 'info' | 'warning' | 'error';
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high';
+  actions: Array<{ label: string; action: string; value: unknown }>;
+  timestamp: string;
+  expiresAt: string;
+}

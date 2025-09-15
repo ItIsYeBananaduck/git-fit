@@ -1,7 +1,7 @@
 // Support Ticket System Service
 
 import { ConvexError } from "convex/values";
-import type { 
+import type {
   SupportTicket,
   SupportMessage,
   BulkUserAction,
@@ -36,7 +36,7 @@ export class SupportService {
         throw new ConvexError("Insufficient permissions to view support tickets");
       }
 
-      const result = await convex.query(api.admin.support.getSupportTickets, {
+      const result = await convex.query(api.functions.admin.support.getSupportTickets, {
         status: filters.status,
         priority: filters.priority,
         assignedTo: filters.assignedTo,
@@ -44,7 +44,7 @@ export class SupportService {
         dateRange: filters.dateRange,
         limit,
         offset
-      });
+      }) as { tickets: SupportTicket[]; total: number; hasMore: boolean };
 
       // Log ticket access
       await adminAuthService.logAdminAction(adminId, {
@@ -82,7 +82,7 @@ export class SupportService {
     adminId?: Id<"adminUsers">
   ): Promise<SupportTicket> {
     try {
-      const ticket = await convex.mutation(api.admin.support.createSupportTicket, {
+      const ticket = await convex.mutation(api.functions.admin.support.createSupportTicket, {
         userId: ticketData.userId,
         subject: ticketData.subject,
         description: ticketData.description,
@@ -90,7 +90,7 @@ export class SupportService {
         category: ticketData.category,
         createdBy: adminId,
         createdAt: new Date().toISOString()
-      });
+      }) as SupportTicket;
 
       // Log ticket creation
       if (adminId) {
@@ -137,7 +137,7 @@ export class SupportService {
         throw new ConvexError("Insufficient permissions to update support tickets");
       }
 
-      await convex.mutation(api.admin.support.updateSupportTicket, {
+      await convex.mutation(api.functions.admin.support.updateSupportTicket, {
         ticketId,
         status: updates.status,
         priority: updates.priority,
@@ -186,7 +186,7 @@ export class SupportService {
         }
       }
 
-      const ticketMessage = await convex.mutation(api.admin.support.addTicketMessage, {
+      const ticketMessage = await convex.mutation(api.functions.admin.support.addTicketMessage, {
         ticketId,
         senderId,
         senderType,
@@ -194,7 +194,7 @@ export class SupportService {
         attachments: message.attachments,
         isInternal: message.isInternal || false,
         timestamp: new Date().toISOString()
-      });
+      }) as SupportMessage;
 
       // Log message addition
       if (senderType === "admin") {
@@ -236,7 +236,7 @@ export class SupportService {
         throw new ConvexError("Insufficient permissions to view support ticket details");
       }
 
-      const ticket = await convex.query(api.admin.support.getSupportTicketDetails, { ticketId });
+      const ticket = await convex.query(api.functions.admin.support.getSupportTicketDetails, { ticketId }) as SupportTicket | null;
       if (!ticket) {
         throw new ConvexError("Support ticket not found");
       }
@@ -285,7 +285,7 @@ export class SupportService {
         throw new ConvexError("Insufficient permissions to send platform announcements");
       }
 
-      const result = await convex.mutation(api.admin.communication.sendPlatformAnnouncement, {
+      const result = await convex.mutation(api.functions.admin.communication.sendPlatformAnnouncement, {
         title: announcement.title,
         content: announcement.content,
         type: announcement.type,
@@ -294,7 +294,7 @@ export class SupportService {
         expiresAt: announcement.expiresAt,
         sentBy: adminId,
         createdAt: new Date().toISOString()
-      });
+      }) as { announcementId: string; recipientCount: number };
 
       // Log announcement
       await adminAuthService.logAdminAction(adminId, {
@@ -341,7 +341,7 @@ export class SupportService {
         throw new ConvexError("Insufficient permissions to send user messages");
       }
 
-      const result = await convex.mutation(api.admin.communication.sendTargetedMessage, {
+      const result = await convex.mutation(api.functions.admin.communication.sendTargetedMessage, {
         subject: message.subject,
         content: message.content,
         type: message.type,
@@ -349,7 +349,7 @@ export class SupportService {
         userCriteria: message.userCriteria,
         sentBy: adminId,
         sentAt: new Date().toISOString()
-      });
+      }) as { messageId: string; recipientCount: number };
 
       // Log targeted message
       await adminAuthService.logAdminAction(adminId, {
@@ -392,13 +392,13 @@ export class SupportService {
         throw new ConvexError("Insufficient permissions to handle GDPR requests");
       }
 
-      const result = await convex.mutation(api.admin.privacy.handleGDPRRequest, {
+      const result = await convex.mutation(api.functions.admin.privacy.handleGDPRRequest, {
         userId,
         requestType,
         handledBy: adminId,
         notes,
         requestedAt: new Date().toISOString()
-      });
+      }) as { requestId: string; status: string; estimatedCompletion?: string };
 
       // Log GDPR request handling
       await adminAuthService.logAdminAction(adminId, {
@@ -439,12 +439,12 @@ export class SupportService {
         throw new ConvexError("Insufficient permissions to export user data");
       }
 
-      const result = await convex.mutation(api.admin.privacy.exportUserData, {
+      const result = await convex.mutation(api.functions.admin.privacy.exportUserData, {
         userId,
         requestedBy: adminId,
         includeDeleted,
         requestedAt: new Date().toISOString()
-      });
+      }) as { exportId: string; downloadUrl: string; expiresAt: string };
 
       // Log data export
       await adminAuthService.logAdminAction(adminId, {
@@ -496,12 +496,12 @@ export class SupportService {
         throw new ConvexError(`Insufficient permissions to ${action.action} users`);
       }
 
-      const result = await convex.mutation(api.admin.users.performBulkAction, {
+      const result = await convex.mutation(api.functions.admin.users.performBulkAction, {
         action,
         userIds,
         performedBy: adminId,
         performedAt: new Date().toISOString()
-      });
+      }) as BulkActionResult;
 
       // Log bulk action
       await adminAuthService.logAdminAction(adminId, {
@@ -548,10 +548,17 @@ export class SupportService {
         throw new ConvexError("Insufficient permissions to view communication analytics");
       }
 
-      const analytics = await convex.query(api.admin.communication.getAnalytics, {
+      const analytics = await convex.query(api.functions.admin.communication.getAnalytics, {
         startDate: timeframe.start,
         endDate: timeframe.end
-      });
+      }) as {
+        announcementsSent: number;
+        messagesSent: number;
+        ticketsCreated: number;
+        ticketsResolved: number;
+        averageResponseTime: number;
+        userEngagement: Record<string, number>;
+      };
 
       // Log analytics access
       await adminAuthService.logAdminAction(adminId, {
@@ -596,11 +603,11 @@ export class SupportService {
       }
 
       // Get all tickets in timeframe
-      const allTickets = await convex.query(api.admin.support.getSupportTickets, {
+      const allTickets = await convex.query(api.functions.admin.support.getSupportTickets, {
         dateRange: timeframe,
         limit: 1000,
         offset: 0
-      });
+      }) as { tickets: SupportTicket[]; total: number; hasMore: boolean };
 
       const tickets = allTickets.tickets;
 
@@ -725,11 +732,11 @@ export class SupportService {
       }
 
       // Get unassigned tickets
-      const unassignedTickets = await convex.query(api.admin.support.getSupportTickets, {
+      const unassignedTickets = await convex.query(api.functions.admin.support.getSupportTickets, {
         assignedTo: undefined,
         limit: 100,
         offset: 0
-      });
+      }) as { tickets: SupportTicket[]; total: number; hasMore: boolean };
 
       const assignments: Array<{ ticketId: string; assignedTo: Id<"adminUsers"> }> = [];
 

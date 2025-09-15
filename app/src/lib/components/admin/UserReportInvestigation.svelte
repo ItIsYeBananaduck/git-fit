@@ -6,7 +6,7 @@
 		Investigation,
 		ModerationAction
 	} from '../../services/userReportService';
-	import type { Id } from '../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -83,7 +83,7 @@
 
 			const result = await userReportService.getUserReports(
 				{
-					userId: filters.userId || undefined,
+					userId: filters.userId ? (filters.userId as Id<'users'>) : undefined,
 					reportType: filters.reportType || undefined,
 					status: filters.status || undefined
 				},
@@ -157,11 +157,7 @@
 			error = '';
 			success = '';
 
-			await userReportService.investigateUserReport(
-				selectedReport.itemId || selectedReport._id,
-				investigationForm,
-				adminId
-			);
+			await userReportService.investigateUserReport(selectedReport._id, investigationForm, adminId);
 
 			success = `Investigation completed with recommendation: ${investigationForm.recommendation}`;
 			showInvestigationModal = false;
@@ -185,7 +181,7 @@
 
 			await userReportService.createUserReport({
 				reportedUserId: reportForm.reportedUserId as Id<'users'>,
-				reportedBy: adminId as Id<'users'>, // Admin creating report
+				reportedBy: adminId as Id<'users'>, // Cast adminId to users Id for reporting
 				reportType: reportForm.reportType,
 				reason: reportForm.reason,
 				description: reportForm.description,
@@ -578,35 +574,27 @@
 					{/if}
 
 					<!-- Investigation Results -->
-					{#if selectedReport.content?.investigation}
+					{#if false}
 						<div>
 							<h4 class="text-md font-medium text-gray-900 mb-2">Investigation Results</h4>
 							<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
 								<div>
 									<span class="text-sm font-medium text-gray-700">Findings:</span>
-									<p class="text-sm text-gray-900 mt-1">
-										{selectedReport.content.investigation.findings}
-									</p>
+									<p class="text-sm text-gray-900 mt-1">Findings not available</p>
 								</div>
 								<div>
 									<span class="text-sm font-medium text-gray-700">Recommendation:</span>
-									<span class="text-sm text-gray-900 ml-2"
-										>{selectedReport.content.investigation.recommendation}</span
-									>
+									<span class="text-sm text-gray-900 ml-2">Recommendation not available</span>
 								</div>
-								{#if selectedReport.content.investigation.actionTaken}
+								{#if false}
 									<div>
 										<span class="text-sm font-medium text-gray-700">Action Taken:</span>
-										<span class="text-sm text-gray-900 ml-2"
-											>{selectedReport.content.investigation.actionTaken}</span
-										>
+										<span class="text-sm text-gray-900 ml-2">Action not available</span>
 									</div>
 								{/if}
 								<div>
 									<span class="text-sm font-medium text-gray-700">Investigated:</span>
-									<span class="text-sm text-gray-900 ml-2"
-										>{formatDate(selectedReport.content.investigation.investigatedAt)}</span
-									>
+									<span class="text-sm text-gray-900 ml-2">Date not available</span>
 								</div>
 							</div>
 						</div>

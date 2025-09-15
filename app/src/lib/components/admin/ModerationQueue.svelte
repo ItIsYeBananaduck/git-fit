@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { contentModerationService } from '../../services/contentModerationService';
 	import type { ModerationItem, ModerationDecision } from '../../types/admin';
-	import type { Id } from '../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -25,7 +25,7 @@
 			| 'user_profile',
 		status: '' as '' | 'pending' | 'under_review' | 'approved' | 'rejected' | 'escalated',
 		priority: '' as '' | 'low' | 'medium' | 'high' | 'urgent',
-		assignedTo: '',
+		assignedTo: '' as string,
 		autoFlagged: undefined as boolean | undefined
 	};
 
@@ -39,7 +39,7 @@
 	let moderationDecision: ModerationDecision = {
 		decision: 'approve',
 		reason: '',
-		modifications: null,
+		modifications: '',
 		followUpActions: [],
 		notifyUser: true
 	};
@@ -60,7 +60,7 @@
 					itemType: filters.itemType || undefined,
 					status: filters.status || undefined,
 					priority: filters.priority || undefined,
-					assignedTo: filters.assignedTo || undefined,
+					assignedTo: filters.assignedTo ? (filters.assignedTo as Id<'adminUsers'>) : undefined,
 					autoFlagged: filters.autoFlagged
 				},
 				adminId,
@@ -96,7 +96,7 @@
 		moderationDecision = {
 			decision,
 			reason: '',
-			modifications: null,
+			modifications: undefined,
 			followUpActions: [],
 			notifyUser: true
 		};

@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { contentModerationService } from '../../services/contentModerationService';
 	import type { PolicyRule, ContentAnalytics } from '../../types/admin';
-	import type { Id } from '../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;

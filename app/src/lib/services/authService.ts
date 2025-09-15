@@ -6,8 +6,6 @@ import type {
   RegisterData, 
   LoginCredentials, 
   AuthResult, 
-  AuthError,
-  AuthErrorCode 
 } from '$lib/types/auth';
 import { api } from "../../../convex/_generated/api";
 import { convex } from "$lib/convex";
@@ -70,7 +68,12 @@ export class AuthService {
         name: userData.name.trim(),
         role: userData.role,
         profile: userData.profile
-      });
+      }) as {
+        success: boolean;
+        user?: User;
+        token?: string;
+        error?: string;
+      };
 
       if (result.success && result.user && result.token) {
         this.setAuthData(result.user, result.token);
@@ -114,7 +117,12 @@ export class AuthService {
         email: credentials.email.toLowerCase().trim(),
         password: credentials.password,
         rememberMe: credentials.rememberMe || false
-      });
+      }) as {
+        success: boolean;
+        user?: User;
+        token?: string;
+        error?: string;
+      };
 
       if (result.success && result.user && result.token) {
         this.setAuthData(result.user, result.token);
@@ -187,7 +195,11 @@ export class AuthService {
 
       const result = await convex.query(api.functions.users.validateSession, {
         token: this.authToken
-      });
+      }) as {
+        valid: boolean;
+        user?: User;
+        reason?: string;
+      };
 
       if (result.valid && result.user) {
         this.currentUser = result.user;
@@ -247,7 +259,10 @@ export class AuthService {
       const result = await convex.mutation(api.functions.users.resetPassword, {
         token,
         newPassword
-      });
+      }) as {
+        success: boolean;
+        error?: string;
+      };
 
       if (result.success) {
         return { success: true };
@@ -282,7 +297,11 @@ export class AuthService {
       const result = await convex.mutation(api.functions.users.updateUserProfile, {
         userId: this.currentUser!._id,
         updates
-      });
+      }) as {
+        success: boolean;
+        user?: User;
+        error?: string;
+      };
 
       if (result.success && result.user) {
         this.currentUser = result.user;
@@ -331,7 +350,10 @@ export class AuthService {
         userId: this.currentUser!._id,
         currentPassword,
         newPassword
-      });
+      }) as {
+        success: boolean;
+        error?: string;
+      };
 
       return {
         success: result.success,
@@ -426,12 +448,12 @@ export class AuthService {
     return emailRegex.test(email);
   }
 
-  private handleError(error: any): string {
+  private handleError(error: unknown): string {
     if (error instanceof ConvexError) {
       return error.message;
     }
     
-    if (error?.message) {
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
       return error.message;
     }
 

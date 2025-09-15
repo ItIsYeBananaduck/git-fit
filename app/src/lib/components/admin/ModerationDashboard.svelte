@@ -7,7 +7,7 @@
 	import UserReportInvestigation from './UserReportInvestigation.svelte';
 	import ContentAnalyticsDashboard from './ContentAnalyticsDashboard.svelte';
 	import type { ContentAnalytics } from '../../types/admin';
-	import type { Id } from '../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;

@@ -17,7 +17,7 @@ export class AdminSetupService {
   }): Promise<{ success: boolean; message: string; adminUser?: AdminUser }> {
     try {
       // Check if admin system is already initialized
-      const existingAdmins = await convex.query(api.admin.auth.getAllAdminUsers, { limit: 1 });
+      const existingAdmins = await convex.query(api.functions.admin.auth.getAllAdminUsers, { limit: 1 }) as { page: AdminUser[] };
       if (existingAdmins.page.length > 0) {
         return {
           success: false,
@@ -26,14 +26,14 @@ export class AdminSetupService {
       }
 
       // Initialize default roles and permissions
-      const rolesResult = await convex.mutation(api.admin.roles.initializeDefaultRolesAndPermissions, {});
+      const rolesResult = await convex.mutation(api.functions.admin.roles.initializeDefaultRolesAndPermissions, {});
       console.log("Roles initialization result:", rolesResult);
 
       // Create the first super admin user
       const passwordHash = await bcrypt.hash(initialAdmin.password, 12);
       
       // For the first admin, we need to create without validation since no admin exists yet
-      const firstAdminId = await convex.mutation(api.admin.auth.createFirstSuperAdmin, {
+      const firstAdminId = await convex.mutation(api.functions.admin.auth.createFirstSuperAdmin, {
         email: initialAdmin.email,
         name: initialAdmin.name,
         passwordHash,
@@ -41,7 +41,7 @@ export class AdminSetupService {
         updatedAt: new Date().toISOString(),
       });
 
-      const adminUser = await convex.query(api.admin.auth.getAdminById, { adminId: firstAdminId });
+      const adminUser = await convex.query(api.functions.admin.auth.getAdminById, { adminId: firstAdminId }) as AdminUser | null;
 
       return {
         success: true,
@@ -63,7 +63,7 @@ export class AdminSetupService {
    */
   async isAdminSystemInitialized(): Promise<boolean> {
     try {
-      const existingAdmins = await convex.query(api.admin.auth.getAllAdminUsers, { limit: 1 });
+      const existingAdmins = await convex.query(api.functions.admin.auth.getAllAdminUsers, { limit: 1 }) as { page: AdminUser[] };
       return existingAdmins.page.length > 0;
     } catch (error) {
       console.error("Error checking admin system initialization:", error);
@@ -83,18 +83,18 @@ export class AdminSetupService {
   }> {
     try {
       const [admins, roles, permissions] = await Promise.all([
-        convex.query(api.admin.auth.getAllAdminUsers, { limit: 100 }),
-        convex.query(api.admin.roles.getAllAdminRoles, {}),
-        convex.query(api.admin.roles.getAllAdminPermissions, {})
+        (await convex.query(api.functions.admin.auth.getAllAdminUsers, { limit: 100 })) as { page: AdminUser[] },
+        (await convex.query(api.functions.admin.roles.getAllAdminRoles, {})) as unknown[],
+        (await convex.query(api.functions.admin.roles.getAllAdminPermissions, {})) as unknown[]
       ]);
 
       // Get recent activity (last 24 hours)
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const recentActivity = await convex.query(api.admin.audit.getAuditLogByTimeRange, {
+      const recentActivity = (await convex.query(api.functions.admin.audit.getAuditLogByTimeRange, {
         startTime: yesterday,
         endTime: new Date().toISOString(),
         limit: 1000
-      });
+      })) as unknown[];
 
       return {
         initialized: admins.page.length > 0,
@@ -147,12 +147,12 @@ export class AdminSetupService {
       // Get default permissions for role if not specified
       let permissions = adminData.permissions || [];
       if (permissions.length === 0) {
-        const roleData = await convex.query(api.admin.roles.getRolePermissions, { role: adminData.role });
+        const roleData = await convex.query(api.functions.admin.roles.getRolePermissions, { role: adminData.role }) as { permissions: string[] };
         permissions = roleData?.permissions || [];
       }
 
       // Create admin user
-      const newAdmin = await convex.mutation(api.admin.auth.createAdminUser, {
+      const newAdmin = await convex.mutation(api.functions.admin.auth.createAdminUser, {
         email: adminData.email,
         name: adminData.name,
         role: adminData.role,
@@ -167,7 +167,7 @@ export class AdminSetupService {
         failedLoginAttempts: 0,
         ipWhitelist: adminData.ipWhitelist,
         sessionTimeout: undefined,
-      });
+      }) as AdminUser;
 
       return {
         success: true,
@@ -198,7 +198,7 @@ export class AdminSetupService {
       }
 
       // Delete all admin data
-      await convex.mutation(api.admin.setup.resetAdminSystem, {});
+      await convex.mutation(api.functions.admin.setup.resetAdminSystem, {});
 
       return {
         success: true,

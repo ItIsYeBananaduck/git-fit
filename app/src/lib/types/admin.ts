@@ -1,6 +1,6 @@
 // Admin Dashboard & Platform Management Types
 
-import type { Id } from "../../../convex/_generated/dataModel";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 // ============================================================================
 // Admin User and Authentication Types
@@ -128,7 +128,7 @@ export interface UserActivityMetrics {
   averageSessionDuration: number;
   featureUsage: Record<string, number>;
   engagementScore: number;
-  retentionCohort: "string";
+  retentionCohort: string;
 }
 
 export interface SupportTicket {
@@ -217,6 +217,7 @@ export type ModerationItemType =
 
 export interface ModerationItem {
   _id: Id<"moderationQueue">;
+  id: string; // Add id property for compatibility
   itemType: ModerationItemType;
   itemId: string;
   reportedBy?: Id<"users">;
@@ -750,7 +751,7 @@ export interface AdminAction {
   action: string;
   resource: string;
   resourceId?: string;
-  details: string;
+  details: Record<string, unknown>;
   ipAddress: string;
   userAgent: string;
 }
@@ -761,9 +762,14 @@ export interface TimeFrame {
   period?: "hour" | "day" | "week" | "month";
 }
 
-// ============================================================================
-// Utility Types
-// ============================================================================
+export interface UserSubscriptionInfo {
+  status: "active" | "inactive" | "cancelled" | "trial";
+  tier?: string;
+  startDate?: string;
+  endDate?: string;
+  autoRenew?: boolean;
+  paymentMethod?: string;
+}
 
 export interface PaginationOptions {
   limit: number;
@@ -810,3 +816,4 @@ export interface ServiceError {
 
 // Ensure Id type is exported correctly
 // Use Convex-generated `Id` type from app/convex/_generated/dataModel instead of local re-definition.
+export type { Id } from "../../../../convex/_generated/dataModel";

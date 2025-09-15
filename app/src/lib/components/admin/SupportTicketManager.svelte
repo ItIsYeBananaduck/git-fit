@@ -3,7 +3,7 @@
 	import { supportService } from '../../services/supportService';
 	import { adminAuthService } from '../../services/adminAuth';
 	import type { SupportTicket, SupportMessage } from '../../types/admin';
-	import type { Id } from '../../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -39,10 +39,10 @@
 
 			const result = await supportService.getSupportTickets(
 				{
-					status: filters.status || undefined,
-					priority: filters.priority || undefined,
-					assignedTo: filters.assignedTo || undefined,
-					userId: filters.userId || undefined
+					status: (filters.status as 'resolved' | 'open' | 'in_progress' | 'closed') || undefined,
+					priority: (filters.priority as 'high' | 'low' | 'medium' | 'urgent') || undefined,
+					assignedTo: (filters.assignedTo as Id<'adminUsers'>) || undefined,
+					userId: (filters.userId as Id<'users'>) || undefined
 				},
 				adminId,
 				pageSize,
@@ -204,11 +204,19 @@
 			{:else}
 				{#each tickets as ticket}
 					<div
+						role="button"
+						tabindex="0"
 						class="p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 {selectedTicket?.id ===
 						ticket.id
 							? 'bg-blue-50 border-blue-200'
 							: ''}"
 						on:click={() => selectTicket(ticket)}
+						on:keydown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault();
+								selectTicket(ticket);
+							}
+						}}
 					>
 						<div class="flex items-start justify-between mb-2">
 							<h3 class="font-medium text-gray-900 text-sm truncate">{ticket.subject}</h3>
@@ -291,7 +299,7 @@
 				<div class="flex items-center space-x-4">
 					<select
 						value={selectedTicket.status}
-						on:change={(e) => updateTicketStatus(e.target.value)}
+						on:change={(e) => e.target && updateTicketStatus((e.target as HTMLSelectElement).value)}
 						class="px-3 py-2 border border-gray-300 rounded-md text-sm"
 					>
 						<option value="open">Open</option>

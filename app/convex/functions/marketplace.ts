@@ -32,7 +32,7 @@ export const getMarketplacePrograms = query({
     // Get trainer info for each program
     const programsWithTrainer = await Promise.all(
       programs.map(async (program) => {
-        const trainer = await ctx.db.get(program.trainerId);
+        const trainer = program.trainerId ? await ctx.db.get(program.trainerId) : null;
         return {
           ...program,
           trainer: trainer ? {
@@ -184,7 +184,7 @@ export const purchaseProgram = mutation({
     const purchaseId = await ctx.db.insert("programPurchases", {
       userId: user._id,
       programId: args.programId,
-      trainerId: program.trainerId,
+      trainerId: program.trainerId!,
       purchaseType: "program",
       amount: program.price,
       platformFee,
@@ -210,7 +210,7 @@ export const purchaseProgram = mutation({
     await ctx.db.insert("revenueTransactions", {
       type: "program_purchase",
       referenceId: purchaseId,
-      trainerId: program.trainerId,
+      trainerId: program.trainerId!,
       clientId: user._id,
       grossAmount: program.price,
       platformFee,

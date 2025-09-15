@@ -36,7 +36,7 @@
 	// Mock user preferences
 	let userPreferences = ['Adjustable', 'Functional', 'Olympic'];
 
-	function handleEquipmentSelection(event) {
+	function handleEquipmentSelection(event: CustomEvent) {
 		const { exerciseName, equipment, isAlternative } = event.detail;
 		console.log(`Selected ${equipment} for ${exerciseName} (Alternative: ${isAlternative})`);
 

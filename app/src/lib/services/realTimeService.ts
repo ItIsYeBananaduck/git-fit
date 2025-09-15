@@ -5,18 +5,18 @@ import type { Id } from "../../../convex/_generated/dataModel";
 export interface RealTimeSubscription {
   id: string;
   type: 'dashboard' | 'users' | 'revenue' | 'engagement' | 'system';
-  callback: (data: any) => void;
+  callback: (data: Record<string, unknown>) => void;
   adminId: Id<'adminUsers'>;
 }
 
 export class RealTimeService {
-  private ws: WebSocket | null = null;
-  private subscriptions = new Map<string, RealTimeSubscription>();
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
-  private isConnected = false;
-  private heartbeatInterval: NodeJS.Timeout | null = null;
+  protected ws: WebSocket | null = null;
+  protected subscriptions = new Map<string, RealTimeSubscription>();
+  protected reconnectAttempts = 0;
+  protected maxReconnectAttempts = 5;
+  protected reconnectDelay = 1000;
+  protected isConnected = false;
+  protected heartbeatInterval: NodeJS.Timeout | null = null;
 
   constructor(private wsUrl: string = 'ws://localhost:3001/ws') {}
 

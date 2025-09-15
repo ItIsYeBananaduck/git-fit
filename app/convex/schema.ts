@@ -88,7 +88,7 @@ export default defineSchema({
     price: v.number(),
     createdAt: v.string(),
     updatedAt: v.string(),
-    trainerId: v.id("users"),
+    trainerId: v.optional(v.id("users")),
     difficulty: v.union(v.literal("beginner"), v.literal("intermediate"), v.literal("advanced")),
     duration: v.number(), // weeks
     category: v.array(v.string()), // strength, cardio, flexibility, etc.
@@ -661,4 +661,169 @@ export default defineSchema({
   }).index("by_user", ["userId"])
     .index("by_deleted_by", ["deletedBy"])
     .index("by_deleted_at", ["deletedAt"]),
+
+  // Nutrition Goals - user's daily/weekly nutrition targets
+  nutritionGoals: defineTable({
+    userId: v.id("users"),
+    name: v.string(), // e.g., "Weight Loss Phase 1", "Muscle Gain"
+    calories: v.number(),
+    protein: v.number(), // grams
+    carbs: v.number(), // grams
+    fat: v.number(), // grams
+    fiber: v.number(), // grams
+    sugar: v.number(), // grams
+    sodium: v.number(), // mg
+    isActive: v.boolean(),
+    createdBy: v.id("users"), // who created this goal (user or trainer)
+    createdAt: v.string(),
+    updatedAt: v.string(),
+    startDate: v.string(),
+    endDate: v.optional(v.string()),
+    notes: v.optional(v.string()),
+  }).index("by_user", ["userId"])
+    .index("by_active", ["userId", "isActive"])
+    .index("by_created_by", ["createdBy"]),
+
+  // Food Database - master food items with nutrition info
+  foodDatabase: defineTable({
+    name: v.string(),
+    brand: v.optional(v.string()),
+    barcode: v.optional(v.string()),
+    category: v.string(), // e.g., "protein", "vegetable", "dairy"
+    nutritionPer100g: v.object({
+      calories: v.number(),
+      protein: v.number(),
+      carbs: v.number(),
+      fat: v.number(),
+      fiber: v.number(),
+      sugar: v.number(),
+      sodium: v.number(),
+      vitamins: v.optional(v.any()),
+      minerals: v.optional(v.any()),
+    }),
+    servingSizes: v.array(v.object({
+      name: v.string(),
+      grams: v.number(),
+      description: v.string(),
+    })),
+    verified: v.boolean(),
+    source: v.string(), // "openfoodfacts", "usda", "manual"
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_name", ["name"])
+    .index("by_category", ["category"])
+    .index("by_barcode", ["barcode"])
+    .index("by_verified", ["verified"]),
+
+  // Food Entries - user's logged meals and snacks
+  foodEntries: defineTable({
+    userId: v.id("users"),
+    foodId: v.id("foodDatabase"),
+    servingSize: v.number(), // grams
+    mealType: v.union(v.literal("breakfast"), v.literal("lunch"), v.literal("dinner"), v.literal("snack")),
+    date: v.string(), // YYYY-MM-DD
+    time: v.string(), // HH:MM
+    nutrition: v.object({
+      calories: v.number(),
+      protein: v.number(),
+      carbs: v.number(),
+      fat: v.number(),
+      fiber: v.number(),
+      sugar: v.number(),
+      sodium: v.number(),
+    }),
+    notes: v.optional(v.string()),
+    loggedBy: v.id("users"), // who logged this entry (user or trainer)
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_user_and_date", ["userId", "date"])
+    .index("by_meal_type", ["userId", "mealType", "date"])
+    .index("by_logged_by", ["loggedBy"]),
+
+  // Meal Plans - structured meal plans created by trainers
+  mealPlans: defineTable({
+    name: v.string(),
+    description: v.string(),
+    clientId: v.id("users"),
+    trainerId: v.id("users"),
+    isActive: v.boolean(),
+    startDate: v.string(),
+    endDate: v.optional(v.string()),
+    goals: v.array(v.string()), // e.g., ["weight_loss", "muscle_gain"]
+    preferences: v.optional(v.object({
+      dietaryRestrictions: v.array(v.string()),
+      allergies: v.array(v.string()),
+      cuisinePreferences: v.array(v.string()),
+      budget: v.optional(v.string()),
+    })),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_client", ["clientId"])
+    .index("by_trainer", ["trainerId"])
+    .index("by_active", ["clientId", "isActive"]),
+
+  // Meal Plan Days - daily structure within a meal plan
+  mealPlanDays: defineTable({
+    mealPlanId: v.id("mealPlans"),
+    dayNumber: v.number(), // 1-7 for weekly plans
+    meals: v.array(v.object({
+      type: v.union(v.literal("breakfast"), v.literal("lunch"), v.literal("dinner"), v.literal("snack")),
+      foods: v.array(v.object({
+        foodId: v.id("foodDatabase"),
+        servingSize: v.number(),
+        notes: v.optional(v.string()),
+      })),
+      totalNutrition: v.object({
+        calories: v.number(),
+        protein: v.number(),
+        carbs: v.number(),
+        fat: v.number(),
+        fiber: v.number(),
+        sugar: v.number(),
+        sodium: v.number(),
+      }),
+    })),
+    totalNutrition: v.object({
+      calories: v.number(),
+      protein: v.number(),
+      carbs: v.number(),
+      fat: v.number(),
+      fiber: v.number(),
+      sugar: v.number(),
+      sodium: v.number(),
+    }),
+    notes: v.optional(v.string()),
+  }).index("by_meal_plan", ["mealPlanId"])
+    .index("by_day", ["mealPlanId", "dayNumber"]),
+
+  // Nutrition Progress Tracking
+  nutritionProgress: defineTable({
+    userId: v.id("users"),
+    date: v.string(), // YYYY-MM-DD
+    goalId: v.optional(v.id("nutritionGoals")),
+    actualNutrition: v.object({
+      calories: v.number(),
+      protein: v.number(),
+      carbs: v.number(),
+      fat: v.number(),
+      fiber: v.number(),
+      sugar: v.number(),
+      sodium: v.number(),
+    }),
+    goalNutrition: v.optional(v.object({
+      calories: v.number(),
+      protein: v.number(),
+      carbs: v.number(),
+      fat: v.number(),
+      fiber: v.number(),
+      sugar: v.number(),
+      sodium: v.number(),
+    })),
+    adherenceScore: v.number(), // 0-100 percentage
+    notes: v.optional(v.string()),
+    createdAt: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_user_and_date", ["userId", "date"])
+    .index("by_goal", ["goalId"]),
 });

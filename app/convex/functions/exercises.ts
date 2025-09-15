@@ -36,7 +36,8 @@ export const importExercises = mutation({
           }
 
           // Generate equipment recommendations
-          const recommendations = getEquipmentRecommendations(exercise.equipment);
+          const equipmentType = exercise.equipment || "body only";
+          const recommendations = getEquipmentRecommendations(equipmentType);
 
           await ctx.db.insert("exerciseDatabase", {
             exerciseId: exercise.id,
@@ -44,11 +45,11 @@ export const importExercises = mutation({
             instructions: exercise.instructions,
             category: exercise.category,
             level: exercise.level,
-            force: exercise.force || null,
-            mechanic: exercise.mechanic || null,
+            force: exercise.force || undefined,
+            mechanic: exercise.mechanic || undefined,
             primaryMuscles: exercise.primaryMuscles,
             secondaryMuscles: exercise.secondaryMuscles,
-            equipment: exercise.equipment || null,
+            equipment: exercise.equipment || undefined,
             alternativeEquipment: recommendations.alternatives,
             recommendedMachines: recommendations.machines,
             images: exercise.images,
@@ -58,7 +59,7 @@ export const importExercises = mutation({
 
           importedCount++;
         } catch (error) {
-          errors.push(`Error importing ${exercise.name}: ${error.message}`);
+          errors.push(`Error importing ${exercise.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 
@@ -71,7 +72,7 @@ export const importExercises = mutation({
     } catch (error) {
       return {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         imported: importedCount,
         total: args.exercises.length,
       };
@@ -80,8 +81,8 @@ export const importExercises = mutation({
 });
 
 // Get equipment recommendations based on primary equipment
-function getEquipmentRecommendations(primaryEquipment) {
-  const recommendations = {
+function getEquipmentRecommendations(primaryEquipment: string) {
+  const recommendations: { alternatives: string[], machines: string[] } = {
     alternatives: [],
     machines: [],
   };
@@ -233,8 +234,8 @@ export const getExercises = query({
     // Filter by muscle group if specified
     if (args.muscleGroup) {
       exercises = exercises.filter(exercise => 
-        exercise.primaryMuscles.includes(args.muscleGroup) ||
-        exercise.secondaryMuscles.includes(args.muscleGroup)
+        exercise.primaryMuscles.includes(args.muscleGroup!) ||
+        exercise.secondaryMuscles.includes(args.muscleGroup!)
       );
     }
 

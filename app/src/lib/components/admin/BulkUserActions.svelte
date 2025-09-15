@@ -130,6 +130,16 @@
 	// Reactive statements
 	$: canPerformAction =
 		selectedUsers.length > 0 && (bulkAction.reason || bulkAction.action === 'activate');
+	$: textareaValue = bulkAction.action === 'send_message' ? bulkAction.message : bulkAction.reason;
+	$: textareaPlaceholder =
+		bulkAction.action === 'send_message' ? 'Enter message content' : 'Enter reason for action';
+
+	// Update bulkAction when textareaValue changes
+	$: if (bulkAction.action === 'send_message') {
+		bulkAction.message = textareaValue;
+	} else {
+		bulkAction.reason = textareaValue;
+	}
 </script>
 
 <div class="p-6">
@@ -158,8 +168,9 @@
 
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Search Query</label>
+						<label for="searchQuery" class="block text-sm font-medium text-gray-700 mb-1">Search Query</label>
 						<input
+							id="searchQuery"
 							type="text"
 							bind:value={searchCriteria.query}
 							class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -168,8 +179,9 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+						<label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
 						<select
+							id="role"
 							bind:value={searchCriteria.role}
 							class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
 						>
@@ -180,8 +192,9 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Subscription Status</label>
+						<label for="subscriptionStatus" class="block text-sm font-medium text-gray-700 mb-1">Subscription Status</label>
 						<select
+							id="subscriptionStatus"
 							bind:value={searchCriteria.subscriptionStatus}
 							class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
 						>
@@ -193,8 +206,9 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Activity Level</label>
+						<label for="activityLevel" class="block text-sm font-medium text-gray-700 mb-1">Activity Level</label>
 						<select
+							id="activityLevel"
 							bind:value={searchCriteria.activityLevel}
 							class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
 						>
@@ -339,8 +353,9 @@
 
 				<div class="space-y-4">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Action</label>
+						<label for="action" class="block text-sm font-medium text-gray-700 mb-1">Action</label>
 						<select
+							id="action"
 							bind:value={bulkAction.action}
 							class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
 						>
@@ -353,8 +368,9 @@
 
 					{#if bulkAction.action === 'suspend'}
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-1">Duration (days)</label>
+							<label for="duration" class="block text-sm font-medium text-gray-700 mb-1">Duration (days)</label>
 							<input
+								id="duration"
 								type="number"
 								bind:value={bulkAction.duration}
 								class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -365,18 +381,15 @@
 
 					{#if bulkAction.action !== 'activate'}
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-1">
+							<label for="message" class="block text-sm font-medium text-gray-700 mb-1">
 								{bulkAction.action === 'send_message' ? 'Message' : 'Reason'}
 							</label>
 							<textarea
-								bind:value={
-									bulkAction.action === 'send_message' ? bulkAction.message : bulkAction.reason
-								}
+								id="message"
+								bind:value={textareaValue}
 								rows="3"
 								class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-								placeholder={bulkAction.action === 'send_message'
-									? 'Enter message content'
-									: 'Enter reason for action'}
+								placeholder={textareaPlaceholder}
 							></textarea>
 						</div>
 					{/if}

@@ -38,7 +38,7 @@ export class ContentModerationService {
         throw new ConvexError("Insufficient permissions to view moderation queue");
       }
 
-      const result = await convex.query(api.admin.moderation.getModerationQueue, {
+      const result = await convex.query(api.functions.admin.moderation.getModerationQueue, {
         itemType: filters.itemType,
         status: filters.status,
         priority: filters.priority,
@@ -46,7 +46,7 @@ export class ContentModerationService {
         autoFlagged: filters.autoFlagged,
         limit,
         offset
-      });
+      }) as { items: ModerationItem[]; total: number; hasMore: boolean };
 
       // Log moderation queue access
       await adminAuthService.logAdminAction(adminId, {
@@ -86,13 +86,13 @@ export class ContentModerationService {
       }
 
       // Get the moderation item
-      const item = await convex.query(api.admin.moderation.getModerationItem, { itemId });
+      const item = await convex.query(api.functions.admin.moderation.getModerationItem, { itemId }) as ModerationItem | null;
       if (!item) {
         throw new ConvexError("Moderation item not found");
       }
 
       // Update moderation item with decision
-      await convex.mutation(api.admin.moderation.reviewContent, {
+      await convex.mutation(api.functions.admin.moderation.reviewContent, {
         itemId,
         decision: decision.decision,
         reason: decision.reason,
@@ -150,7 +150,7 @@ export class ContentModerationService {
       const priority = this.determinePriority(reason, contentType);
 
       // Create moderation item
-      const moderationItemId = await convex.mutation(api.admin.moderation.createModerationItem, {
+      const moderationItemId = await convex.mutation(api.functions.admin.moderation.createModerationItem, {
         itemType: contentType,
         itemId: contentId,
         content,
@@ -160,7 +160,7 @@ export class ContentModerationService {
         status: "pending",
         autoFlagged: !reportedBy && !adminId,
         createdAt: new Date().toISOString()
-      });
+      }) as string;
 
       // Log flagging action
       if (adminId) {
@@ -205,7 +205,7 @@ export class ContentModerationService {
       }
 
       // Update the report with investigation findings
-      await convex.mutation(api.admin.moderation.updateUserReport, {
+      await convex.mutation(api.functions.admin.moderation.updateUserReport, {
         reportId,
         findings: investigation.findings,
         evidence: investigation.evidence,
@@ -257,14 +257,14 @@ export class ContentModerationService {
       }
 
       // Create or update content policy
-      const policyId = await convex.mutation(api.admin.moderation.setContentPolicy, {
+      const policyId = await convex.mutation(api.functions.admin.moderation.setContentPolicy, {
         type: policy.type,
         rules: policy.rules,
         autoEnforcement: policy.autoEnforcement,
         severity: policy.severity,
         updatedBy: adminId,
         updatedAt: new Date().toISOString()
-      });
+      }) as string;
 
       // Log policy update
       await adminAuthService.logAdminAction(adminId, {
@@ -305,10 +305,10 @@ export class ContentModerationService {
         throw new ConvexError("Insufficient permissions to view content analytics");
       }
 
-      const analytics = await convex.query(api.admin.moderation.getContentAnalytics, {
+      const analytics = await convex.query(api.functions.admin.moderation.getContentAnalytics, {
         startDate: timeframe.start,
         endDate: timeframe.end
-      });
+      }) as ContentAnalytics;
 
       // Log analytics access
       await adminAuthService.logAdminAction(adminId, {
@@ -343,11 +343,11 @@ export class ContentModerationService {
         throw new ConvexError("Insufficient permissions to automate content filtering");
       }
 
-      const result = await convex.mutation(api.admin.moderation.automateContentFiltering, {
+      const result = await convex.mutation(api.functions.admin.moderation.automateContentFiltering, {
         rules,
         appliedBy: adminId,
         appliedAt: new Date().toISOString()
-      });
+      }) as { rulesApplied: number; itemsFlagged: number };
 
       // Log automation setup
       await adminAuthService.logAdminAction(adminId, {
@@ -387,7 +387,7 @@ export class ContentModerationService {
         throw new ConvexError("Insufficient permissions to assign moderation items");
       }
 
-      await convex.mutation(api.admin.moderation.assignModerationItem, {
+      await convex.mutation(api.functions.admin.moderation.assignModerationItem, {
         itemId,
         assignedTo,
         assignedBy: adminId,
@@ -427,7 +427,7 @@ export class ContentModerationService {
         throw new ConvexError("Insufficient permissions to escalate moderation items");
       }
 
-      await convex.mutation(api.admin.moderation.escalateModerationItem, {
+      await convex.mutation(api.functions.admin.moderation.escalateModerationItem, {
         itemId,
         escalationReason,
         escalatedBy: adminId,
@@ -487,19 +487,19 @@ export class ContentModerationService {
     // Approve the content based on its type
     switch (item.itemType) {
       case "custom_exercise":
-        await convex.mutation(api.admin.moderation.approveCustomExercise, {
+        await convex.mutation(api.functions.admin.moderation.approveCustomExercise, {
           exerciseId: item.itemId,
           approvedBy: adminId
         });
         break;
       case "trainer_message":
-        await convex.mutation(api.admin.moderation.approveMessage, {
+        await convex.mutation(api.functions.admin.moderation.approveMessage, {
           messageId: item.itemId,
           approvedBy: adminId
         });
         break;
       case "user_profile":
-        await convex.mutation(api.admin.moderation.approveProfile, {
+        await convex.mutation(api.functions.admin.moderation.approveProfile, {
           profileId: item.itemId,
           approvedBy: adminId
         });
@@ -511,21 +511,21 @@ export class ContentModerationService {
     // Reject the content based on its type
     switch (item.itemType) {
       case "custom_exercise":
-        await convex.mutation(api.admin.moderation.rejectCustomExercise, {
+        await convex.mutation(api.functions.admin.moderation.rejectCustomExercise, {
           exerciseId: item.itemId,
           reason,
           rejectedBy: adminId
         });
         break;
       case "trainer_message":
-        await convex.mutation(api.admin.moderation.rejectMessage, {
+        await convex.mutation(api.functions.admin.moderation.rejectMessage, {
           messageId: item.itemId,
           reason,
           rejectedBy: adminId
         });
         break;
       case "user_profile":
-        await convex.mutation(api.admin.moderation.rejectProfile, {
+        await convex.mutation(api.functions.admin.moderation.rejectProfile, {
           profileId: item.itemId,
           reason,
           rejectedBy: adminId
@@ -538,21 +538,21 @@ export class ContentModerationService {
     // Apply modifications to content based on its type
     switch (item.itemType) {
       case "custom_exercise":
-        await convex.mutation(api.admin.moderation.modifyCustomExercise, {
+        await convex.mutation(api.functions.admin.moderation.modifyCustomExercise, {
           exerciseId: item.itemId,
           modifications,
           modifiedBy: adminId
         });
         break;
       case "trainer_message":
-        await convex.mutation(api.admin.moderation.modifyMessage, {
+        await convex.mutation(api.functions.admin.moderation.modifyMessage, {
           messageId: item.itemId,
           modifications,
           modifiedBy: adminId
         });
         break;
       case "user_profile":
-        await convex.mutation(api.admin.moderation.modifyProfile, {
+        await convex.mutation(api.functions.admin.moderation.modifyProfile, {
           profileId: item.itemId,
           modifications,
           modifiedBy: adminId

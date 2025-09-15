@@ -36,17 +36,15 @@ export const getWorkoutsByProgram = query({
 export const createExercise = mutation({
   args: {
     workoutId: v.id("workouts"),
-    name: v.string(),
-    description: v.string(),
+    exerciseDbId: v.id("exerciseDatabase"),
     sets: v.number(),
     reps: v.optional(v.string()),
     weight: v.optional(v.number()),
     duration: v.optional(v.number()),
     restTime: v.optional(v.number()),
     order: v.number(),
-    instructions: v.string(),
-    videoUrl: v.optional(v.string()),
-    muscleGroups: v.array(v.string()),
+    selectedEquipment: v.optional(v.string()),
+    notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const exercise = args;
@@ -175,7 +173,7 @@ export const getUserWorkoutSessions = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
     
-    const sorted = sessions.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+    const sorted = sessions.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
     
     return args.limit ? sorted.slice(0, args.limit) : sorted;
   },

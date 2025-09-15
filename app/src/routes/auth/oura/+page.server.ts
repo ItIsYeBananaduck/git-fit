@@ -19,8 +19,8 @@ export const load: PageServerLoad = async ({ url, platform }) => {
   }
 
   // Get environment variables
-  const OURA_CLIENT_ID = platform?.env?.OURA_CLIENT_ID || process.env.OURA_CLIENT_ID;
-  const OURA_CLIENT_SECRET = platform?.env?.OURA_CLIENT_SECRET || process.env.OURA_CLIENT_SECRET;
+  const OURA_CLIENT_ID = process.env.OURA_CLIENT_ID;
+  const OURA_CLIENT_SECRET = process.env.OURA_CLIENT_SECRET;
 
   if (!OURA_CLIENT_ID || !OURA_CLIENT_SECRET) {
     console.error('Missing Oura OAuth credentials');

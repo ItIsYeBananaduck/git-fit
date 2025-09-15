@@ -86,7 +86,7 @@ export const addTrainingProgram = mutation({
     // Create a default trainer user for legacy compatibility
     const program = {
       ...args,
-      trainerId: "default_trainer", // TODO: replace with actual trainer ID
+      trainerId: undefined,
       difficulty: "beginner",
       duration: 4,
       category: ["general"],

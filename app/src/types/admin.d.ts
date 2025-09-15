@@ -2,7 +2,7 @@
 // These are intentionally permissive placeholder types to unblock development.
 
 // Prefer Convex-generated Id type where available. This maps our local Id to Convex's generic Id.
-export type Id<TableName extends string = string> = import('../../convex/_generated/dataModel').Id<TableName>;
+export type Id = string;
 
 export interface AdminUser {
   id: Id;
@@ -50,6 +50,7 @@ export interface SupportMessage {
   from: Id | string;
   body: string;
   createdAt: string;
+  senderInfo?: { name: string; email?: string };
 }
 
 export interface SupportTicket {
@@ -59,6 +60,7 @@ export interface SupportTicket {
   messages: SupportMessage[];
   createdAt: string;
   createdBy: Id | string;
+  user?: { name: string };
 }
 
 export interface PolicyRule {

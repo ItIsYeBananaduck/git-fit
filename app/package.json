@@ -27,11 +27,13 @@
 		"@capacitor/cli": "^7.4.3",
 		"@capacitor/core": "^7.4.3",
 		"@capacitor/ios": "^7.4.3",
+		"@stripe/stripe-js": "^7.9.0",
 		"bcryptjs": "^2.4.3",
 		"convex": "^1.27.0",
 		"convex-svelte": "^0.0.11",
 		"lucide-svelte": "^0.542.0",
-		"speakeasy": "^2.0.0"
+		"speakeasy": "^2.0.0",
+		"stripe": "^18.5.0"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
@@ -40,6 +42,7 @@
 		"@sveltejs/kit": "^2.22.0",
 		"@sveltejs/vite-plugin-svelte": "^6.0.0",
 		"@types/bcryptjs": "^2.4.6",
+		"@types/node-fetch": "^2.6.13",
 		"@types/speakeasy": "^2.0.10",
 		"@vitest/browser": "^3.2.3",
 		"eslint": "^9.18.0",

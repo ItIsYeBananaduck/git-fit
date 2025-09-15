@@ -2,10 +2,11 @@
 	import { createEventDispatcher } from 'svelte';
 	import { advancedAnalyticsService } from '$lib/services/advancedAnalyticsService';
 	import type { ConversionFunnel } from '$lib/types/admin';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	export let data: ConversionFunnel | null;
 	export let dateRange: { start: string; end: string };
-	export let adminId: string;
+	export let adminId: Id<'adminUsers'>;
 
 	const dispatch = createEventDispatcher();
 

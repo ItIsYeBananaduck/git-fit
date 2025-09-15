@@ -3,7 +3,7 @@
 	import { analyticsService } from '../../services/analyticsService';
 	import DashboardWidget from './DashboardWidget.svelte';
 	import MetricsComparison from './MetricsComparison.svelte';
-	import type { Id } from '../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -373,7 +373,9 @@
 											4,
 											(dataPoint.value /
 												Math.max(
-													...dashboardData.userGrowth.userGrowth.slice(-7).map((d) => d.value)
+													...dashboardData.userGrowth.userGrowth
+														.slice(-7)
+														.map((d: { value: number }) => d.value)
 												)) *
 												100
 										)}px; width: 16px;"
@@ -401,7 +403,7 @@
 												Math.max(
 													...dashboardData.revenueAnalytics.revenueGrowth
 														.slice(-7)
-														.map((d) => d.value)
+														.map((d: { value: number }) => d.value)
 												)) *
 												100
 										)}px; width: 16px;"

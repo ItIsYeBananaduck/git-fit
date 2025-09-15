@@ -2,7 +2,7 @@
 This demonstrates the complete wearable workout experience
 -->
 
-<script>
+<script lang="ts">
 	import WearableWorkoutController from '../lib/components/WearableWorkoutController.svelte';
 
 	// Sample workout data
@@ -38,12 +38,12 @@ This demonstrates the complete wearable workout experience
 		}, 3000);
 	});
 
-	function handleSetFeedback(event) {
+	function handleSetFeedback(event: CustomEvent) {
 		console.log('Set feedback received:', event.detail);
 		// In real app, this would update the adaptive training algorithm
 	}
 
-	function handleWorkoutComplete(event) {
+	function handleWorkoutComplete(event: CustomEvent) {
 		console.log('Workout completed:', event.detail);
 		// In real app, this would save workout data and show summary
 	}
@@ -75,18 +75,18 @@ This demonstrates the complete wearable workout experience
 	<div class="demo-controls">
 		<h3>Demo Controls</h3>
 		<div class="control-group">
-			<label>Heart Rate: {liveMetrics.heartRate} BPM</label>
-			<input type="range" min="100" max="180" bind:value={liveMetrics.heartRate} />
+			<label for="heartRate">Heart Rate: {liveMetrics.heartRate} BPM</label>
+			<input id="heartRate" type="range" min="100" max="180" bind:value={liveMetrics.heartRate} />
 		</div>
 
 		<div class="control-group">
-			<label>SpO₂: {liveMetrics.spo2}%</label>
-			<input type="range" min="90" max="100" bind:value={liveMetrics.spo2} />
+			<label for="spo2">SpO₂: {liveMetrics.spo2}%</label>
+			<input id="spo2" type="range" min="90" max="100" bind:value={liveMetrics.spo2} />
 		</div>
 
 		<div class="control-group">
-			<label>Strain Level:</label>
-			<select bind:value={liveMetrics.strainLevel}>
+			<label for="strainLevel">Strain Level:</label>
+			<select id="strainLevel" bind:value={liveMetrics.strainLevel}>
 				<option value="low">Low</option>
 				<option value="moderate">Moderate</option>
 				<option value="high">High</option>

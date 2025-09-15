@@ -324,12 +324,12 @@ export class AdvancedAnalyticsService {
         throw new ConvexError("Insufficient permissions to schedule reports");
       }
 
-      const scheduledReport = await convex.mutation(api.admin.analytics.scheduleReport, {
+      const scheduledReport = await convex.mutation(api.functions.admin.analytics.scheduleReport, {
         reportConfig,
         schedule,
         recipients,
         adminId
-      });
+      }) as ReportSchedule;
 
       await adminAuthService.logAdminAction(adminId, {
         action: "report_scheduled",
@@ -371,11 +371,11 @@ export class AdvancedAnalyticsService {
         }
       }
 
-      const reports = await convex.query(api.admin.analytics.getReportHistory, {
+      const reports = await convex.query(api.functions.admin.analytics.getReportHistory, {
         adminId: filters?.adminId,
         reportType: filters?.reportType,
         limit
-      });
+      }) as CustomReport[];
 
       if (adminId) {
         await adminAuthService.logAdminAction(adminId, {

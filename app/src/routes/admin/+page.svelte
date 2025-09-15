@@ -15,7 +15,12 @@
 	let importStatus = '';
 	let isImporting = false;
 	let exerciseCount = 0;
-	let importResult = null;
+	let importResult: {
+		success: boolean;
+		totalImported?: number;
+		totalExercises?: number;
+		error?: string;
+	} | null = null;
 
 	onMount(async () => {
 		try {
@@ -52,7 +57,7 @@
 					totalImported += result.imported;
 					importStatus = `Imported ${totalImported} of ${exercises.length} exercises...`;
 				} else {
-					importStatus = `Error importing batch: ${result.error}`;
+					importStatus = `Error importing batch: ${result.errors?.[0] || 'Unknown error'}`;
 					break;
 				}
 			}
@@ -74,9 +79,9 @@
 		} catch (error) {
 			importResult = {
 				success: false,
-				error: error.message
+				error: error instanceof Error ? error.message : 'Unknown error'
 			};
-			importStatus = `Import failed: ${error.message}`;
+			importStatus = `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
 		}
 
 		isImporting = false;
@@ -93,7 +98,7 @@
 
 			if (dumbbellExercises.length > 0) {
 				const exerciseWithRecs = await api.exercises.getExerciseWithRecommendations({
-					exerciseId: dumbbellExercises[0].exerciseId
+					exerciseId: dumbbellExercises[0]._id
 				});
 				console.log('Exercise with recommendations:', exerciseWithRecs);
 			}

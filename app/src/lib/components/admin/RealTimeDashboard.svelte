@@ -8,7 +8,7 @@
 		RevenueAnalytics,
 		EngagementMetrics
 	} from '../../services/analyticsService';
-	import type { Id } from '../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -571,7 +571,7 @@
 		<div class="mt-4 flex flex-wrap gap-2">
 			{#each Object.entries(visibleWidgets) as [widgetName, isVisible]}
 				<button
-					on:click={() => toggleWidget(widgetName)}
+					on:click={() => toggleWidget(widgetName as keyof typeof visibleWidgets)}
 					class="px-3 py-1 text-xs rounded-full border {isVisible
 						? 'bg-blue-100 border-blue-300 text-blue-700'
 						: 'bg-gray-100 border-gray-300 text-gray-600'}"

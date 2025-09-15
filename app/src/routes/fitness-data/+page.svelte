@@ -48,7 +48,7 @@
 	$: whoopConnected = $whoopState.isConnected;
 
 	// Mock chart data
-	let chartData = {
+	let chartData: Record<string, { date: string; value: number }[]> = {
 		steps: [
 			{ date: '2025-01-26', value: 7200 },
 			{ date: '2025-01-27', value: 8900 },
@@ -66,6 +66,24 @@
 			{ date: '2025-01-30', value: 73 },
 			{ date: '2025-01-31', value: 71 },
 			{ date: '2025-02-01', value: 72 }
+		],
+		calories: [
+			{ date: '2025-01-26', value: 2100 },
+			{ date: '2025-01-27', value: 2300 },
+			{ date: '2025-01-28', value: 1950 },
+			{ date: '2025-01-29', value: 2400 },
+			{ date: '2025-01-30', value: 2200 },
+			{ date: '2025-01-31', value: 2150 },
+			{ date: '2025-02-01', value: 2250 }
+		],
+		sleep: [
+			{ date: '2025-01-26', value: 7.5 },
+			{ date: '2025-01-27', value: 6.8 },
+			{ date: '2025-01-28', value: 8.2 },
+			{ date: '2025-01-29', value: 7.1 },
+			{ date: '2025-01-30', value: 7.8 },
+			{ date: '2025-01-31', value: 6.9 },
+			{ date: '2025-02-01', value: 7.2 }
 		]
 	};
 </script>

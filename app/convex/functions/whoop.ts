@@ -1,29 +1,30 @@
-import { defineMutation} from "convex/server";
-import fetch from "node-fetch";
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
 
 // Exchange Whoop Code
-export const exchangeWhoopCode = defineMutation(async (_, { code }) => {
-  const response = await fetch("https://api.whoop.com/oauth/oauth2/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      code,
-      client_id: process.env.VITE_WHOOP_CLIENT_ID,
-      client_secret: process.env.VITE_WHOOP_CLIENT_SECRET,
-      redirect_uri: process.env.VITE_WHOOP_REDIRECT_URI,
-    }),
-  });
+export const exchangeWhoopCode = mutation({
+  args: { code: v.string() },
+  handler: async (ctx, args) => {
+    const response = await fetch("https://api.whoop.com/oauth/oauth2/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: args.code,
+        client_id: process.env.VITE_WHOOP_CLIENT_ID || "",
+        client_secret: process.env.VITE_WHOOP_CLIENT_SECRET || "",
+        redirect_uri: process.env.VITE_WHOOP_REDIRECT_URI || "",
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error("Failed to exchange code for token");
+    if (!response.ok) {
+      throw new Error("Failed to exchange code for token");
+    }
+
+    return await response.json();
   }
-
-  return await response.json();
 });
 
 // Store WHOOP user connection data

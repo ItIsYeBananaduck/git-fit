@@ -1,6 +1,7 @@
 // User Management Service for Admin Dashboard
 
 import { ConvexError } from "convex/values";
+import { convex } from "$lib/convex";
 import type { 
   UserSearchCriteria,
   UserSearchResult,
@@ -17,8 +18,7 @@ import type {
   ModerationAction
 } from "../types/admin";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { api } from "../../../convex/_generated/api";
-import { convex } from "$lib/convex";
+import { api } from "$lib/convex";
 import { adminAuthService } from "./adminAuth";
 
 export class UserManagementService {
@@ -36,7 +36,7 @@ export class UserManagementService {
         throw new ConvexError("Insufficient permissions to view users");
       }
 
-      const result = await convex.query(api.admin.users.searchUsers, {
+      const result = await convex.query(api.functions.admin.users.searchUsers, {
         query: criteria.query,
         role: criteria.role,
         subscriptionStatus: criteria.subscriptionStatus,
@@ -44,7 +44,11 @@ export class UserManagementService {
         dateRange: criteria.dateRange,
         limit: criteria.limit || 50,
         offset: criteria.offset || 0
-      });
+      }) as {
+        users: UserSearchResult[];
+        total: number;
+        hasMore: boolean;
+      };
 
       // Log user search action
       await adminAuthService.logAdminAction(adminId, {
@@ -83,28 +87,28 @@ export class UserManagementService {
       }
 
       // Get basic user info
-      const basicInfo = await convex.query(api.admin.users.getUserBasicInfo, { userId });
+      const basicInfo = await convex.query(api.functions.admin.users.getUserBasicInfo, { userId }) as UserBasicInfo;
       if (!basicInfo) {
         throw new ConvexError("User not found");
       }
 
       // Get subscription info
-      const subscriptionInfo = await convex.query(api.admin.users.getUserSubscriptionInfo, { userId });
+      const subscriptionInfo = await convex.query(api.functions.admin.users.getUserSubscriptionInfo, { userId }) as UserSubscriptionInfo | null;
 
       // Get activity metrics
-      const activityMetrics = await convex.query(api.admin.users.getUserActivityMetrics, { userId });
+      const activityMetrics = await convex.query(api.functions.admin.users.getUserActivityMetrics, { userId }) as UserActivityMetrics | null;
 
       // Get support history
-      const supportHistory = await convex.query(api.admin.users.getUserSupportHistory, { userId });
+      const supportHistory = await convex.query(api.functions.admin.users.getUserSupportHistory, { userId }) as SupportTicket[];
 
       // Get moderation history
-      const moderationHistory = await convex.query(api.admin.users.getUserModerationHistory, { userId });
+      const moderationHistory = await convex.query(api.functions.admin.users.getUserModerationHistory, { userId }) as ModerationAction[];
 
       // Get financial summary
-      const financialSummary = await convex.query(api.admin.users.getUserFinancialSummary, { userId });
+      const financialSummary = await convex.query(api.functions.admin.users.getUserFinancialSummary, { userId }) as UserFinancialSummary | null;
 
       // Get device connections
-      const deviceConnections = await convex.query(api.admin.users.getUserDeviceConnections, { userId });
+      const deviceConnections = await convex.query(api.functions.admin.users.getUserDeviceConnections, { userId }) as DeviceConnection[];
 
       // Calculate risk score
       const riskScore = this.calculateUserRiskScore(basicInfo, activityMetrics, moderationHistory);
@@ -181,7 +185,7 @@ export class UserManagementService {
       }
 
       // Get user info for logging
-      const userInfo = await convex.query(api.admin.users.getUserBasicInfo, { userId });
+      const userInfo = await convex.query(api.functions.admin.users.getUserBasicInfo, { userId }) as UserBasicInfo;
       if (!userInfo) {
         throw new ConvexError("User not found");
       }
@@ -189,7 +193,7 @@ export class UserManagementService {
       // Suspend user
       const suspensionEndDate = duration ? new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString() : undefined;
       
-      await convex.mutation(api.admin.users.suspendUser, {
+      await convex.mutation(api.functions.admin.users.suspendUser, {
         userId,
         reason,
         suspendedBy: adminId,
@@ -198,7 +202,7 @@ export class UserManagementService {
       });
 
       // Create moderation action record
-      await convex.mutation(api.admin.moderation.createModerationAction, {
+      await convex.mutation(api.functions.admin.moderation.createModerationAction, {
         userId,
         action: "suspension",
         reason,
@@ -250,18 +254,21 @@ export class UserManagementService {
       }
 
       // Get user info for logging
-      const userInfo = await convex.query(api.admin.users.getUserBasicInfo, { userId });
+      const userInfo = await convex.query(api.functions.admin.users.getUserBasicInfo, { userId }) as UserBasicInfo;
       if (!userInfo) {
         throw new ConvexError("User not found");
       }
 
       // Perform deletion based on type
-      const result = await convex.mutation(api.admin.users.deleteUserData, {
+      const result = await convex.mutation(api.functions.admin.users.deleteUserData, {
         userId,
         deletionType,
         deletedBy: adminId,
         deletedAt: new Date().toISOString()
-      });
+      }) as {
+        success: boolean;
+        deletedRecords: number;
+      };
 
       // Log deletion action
       await adminAuthService.logAdminAction(adminId, {
@@ -303,7 +310,7 @@ export class UserManagementService {
       }
 
       // Get user info for logging
-      const userInfo = await convex.query(api.admin.users.getUserBasicInfo, { userId });
+      const userInfo = await convex.query(api.functions.admin.users.getUserBasicInfo, { userId }) as UserBasicInfo;
       if (!userInfo) {
         throw new ConvexError("User not found");
       }
@@ -319,7 +326,7 @@ export class UserManagementService {
       };
 
       // Store impersonation session
-      await convex.mutation(api.admin.users.createImpersonationSession, {
+      await convex.mutation(api.functions.admin.users.createImpersonationSession, {
         sessionId,
         adminId,
         userId,
@@ -360,7 +367,7 @@ export class UserManagementService {
   ): Promise<void> {
     try {
       // Get impersonation session
-      const session = await convex.query(api.admin.users.getImpersonationSession, { sessionId });
+      const session = await convex.query(api.functions.admin.users.getImpersonationSession, { sessionId }) as ImpersonationSession | null;
       if (!session) {
         throw new ConvexError("Impersonation session not found");
       }
@@ -371,7 +378,7 @@ export class UserManagementService {
       }
 
       // End impersonation session
-      await convex.mutation(api.admin.users.endImpersonationSession, {
+      await convex.mutation(api.functions.admin.users.endImpersonationSession, {
         sessionId,
         endTime: new Date().toISOString()
       });
@@ -408,7 +415,7 @@ export class UserManagementService {
     timestamp: string;
     type: string;
     description: string;
-    details?: any;
+    details?: Record<string, unknown>;
   }>> {
     try {
       // Validate admin permissions
@@ -417,10 +424,15 @@ export class UserManagementService {
         throw new ConvexError("Insufficient permissions to view user activity");
       }
 
-      const timeline = await convex.query(api.admin.users.getUserActivityTimeline, {
+      const timeline = await convex.query(api.functions.admin.users.getUserActivityTimeline, {
         userId,
         limit
-      });
+      }) as Array<{
+        timestamp: string;
+        type: string;
+        description: string;
+        details?: Record<string, unknown>;
+      }>;
 
       // Log activity timeline access
       await adminAuthService.logAdminAction(adminId, {
@@ -483,13 +495,13 @@ export class UserManagementService {
               await this.suspendUser(userId, action.reason || "Bulk suspension", adminId, action.duration);
               break;
             case "activate":
-              await convex.mutation(api.admin.users.activateUser, { userId });
+              await convex.mutation(api.functions.admin.users.activateUser, { userId });
               break;
             case "delete":
               await this.deleteUserData(userId, "soft", adminId);
               break;
             case "send_message":
-              await convex.mutation(api.admin.users.sendUserMessage, {
+              await convex.mutation(api.functions.admin.users.sendUserMessage, {
                 userId,
                 message: action.message || "",
                 sentBy: adminId
@@ -546,13 +558,13 @@ export class UserManagementService {
       }
 
       // Get user info for logging
-      const userInfo = await convex.query(api.admin.users.getUserBasicInfo, { userId });
+      const userInfo = await convex.query(api.functions.admin.users.getUserBasicInfo, { userId }) as UserBasicInfo;
       if (!userInfo) {
         throw new ConvexError("User not found");
       }
 
       // Create warning record
-      await convex.mutation(api.admin.moderation.createModerationAction, {
+      await convex.mutation(api.functions.admin.moderation.createModerationAction, {
         userId,
         action: "warning",
         reason,
@@ -601,13 +613,13 @@ export class UserManagementService {
       }
 
       // Get user info for logging
-      const userInfo = await convex.query(api.admin.users.getUserBasicInfo, { userId });
+      const userInfo = await convex.query(api.functions.admin.users.getUserBasicInfo, { userId }) as UserBasicInfo;
       if (!userInfo) {
         throw new ConvexError("User not found");
       }
 
       // Terminate user account
-      await convex.mutation(api.admin.users.terminateUser, {
+      await convex.mutation(api.functions.admin.users.terminateUser, {
         userId,
         reason,
         terminatedBy: adminId,
@@ -615,7 +627,7 @@ export class UserManagementService {
       });
 
       // Create moderation action record
-      await convex.mutation(api.admin.moderation.createModerationAction, {
+      await convex.mutation(api.functions.admin.moderation.createModerationAction, {
         userId,
         action: "termination",
         reason,

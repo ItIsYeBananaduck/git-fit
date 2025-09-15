@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { advancedAnalyticsService } from '$lib/services/advancedAnalyticsService';
+	import { advancedAnalyticsService } from '$lib/services/advancedAnalyticsS						{#if data.cohorts.length > 0}
+							{@const bestCohort = data.cohorts.reduce((best: any, current: any) =>
+								(current.retention.week_8 || 0) > (best.retention.week_8 || 0) ? current : best
+							)}ce';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	export let data: any;
 	export let dateRange: { start: string; end: string };
-	export let adminId: string;
+	export let adminId: Id<'adminUsers'>;
 
 	const dispatch = createEventDispatcher();
 
@@ -186,25 +190,27 @@
 				<div class="insight-card">
 					<h4>Critical Drop-off Period</h4>
 					<div class="insight-content">
-						{@const avgWeek1 = data.averageRetention.week_1}
-						{@const avgWeek2 = data.averageRetention.week_2}
-						{@const avgWeek4 = data.averageRetention.week_4}
-						{@const week1to2Drop = avgWeek1 - avgWeek2}
-						{@const week2to4Drop = avgWeek2 - avgWeek4}
-						<div class="dropoff-analysis">
-							<div class="dropoff-period">
-								<span class="period">Week 1-2:</span>
-								<span class="dropoff-rate">{week1to2Drop.toFixed(1)}% drop</span>
+						{#if data.averageRetention}
+							{@const avgWeek1 = data.averageRetention.week_1}
+							{@const avgWeek2 = data.averageRetention.week_2}
+							{@const avgWeek4 = data.averageRetention.week_4}
+							{@const week1to2Drop = avgWeek1 - avgWeek2}
+							{@const week2to4Drop = avgWeek2 - avgWeek4}
+							<div class="dropoff-analysis">
+								<div class="dropoff-period">
+									<span class="period">Week 1-2:</span>
+									<span class="dropoff-rate">{week1to2Drop.toFixed(1)}% drop</span>
+								</div>
+								<div class="dropoff-period">
+									<span class="period">Week 2-4:</span>
+									<span class="dropoff-rate">{week2to4Drop.toFixed(1)}% drop</span>
+								</div>
 							</div>
-							<div class="dropoff-period">
-								<span class="period">Week 2-4:</span>
-								<span class="dropoff-rate">{week2to4Drop.toFixed(1)}% drop</span>
-							</div>
-						</div>
-						<p class="insight-description">
-							{week1to2Drop > week2to4Drop ? 'Early engagement' : 'Mid-term retention'} is the critical
-							focus area.
-						</p>
+							<p class="insight-description">
+								{week1to2Drop > week2to4Drop ? 'Early engagement' : 'Mid-term retention'} is the critical
+								focus area.
+							</p>
+						{/if}
 					</div>
 				</div>
 

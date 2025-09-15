@@ -24,6 +24,9 @@ export const createUser = mutation({
   handler: async (ctx, args) => {
     const user = {
       ...args,
+      passwordHash: "", // Will be set after hashing
+      emailVerified: false,
+      isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isVerified: false,
@@ -71,7 +74,7 @@ export const getTrainers = query({
     
     if (args.specialty) {
       return trainers.filter(trainer => 
-        trainer.specialties?.includes(args.specialty)
+        trainer.specialties?.includes(args.specialty!)
       );
     }
     
@@ -109,13 +112,13 @@ export const updateUserProfile = mutation({
 });
 
 // Authentication helper functions using bcrypt
-async function hashPassword(password) {
+async function hashPassword(password: string) {
   const bcrypt = await import('bcryptjs');
   const saltRounds = 12;
   return await bcrypt.hash(password, saltRounds);
 }
 
-async function verifyPassword(password, hash) {
+async function verifyPassword(password: string, hash: string) {
   const bcrypt = await import('bcryptjs');
   return await bcrypt.compare(password, hash);
 }
@@ -129,12 +132,12 @@ function generateToken(length = 64) {
   return result;
 }
 
-function isValidEmail(email) {
+function isValidEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
-function isValidPassword(password) {
+function isValidPassword(password: string) {
   return password.length >= 8 && 
          /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password);
 }

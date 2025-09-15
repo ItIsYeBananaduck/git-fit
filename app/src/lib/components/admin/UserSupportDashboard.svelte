@@ -4,7 +4,7 @@
 	import SupportTicketManager from './SupportTicketManager.svelte';
 	import CommunicationCenter from './CommunicationCenter.svelte';
 	import GDPRComplianceManager from './GDPRComplianceManager.svelte';
-	import type { Id } from '../../../../convex/_generated/dataModel';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
