@@ -46,13 +46,22 @@ export interface ProgressionRule {
   };
 }
 
+export interface AdaptiveTrainingConfig {
+  dynamicDeload: boolean;
+  cycleLengthWeeks: number;
+}
+
 export class AdaptiveTrainingEngine {
   private userId: string;
   private sessions: WorkoutSession[] = [];
   private baselineRecovery: number = 50; // default starting point
+  private config: AdaptiveTrainingConfig = { dynamicDeload: true, cycleLengthWeeks: 4 };
 
-  constructor(userId: string) {
+  constructor(userId: string, config?: Partial<AdaptiveTrainingConfig>) {
     this.userId = userId;
+    if (config) {
+      this.config = { ...this.config, ...config };
+    }
   }
 
   /**
@@ -208,10 +217,20 @@ export class AdaptiveTrainingEngine {
       ? this.calculateRecentAverage(recentSessions, 'recovery', 14)
       : this.calculateFeedbackBasedRecoveryTrend(recentSessions);
 
-    if (weeksOfTraining >= 3 && (avgRecoveryTrend < 45 || this.isDeloadWeekScheduled())) {
-      shouldDeload = true;
-      safetyAlerts.push('🔄 Deload week recommended - reduce intensity and focus on recovery');
-      reasoning.push(`${weeksOfTraining} weeks of training completed - time for deload`);
+    // Deload logic: dynamic or standard
+    if (this.config.dynamicDeload) {
+      if (weeksOfTraining >= 3 && (avgRecoveryTrend < 45 || this.isDeloadWeekScheduled(this.config.cycleLengthWeeks))) {
+        shouldDeload = true;
+        safetyAlerts.push('🔄 Deload week recommended - reduce intensity and focus on recovery');
+        reasoning.push(`${weeksOfTraining} weeks of training completed - time for deload (dynamic)`);
+      }
+    } else {
+      // Standard: deload only on last week of mesocycle
+      if (weeksOfTraining > 0 && this.isLastWeekOfMesocycle(weeksOfTraining, this.config.cycleLengthWeeks)) {
+        shouldDeload = true;
+        safetyAlerts.push('🔄 Standard deload week (end of mesocycle)');
+        reasoning.push(`Mesocycle of ${this.config.cycleLengthWeeks} weeks completed - time for deload (standard)`);
+      }
     }
 
     // Strain target calculation and alert
@@ -625,10 +644,15 @@ export class AdaptiveTrainingEngine {
     return Math.floor(daysDiff / 7);
   }
 
-  private isDeloadWeekScheduled(): boolean {
-    // Check if it's week 4, 8, 12, etc. in a training cycle
-    const weekNumber = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 7)) % 4;
-    return weekNumber === 3; // Every 4th week
+  private isDeloadWeekScheduled(cycleLength: number): boolean {
+    // Check if it's the last week of the cycle (default: every 4th week)
+    const weekNumber = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 7)) % cycleLength;
+    return weekNumber === (cycleLength - 1);
+  }
+
+  private isLastWeekOfMesocycle(weeksOfTraining: number, cycleLength: number): boolean {
+    // True if current week is the last week of the mesocycle
+    return weeksOfTraining % cycleLength === 0;
   }
 
   private generateRecommendationText(intensity: string, recovery: number, strain: number, availableDataSources?: any): string {

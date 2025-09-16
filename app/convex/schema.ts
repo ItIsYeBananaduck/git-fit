@@ -2,6 +2,29 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // AI Summary System Tables
+  user_configs: defineTable({
+    userId: v.id("users"),
+    configJson: v.string(), // stringified JSON object
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_user", ["userId"]),
+
+  user_monthly_summaries: defineTable({
+    userId: v.id("users"),
+    monthKey: v.string(), // e.g. "2025-09"
+    monthlySummaryJson: v.string(), // stringified JSON
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_user_and_month", ["userId", "monthKey"]),
+
+  user_yearly_summaries: defineTable({
+    userId: v.id("users"),
+    yearlySummaryJson: v.string(), // stringified JSON object
+    subscriptionStartDate: v.string(), // Unix timestamp as string
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_user", ["userId"]),
   wearableFeedback: defineTable({
     userId: v.id("users"),
     timestamp: v.string(),
@@ -49,6 +72,17 @@ export default defineSchema({
       conditions: v.optional(v.array(v.string())),
       notes: v.optional(v.string()),
     })),
+
+    // Smart Set Nudging & Device Support
+    smartSetNudges: v.optional(v.boolean()), // User toggle
+    smartSetNudgesActive: v.optional(v.boolean()), // Auto-managed (true if device supports real-time strain)
+    connectedWearable: v.optional(v.union(
+      v.literal("whoop"),
+      v.literal("apple_watch"),
+      v.literal("samsung_watch"),
+      v.literal("fitbit"),
+      v.literal("polar")
+    )),
   }).index("by_email", ["email"]).index("by_role", ["role"]).index("by_active", ["isActive"]),
 
   // User sessions for authentication

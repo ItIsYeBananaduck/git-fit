@@ -824,3 +824,38 @@ export const changePassword = mutation({
     return { success: true };
   },
 });
+
+export const updateSmartSetNudgeSettings = mutation({
+  args: {
+    userId: v.id("users"),
+    smartSetNudges: v.optional(v.boolean()),
+    smartSetNudgesActive: v.optional(v.boolean()),
+    connectedWearable: v.optional(v.union(
+      v.literal("whoop"),
+      v.literal("apple_watch"),
+      v.literal("samsung_watch"),
+      v.literal("fitbit"),
+      v.literal("polar")
+    )),
+  },
+  handler: async (ctx, args) => {
+    const updates: Record<string, any> = {};
+    if ("smartSetNudges" in args) updates.smartSetNudges = args.smartSetNudges;
+    if ("connectedWearable" in args) {
+      updates.connectedWearable = args.connectedWearable;
+      // Auto-manage smartSetNudgesActive based on device support
+      const supportedDevices = ["whoop", "apple_watch", "samsung_watch"];
+      if (args.connectedWearable && supportedDevices.includes(args.connectedWearable)) {
+        updates.smartSetNudgesActive = true;
+      } else {
+        updates.smartSetNudgesActive = false;
+      }
+    } else if ("smartSetNudgesActive" in args) {
+      // Only allow manual override if device is not specified in this call
+      updates.smartSetNudgesActive = args.smartSetNudgesActive;
+    }
+    updates.updatedAt = new Date().toISOString();
+    await ctx.db.patch(args.userId, updates);
+    return { success: true };
+  }
+});

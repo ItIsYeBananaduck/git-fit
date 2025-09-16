@@ -42,7 +42,8 @@
 	role="button"
 	tabindex="0"
 	aria-label="{achievement.name} - {earned ? 'Earned' : 'In progress'}"
-	on:keydown={(e) => e.key === 'Enter' && handleClick()}
+	on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), handleClick())}
+	style="outline: none;"
 >
 	<!-- Badge Container -->
 	<div
@@ -112,5 +113,8 @@
 		line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
+	}
+	div[role='button']:focus {
+		box-shadow: 0 0 0 3px #2563eb55;
 	}
 </style>

@@ -78,6 +78,10 @@
 				<button
 					on:click={() => goto('/onboarding/goals')}
 					class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+					aria-label="Set your goals"
+					tabindex="0"
+					on:keydown={(e) =>
+						(e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), goto('/onboarding/goals'))}
 				>
 					Set Your Goals
 				</button>
@@ -103,6 +107,10 @@
 						<button
 							on:click={toggleComparison}
 							class="text-blue-600 hover:text-blue-700 font-medium"
+							aria-label={showComparison ? 'Hide comparison' : 'Show comparison'}
+							tabindex="0"
+							on:keydown={(e) =>
+								(e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggleComparison())}
 						>
 							{showComparison ? 'Hide' : 'Show'} Comparison
 						</button>
@@ -160,6 +168,10 @@
 				<button
 					on:click={() => goto('/onboarding/goals')}
 					class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+					aria-label="Back to goals"
+					tabindex="0"
+					on:keydown={(e) =>
+						(e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), goto('/onboarding/goals'))}
 				>
 					Back to Goals
 				</button>
@@ -168,13 +180,27 @@
 					<button
 						on:click={continueToNextStep}
 						class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+						aria-label={`Continue with ${selectedSplit.name}`}
+						tabindex="0"
+						on:keydown={(e) =>
+							(e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), continueToNextStep())}
 					>
 						Continue with {selectedSplit.name}
 					</button>
 				{:else}
-					<button disabled class="px-8 py-3 bg-gray-400 text-white rounded-lg cursor-not-allowed">
+					<button
+						disabled
+						class="px-8 py-3 bg-gray-400 text-white rounded-lg cursor-not-allowed"
+						aria-disabled="true"
+					>
 						Select a Training Split
 					</button>
+					<style>
+						button:focus {
+							box-shadow: 0 0 0 3px #2563eb55;
+							outline: none;
+						}
+					</style>
 				{/if}
 			</div>
 		{/if}

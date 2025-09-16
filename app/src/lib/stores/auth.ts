@@ -18,20 +18,20 @@ function createAuthStore() {
 
   return {
     subscribe,
-    
+
     // Initialize auth state (call on app startup)
     async initialize() {
       if (!browser) return;
-      
+
       update(state => ({ ...state, isLoading: true }));
-      
+
       try {
         const currentUser = authService.getCurrentUser();
-        
+
         if (currentUser && authService.isAuthenticated()) {
           // Validate session with server
           const isValid = await authService.refreshSession();
-          
+
           if (isValid) {
             const refreshedUser = authService.getCurrentUser();
             set({
@@ -73,10 +73,10 @@ function createAuthStore() {
     // Login
     async login(email: string, password: string, rememberMe: boolean = false) {
       update(state => ({ ...state, isLoading: true, error: null }));
-      
+
       try {
         const result = await authService.login({ email, password, rememberMe });
-        
+
         if (result.success && result.user) {
           set({
             user: result.user,
@@ -113,10 +113,10 @@ function createAuthStore() {
     // Register
     async register(userData: any) {
       update(state => ({ ...state, isLoading: true, error: null }));
-      
+
       try {
         const result = await authService.register(userData);
-        
+
         if (result.success && result.user) {
           set({
             user: result.user,
@@ -124,9 +124,9 @@ function createAuthStore() {
             isLoading: false,
             error: null
           });
-          return { 
-            success: true, 
-            requiresVerification: result.requiresVerification 
+          return {
+            success: true,
+            requiresVerification: result.requiresVerification
           };
         } else {
           update(state => ({
@@ -156,7 +156,7 @@ function createAuthStore() {
     // Logout
     async logout() {
       update(state => ({ ...state, isLoading: true }));
-      
+
       try {
         await authService.logout();
         set({
@@ -180,10 +180,10 @@ function createAuthStore() {
     // Update profile
     async updateProfile(updates: Partial<User>) {
       update(state => ({ ...state, isLoading: true, error: null }));
-      
+
       try {
         const result = await authService.updateProfile(updates);
-        
+
         if (result.success && result.user) {
           update(state => ({
             ...state,
@@ -226,7 +226,7 @@ function createAuthStore() {
     async refreshSession() {
       try {
         const isValid = await authService.refreshSession();
-        
+
         if (isValid) {
           const user = authService.getCurrentUser();
           update(state => ({
@@ -242,7 +242,7 @@ function createAuthStore() {
             error: null
           });
         }
-        
+
         return isValid;
       } catch (error) {
         console.error('Session refresh error:', error);
@@ -254,6 +254,18 @@ function createAuthStore() {
         });
         return false;
       }
+    },
+
+    /**
+     * Get the current authenticated user (async, for onboarding flows)
+     */
+    async getAuthUser(): Promise<User | null> {
+      // Try to get from store first
+      const current = authService.getCurrentUser();
+      if (current) return current;
+      // Try to refresh session if not present
+      await authService.refreshSession();
+      return authService.getCurrentUser();
     }
   };
 }

@@ -1,5 +1,32 @@
 <script lang="ts">
 	import WorkoutCard from '$lib/components/WorkoutCard.svelte';
+	import MusicControls from '$lib/components/MusicControls.svelte';
+
+	// Platform detection (basic)
+	let platform: 'ios' | 'android' | 'web' = 'web';
+	if (typeof window !== 'undefined') {
+		const ua = window.navigator.userAgent.toLowerCase();
+		if (/iphone|ipad|ipod/.test(ua)) platform = 'ios';
+		else if (/android/.test(ua)) platform = 'android';
+	}
+
+	// Music state (mock for now)
+	let playing = false;
+	let trackName = 'Sample Track';
+	let artistName = 'Sample Artist';
+
+	function onPlayPause() {
+		playing = !playing;
+	}
+	function onSkip() {
+		/* TODO: Integrate with plugin */
+	}
+	function onVolumeUp() {
+		/* TODO: Integrate with plugin */
+	}
+	function onVolumeDown() {
+		/* TODO: Integrate with plugin */
+	}
 
 	// Mock workout data
 	let activePrograms = [
@@ -83,6 +110,19 @@
 </svelte:head>
 
 <div class="space-y-6">
+	<!-- Music Controls (In-Workout) -->
+	<div class="my-6">
+		<MusicControls
+			{playing}
+			{trackName}
+			{artistName}
+			{onPlayPause}
+			{onSkip}
+			{onVolumeUp}
+			{onVolumeDown}
+		/>
+		<div class="text-xs text-gray-500 mt-2">Platform detected: {platform}</div>
+	</div>
 	<!-- Header -->
 	<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
 		<h1 class="text-2xl font-bold text-gray-900 mb-2">Your Workouts</h1>

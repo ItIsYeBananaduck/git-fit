@@ -1,3 +1,29 @@
+## Nutrition AI – Auto Macro Adjustment on Plateau
+
+- [x] Detect plateau from `monthlySummary`: - No change in average/max volume or load for 3+ weeks - Weight has not changed in 3+ weeks (if goal is weight-based)
+- [x] Confirm user is **compliant** (logs/workouts consistent)
+- [x] Adjust macros carefully: - Bulk: +5–10% carbs or protein - Cut: -5–10% carbs or fats - Recomp: micro-adjust around training window
+- [x] Update `nutritionConfig.currentMacros` and push to `macroHistory[]`
+- [x] Generate adjustment note (example):
+
+```json
+{
+  "reason": "3-week strength plateau with full workout compliance",
+  "adjustment": {
+    "calories": "+150 kcal",
+    "carbs": "+35g"
+  }
+}
+```
+
+Prioritize safe calorie levels — never drop below clinical minimums.
+
+Include config toggle: "autoAdjustMacros": true
+
+Send notification: "We adjusted your macros to help you break through your plateau. You can view or revert this change in your settings."
+
+Disable auto-adjust if wearable or weight log is unavailable for over 14 days.
+
 # Implementation Tasks for Technically Fit
 
 This document outlines the actionable tasks needed to implement the missing specs and features identified in your project.
@@ -8,13 +34,13 @@ This document outlines the actionable tasks needed to implement the missing spec
 
 - [x] Redesign unified navigation and design language across modules
 - [x] Build customizable dashboards for key metrics
-- [ ] Ensure accessibility for users with disabilities
+- [x] Ensure accessibility for users with disabilities
   - [x] Add ARIA labels to all interactive elements
-  - [ ] Implement keyboard navigation for all major flows
-  - [ ] Add screen reader support (roles, labels, alt text)
-  - [ ] Ensure color contrast compliance (WCAG AA)
-  - [ ] Audit AccessibilityUtils.svelte and +layout.svelte
-  - [ ] Audit all dashboard widgets for accessibility
+  - [x] Implement keyboard navigation for all major flows
+  - [x] Add screen reader support (roles, labels, alt text)
+  - [x] Ensure color contrast compliance (WCAG AA)
+  - [x] Audit AccessibilityUtils.svelte and +layout.svelte
+  - [x] Audit all dashboard widgets for accessibility
 
 ---
 
@@ -65,10 +91,239 @@ This document outlines the actionable tasks needed to implement the missing spec
 - [x] Create user data management tools
 
 - [x] Add medical screening questionnaire (injury/condition tracking)
-- [ ] Build goal identification interface (primary/secondary objectives)
-- [ ] Implement recommendation engine for training splits
-- [ ] Create split comparison interface and educational content
+- [x] Build goal identification interface (primary/secondary objectives)
+  - Build UI and backend logic for users to identify and set primary/secondary fitness goals. (COMPLETED: Feature is implemented in onboarding and backend, see GoalIdentificationStep and convex/functions/goals.ts)
+- [x] Implement recommendation engine for training splits
+- [x] Create split comparison interface and educational content
+  - UI for comparing different training splits implemented in SplitComparisonPanel.svelte and SplitSelectionFlow.svelte.
+  - Educational content and pros/cons for each split included in the UI.
+  - Integrated into onboarding and dashboard flows.
+  - Users can view, compare, and select splits with contextual guidance.
+
+# Training Split Customization
+
+- [x] Allow user to set and save a custom training split
+  - Implement UI and backend logic to let users define, save, and retrieve a fully custom training split (e.g., PPL + arm/core + cardio) as part of their config.
+
+## AI Summary System + Smart Set Nudging
+
+### User Config Table
+
+- [x] Create Convex table `user_configs` with a `configJson` field (stringified JSON)
+- [x] Implement backend logic to read/write user config (latest version only)
+- [x] Build UI for users to view and update config options (deload, rest time, etc.)
+
+### Monthly Exercise Summary
+
+- [x] Create Convex table `user_monthly_summaries` with fields: `monthlySummaryJson` and `monthKey`
+- [x] Implement backend logic to generate and store monthly summaries per user
+- [x] Build UI to display monthly exercise summaries and stats
+
+### Yearly Summary
+
+- [x] Create Convex table `user_yearly_summaries` with fields: `yearlySummaryJson` and `subscriptionStartDate`
+- [x] Implement backend logic to aggregate monthly data into yearly summaries (max 3 years, auto-purge oldest)
+- [x] Build UI to display yearly summaries and breakdowns
+
+### Smart Set Nudging
+
+- [x] Implement logic to start rest timer using `avgRestSec` after each set
+- [x] Compare strain at rest start and end; if criteria met, trigger nudge (voice prompt)
+- [x] Integrate with wearable device APIs for real-time strain data
+- [x] Add user toggle for smart set nudges in config/UI
+
+### Device & Nudge Support
+
+- [x] Add fields to user/device model: `smartSetNudges`, `smartSetNudgesActive`, `connectedWearable`
+- [x] Implement logic to auto-enable/disable nudges based on device support
+- [x] Build UI to show nudge/device support status and matrix
+
+### AI Summary Data Parsing
+
+- [x] Implement AI logic to parse and interpret the summary JSON data for monthly and yearly exercise summaries
+- [x] Integrate parsed summary data into recommendations, nudging, and user feedback systems
+
+## Live Activity & Dynamic Island (iOS)
+
+### Active Set View
+
+[x] Show current exercise name
+[x] Show reps completed / rep target (e.g. 6 / 10)
+[x] Show real-time strain (from Apple Watch, WHOOP, etc.)
+
+### Rest View
+
+- [x] Show countdown timer (based on AI-configured avgRestSec)
+- [x] Show current strain
+- [x] Optionally trigger Siri voice nudge when strain drops (if user has nudges enabled)
+
+#### 🧱 Requirements
+
+- [x] Create Swift `WorkoutAttributes` struct with `ActivityAttributes` + `ContentState`
+- [x] Add Live Activity support using ActivityKit (iOS 16.1+)
+- [x] Design Dynamic Island compact/expanded UI using WidgetKit + SwiftUI
+- [x] Add logic to update the Live Activity in real-time as workout progresses
+- [x] Display reps + strain in Dynamic Island during active sets
+- [x] Display rest timer + strain in Dynamic Island during rest
+- [x] Integrate wearable strain values (Apple Watch via HealthKit or WHOOP if available)
+- [x] Auto-disable Live Activity if no wearable connected or permissions are denied
+- [x] Voice assistant nudge (optional): Use Siri Shortcuts or AVSpeechSynthesizer to say “Let’s go! Start your next set.” if nudging is enabled and recovery is detected
+
+#### 🧩 Optional Enhancements
+
+- [x] Add fallback notification system for unsupported iPhones (non-Pro or older than iPhone 14)
+- [x] Show volume trend or fatigue warning if set strain is too low
+- [x] Add settings toggle to disable Live Activity
+
+### 🧩 TASK: Mesocycle-Aware Personalized Training System + Native Music Controls
 
 ---
 
+#### 📆 MESOCYCLE-BASED PROGRAMMING
+
+**Overview:**
+Implement a training logic system where all workout programming, AI summaries, and adjustments operate on a 4–6 week mesocycle basis, not week-to-week.
+
+**Steps:**
+
+- [x] Add mesocycle duration config (`default: 4 weeks`, user adjustable)
+- [x] Trigger deload week automatically at the end of the mesocycle (unless skipped)
+- [x] Store mesocycle metadata (`startDate`, `cycleLength`, `deloadScheduled`, etc.)
+
+---
+
+#### 🧰 EQUIPMENT & PREFERENCE-BASED EXERCISE FILTERING
+
+**After split selection:**
+
+- [ ] Ask user for equipment available (dumbbell, barbell, cable, machine, etc.)
+- [ ] Ask for exercise preferences (include list / avoid list)
+- [ ] Store this JSON in the user config file:
+
+```json
+
+}
+ [x] Show countdown timer (based on AI-configured avgRestSec)
+ [x] Show current strain
+ [x] Optionally trigger Siri voice nudge when strain drops (if user has nudges enabled)
+
+Preference list
+ [x] Create Swift `WorkoutAttributes` struct with `ActivityAttributes` + `ContentState`
+ [x] Add Live Activity support using ActivityKit (iOS 16.1+)
+ [x] Design Dynamic Island compact/expanded UI using WidgetKit + SwiftUI
+ [x] Add logic to update the Live Activity in real-time as workout progresses
+ [x] Display reps + strain in Dynamic Island during active sets
+ [x] Display rest timer + strain in Dynamic Island during rest
+ [x] Integrate wearable strain values (Apple Watch via HealthKit or WHOOP if available)
+ [x] Auto-disable Live Activity if no wearable connected or permissions are denied
+ [x] Voice assistant nudge (optional): Use Siri Shortcuts or AVSpeechSynthesizer to say “Let’s go! Start your next set.” if nudging is enabled and recovery is detected
+
+AI suitability based on prior summary (replace stale or disliked exercises)
+
+avgRest
+totalVolume
+
+### Monthly AI Adjustments to Exercise Pool
+
+- [x] Pull monthlySummary JSON at each mesocycle transition
+- [x] Track avg + max for sets, reps, load, avgRest, and totalVolume
+- [x] Identify and flag exercises that are stalled (no load or volume increase over 2 cycles)
+- [x] Identify exercises with low user rating
+- [x] Identify exercises with poor strain-to-rep correlation (optional)
+- [x] Replace 20–30% of exercise pool with new exercises at each mesocycle transition
+- [x] Update program JSON for new mesocycle with updated exercises
+
+🧠 AI CONFIG SUPPORT
+Config stored as JSON string in Convex:
+
+```
+
+"trackRepsSetsLoad": "avg_max",
+[x] Add fallback notification system for unsupported iPhones (non-Pro or older than iPhone 14)
+[x] Show volume trend or fatigue warning if set strain is too low
+[x] Add settings toggle to disable Live Activity
+"strainNudges": true
+}
+
+````
+
+🎧 NATIVE MUSIC PLAYER CONTROLS (IN-WORKOUT)
+## Native Music Player Controls (In-Workout)
+
+- [x] Add music controls UI to workout session screen
+  - [x] Play / Pause button
+  - [x] Skip track button
+  - [x] Volume up/down controls
+  - [x] Show current track name and artist
+- [x] Implement Capacitor plugin for media control (cordova-plugin-music-controls2 or modern alternative)
+- [x] Auto-detect platform (Apple Music for iOS, Spotify, or system player)
+- [ ] Store music state per session (optional)
+
 **Note:** Check off each task as you complete it. Update this list as new features/specs are added or completed.
+
+---
+
+## Trainer, Marketplace, and Payments Roadmap
+
+### Phase 1: Data Models (Convex)
+- [ ] Create Trainer table
+  - [ ] Fields: trainerId, userId, certificationVerified, bio, specialties[]
+  - [ ] Role: link trainer accounts to users with role-based permissions
+- [ ] Create Program table
+  - [ ] Fields: programId, trainerId, title, goal, description, durationWeeks, equipment[], priceType ("subscription" | "oneTime"), price, jsonData, createdAt
+- [ ] Create Purchase table
+  - [ ] Fields: purchaseId, userId, programId, type ("subscription" | "oneTime"), status ("active" | "expired" | "canceled"), startDate, endDate, stripeSubscriptionId?
+- [ ] Create ProgramOwnership view
+  - [ ] Joins purchases → programs a user has access to
+  - [ ] Supports revoking if subscription canceled/refunded
+
+### Phase 2: File Upload + Conversion
+- [ ] Build file upload endpoint
+  - [ ] Accepts CSV/Excel/Google Sheets import
+  - [ ] Uses parser (e.g., papaparse for CSV, xlsx for Excel)
+  - [ ] Convert → structured JSON with:
+    ```json
+    { "week": 1, "day": "Push", "exercises": [ { "name": "Bench Press", "sets": 4, "reps": "8–12", "load": "70%" } ] }
+    ```
+  - [ ] Validate JSON (required fields: exercise, sets, reps, load)
+  - [ ] Auto-reject malformed files
+  - [ ] Attach JSON to Program table
+  - [ ] Store raw JSON in Convex
+  - [ ] Link back to original trainer upload
+
+### Phase 3: Trainer Account Management
+- [ ] Add trainer onboarding
+  - [ ] Upload certification (PDF/image) → stored securely
+  - [ ] Admin review flag: certificationVerified = true
+  - [ ] Allow only verified trainers to publish programs
+- [ ] Trainer dashboard
+  - [ ] CRUD for programs
+  - [ ] Track purchases/subscriptions
+  - [ ] Revenue summary (linked to Stripe payouts)
+
+### Phase 4: Marketplace UI
+- [ ] Marketplace home (browse by goal, duration, trainer, equipment)
+- [ ] Search bar for keywords
+- [ ] Program details page (title, description, duration, trainer info, price)
+- [ ] Purchase flow
+  - [ ] One-time → checkout → unlock permanent access
+  - [ ] Subscription → checkout → recurring billing via Stripe
+- [ ] User dashboard
+  - [ ] List of purchased programs
+  - [ ] Active subscriptions (Trainer Link)
+  - [ ] Download/view program JSON in workout planner
+
+### Phase 5: Payments (Stripe)
+- [ ] Integrate Stripe Checkout
+  - [ ] One-time products → Stripe Product + Price
+  - [ ] Subscriptions → Stripe Subscription API
+  - [ ] Webhook handling (Convex endpoint)
+    - [ ] On payment success → create Purchase record
+    - [ ] On subscription cancel/expire → update status → revoke access
+- [ ] Trainer payout system
+  - [ ] Track commission % in Convex
+  - [ ] Stripe Connect account per trainer
+  - [ ] Commission tiers:
+    - [ ] Start: 30% app / 70% trainer
+    - [ ] Drop to 10% app when trainer’s Pro clients ≥ fair number
+````

@@ -1,17 +1,23 @@
 <script lang="ts">
 	import MedicalScreeningStep from '$lib/components/MedicalScreeningStep.svelte';
+	import GoalIdentificationStep from '$lib/components/GoalIdentificationStep.svelte';
 	import { goto } from '$app/navigation';
 
 	// Simulate userId (replace with real auth/user context)
 	let userId = 'currentUserId';
 
-	// State for medical screening
+	// State for onboarding steps
+	let step = 1;
 	let medicalScreening = {
 		injuries: [],
 		conditions: [],
 		notes: ''
 	};
-
+	let goalData = {
+		primaryGoal: '',
+		secondaryGoals: [],
+		customGoal: ''
+	};
 	let submitting = false;
 	let error = '';
 
@@ -22,16 +28,33 @@
 		submitting = true;
 		error = '';
 		try {
-			// Call Convex mutation to save medical screening
 			await convex.mutation(api.users.saveMedicalScreening, {
 				userId,
 				injuries: data.injuries,
 				conditions: data.conditions,
 				notes: data.notes
 			});
-			goto('/'); // Go to home or next onboarding step
+			step = 2;
 		} catch (e) {
 			error = 'Failed to save. Please try again.';
+		} finally {
+			submitting = false;
+		}
+	}
+
+	async function saveGoals(data) {
+		submitting = true;
+		error = '';
+		try {
+			await convex.mutation(api.goals.setUserGoals, {
+				userId,
+				primaryGoal: data.primaryGoal,
+				secondaryGoals: data.secondaryGoals,
+				details: {}
+			});
+			goto('/'); // Go to home or next onboarding step
+		} catch (e) {
+			error = 'Failed to save goals. Please try again.';
 		} finally {
 			submitting = false;
 		}
@@ -39,10 +62,14 @@
 </script>
 
 <div class="onboarding-container">
-	<MedicalScreeningStep
-		initial={medicalScreening}
-		on:submit={(e) => saveMedicalScreening(e.detail)}
-	/>
+	{#if step === 1}
+		<MedicalScreeningStep
+			initial={medicalScreening}
+			on:submit={(e) => saveMedicalScreening(e.detail)}
+		/>
+	{:else if step === 2}
+		<GoalIdentificationStep initial={goalData} on:submit={(e) => saveGoals(e.detail)} />
+	{/if}
 	{#if submitting}
 		<div class="status">Saving...</div>
 	{/if}
