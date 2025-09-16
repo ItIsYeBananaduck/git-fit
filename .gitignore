@@ -1,3 +1,5 @@
+# Ignore spec-kit
+.github/spec-kit/
 
 .env.local
 
