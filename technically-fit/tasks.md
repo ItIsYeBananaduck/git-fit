@@ -1,6 +1,20 @@
 # Implementation Tasks for Technically Fit
 
-This document breaks down the actionable tasks needed to implement the missing specs and features identified in your project.
+This document outlines the actionable tasks needed to implement the missing specs and features identified in your project.
+
+---
+
+## User Experience Enhancement
+
+- [x] Redesign unified navigation and design language across modules
+- [x] Build customizable dashboards for key metrics
+- [ ] Ensure accessibility for users with disabilities
+  - [x] Add ARIA labels to all interactive elements
+  - [ ] Implement keyboard navigation for all major flows
+  - [ ] Add screen reader support (roles, labels, alt text)
+  - [ ] Ensure color contrast compliance (WCAG AA)
+  - [ ] Audit AccessibilityUtils.svelte and +layout.svelte
+  - [ ] Audit all dashboard widgets for accessibility
 
 ---
 
@@ -54,14 +68,6 @@ This document breaks down the actionable tasks needed to implement the missing s
 - [ ] Build goal identification interface (primary/secondary objectives)
 - [ ] Implement recommendation engine for training splits
 - [ ] Create split comparison interface and educational content
-
-## User Experience Enhancement
-
-- [ ] Redesign unified navigation and design language across modules
-- [ ] Add achievement badges and milestone celebrations
-- [ ] Implement adaptive recommendations based on user behavior
-- [ ] Build customizable dashboards for key metrics
-- [ ] Ensure accessibility for users with disabilities
 
 ---
 
