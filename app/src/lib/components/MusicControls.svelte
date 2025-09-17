@@ -2,12 +2,28 @@
 	export let playing: boolean = false;
 	export let trackName: string = '';
 	export let artistName: string = '';
+	export let position: number = 0;
+	export let duration: number = 0;
+	export let volume: number = 1;
 	export let onPlayPause: () => void;
 	export let onSkip: () => void;
 	export let onVolumeUp: () => void;
 	export let onVolumeDown: () => void;
+	import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
 
 	// Optionally, expose more events as needed
+
+	function emitMusicState() {
+		dispatch('musicstate', {
+			track: trackName,
+			artist: artistName,
+			position,
+			duration,
+			isPlaying: playing,
+			volume
+		});
+	}
 </script>
 
 <div
@@ -16,7 +32,10 @@
 	<button
 		class="p-2 rounded-full bg-primary text-white hover:bg-blue-700 transition-colors"
 		aria-label={playing ? 'Pause' : 'Play'}
-		on:click={onPlayPause}
+		on:click={() => {
+			onPlayPause();
+			emitMusicState();
+		}}
 	>
 		{#if playing}
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
@@ -31,7 +50,10 @@
 	<button
 		class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
 		aria-label="Skip Track"
-		on:click={onSkip}
+		on:click={() => {
+			onSkip();
+			emitMusicState();
+		}}
 	>
 		<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
 			><polygon points="5,4 15,12 5,20 5,4" /><rect x="17" y="4" width="2" height="16" /></svg
@@ -44,7 +66,10 @@
 	<button
 		class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
 		aria-label="Volume Down"
-		on:click={onVolumeDown}
+		on:click={() => {
+			onVolumeDown();
+			emitMusicState();
+		}}
 	>
 		<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
 			><polygon points="11,5 6,9 2,9 2,15 6,15 11,19 11,5" /></svg
@@ -53,7 +78,10 @@
 	<button
 		class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
 		aria-label="Volume Up"
-		on:click={onVolumeUp}
+		on:click={() => {
+			onVolumeUp();
+			emitMusicState();
+		}}
 	>
 		<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
 			><polygon points="11,5 6,9 2,9 2,15 6,15 11,19 11,5" /><path

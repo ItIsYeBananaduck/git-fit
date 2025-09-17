@@ -34,14 +34,34 @@
 	let showNotifications = false;
 	let activeSection = 'main';
 
-	// Close menus when clicking outside
-	function handleClickOutside(event: MouseEvent) {
-		const target = event.target as HTMLElement;
-		if (!target.closest('.user-menu')) {
+	// Keyboard navigation for user menu
+	function handleUserMenuKeydown(event: KeyboardEvent): void {
+		if (event.key === 'Escape') {
 			showUserMenu = false;
+			const userMenuButton = document.querySelector('[aria-controls="user-menu"]') as HTMLElement;
+			if (userMenuButton) userMenuButton.focus();
+		} else if (event.key === 'ArrowDown' && !showUserMenu) {
+			event.preventDefault();
+			showUserMenu = true;
 		}
-		if (!target.closest('.notifications-menu')) {
-			showNotifications = false;
+	}
+
+	// Keyboard navigation for mobile menu
+	function handleMobileMenuKeydown(event: KeyboardEvent): void {
+		if (event.key === 'Escape') {
+			mobileMenuOpen = false;
+		}
+	}
+
+	// Enhanced search with keyboard shortcuts
+	function handleSearchKeydown(event: KeyboardEvent): void {
+		// Ctrl+K or Cmd+K to focus search
+		if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+			event.preventDefault();
+			const searchInput = document.querySelector(
+				'input[aria-label="Search workouts and programs"]'
+			) as HTMLInputElement;
+			if (searchInput) searchInput.focus();
 		}
 	}
 
@@ -167,7 +187,7 @@
 		)?.[0] || 'main';
 </script>
 
-<svelte:window on:click={handleClickOutside} />
+<svelte:window on:click={handleClickOutside} on:keydown={handleSearchKeydown} />
 
 <!-- Modern Navigation Bar -->
 <nav
@@ -301,12 +321,14 @@
 					<div class="relative user-menu">
 						<button
 							on:click={() => (showUserMenu = !showUserMenu)}
+							on:keydown={handleUserMenuKeydown}
 							class="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-100 transition-colors"
 							title="User menu"
 							aria-label="Open user menu"
 							aria-expanded={showUserMenu}
 							aria-haspopup="menu"
 							aria-controls="user-menu"
+							id="user-menu-button"
 						>
 							<div
 								class="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center shadow-sm"
@@ -325,6 +347,8 @@
 								role="menu"
 								aria-labelledby="user-menu-button"
 								id="user-menu"
+								on:keydown={handleUserMenuKeydown}
+								tabindex="-1"
 							>
 								<div class="px-4 py-3 border-b border-gray-100">
 									<div class="font-medium text-gray-900">{$user.name}</div>
@@ -403,7 +427,11 @@
 
 		<!-- Mobile Navigation -->
 		{#if mobileMenuOpen}
-			<div class="md:hidden py-4 border-t border-gray-200">
+			<div
+				class="md:hidden py-4 border-t border-gray-200"
+				role="navigation"
+				aria-label="Mobile navigation menu"
+			>
 				{#if $isAuthenticated && $user}
 					<!-- Authenticated Mobile Menu -->
 					<div class="space-y-2">

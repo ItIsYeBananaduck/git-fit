@@ -196,7 +196,9 @@
 				{#if programs.length > 0}
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{#each programs as program (program._id)}
-							<ProgramCard {program} />
+							<a href={`/marketplace/${program._id}`} class="block">
+								<ProgramCard {program} />
+							</a>
 						{/each}
 					</div>
 				{:else}

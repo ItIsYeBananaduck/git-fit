@@ -17,7 +17,9 @@
     "convex": "^1.26.2",
     "cordova-plugin-music-controls2": "^3.0.7",
     "lucide-svelte": "^0.542.0",
-    "stripe": "^18.5.0"
+    "papaparse": "^5.5.3",
+    "stripe": "^18.5.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^24.4.0",

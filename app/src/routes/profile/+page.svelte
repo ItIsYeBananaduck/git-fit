@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { user, isAuthenticated, authStore } from '$lib/stores/auth';
 	import type { ClientProfile } from '$lib/types/auth';
+	import TrainerOnboarding from '$lib/components/TrainerOnboarding.svelte';
 
 	// Redirect to login if not authenticated
 	$: if (!$isAuthenticated && $user === null) {
@@ -269,6 +270,15 @@
 			</div>
 		{/if}
 	</div>
+
+	<!-- Trainer Certification Upload (for trainers) -->
+	{#if $user?.role === 'trainer'}
+		<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mt-8">
+			<h2 class="text-lg font-semibold text-gray-900 mb-4">Trainer Certification</h2>
+			<p class="text-gray-600 mb-2">Upload your certification (PDF or image) for admin review.</p>
+			<TrainerOnboarding />
+		</div>
+	{/if}
 
 	{#if isEditing}
 		<div class="flex justify-end space-x-3">

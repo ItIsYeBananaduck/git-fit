@@ -1,6 +1,8 @@
 <script lang="ts">
 	import WorkoutCard from '$lib/components/WorkoutCard.svelte';
 	import MusicControls from '$lib/components/MusicControls.svelte';
+	import { api } from '$lib/convex/_generated/api';
+	import { onMount } from 'svelte';
 
 	// Platform detection (basic)
 	let platform: 'ios' | 'android' | 'web' = 'web';
@@ -14,6 +16,47 @@
 	let playing = false;
 	let trackName = 'Sample Track';
 	let artistName = 'Sample Artist';
+	let position = 0;
+	let duration = 0;
+	let volume = 1;
+
+	// Assume sessionId is available (mock for now)
+	let sessionId = null; // Replace with real sessionId from active session
+
+	async function saveMusicState(state) {
+		if (!sessionId) return;
+		await api.workouts.updateMusicState({
+			sessionId,
+			musicState: state
+		});
+	}
+
+	function handleMusicState(event) {
+		saveMusicState(event.detail);
+	}
+
+	onMount(async () => {
+		if (!sessionId) return;
+		// Try to fetch the session and restore music state if available
+		try {
+			const session = await api.workouts.getUserWorkoutSessions({
+				userId: 'CURRENT_USER_ID',
+				limit: 1
+			});
+			// Replace 'CURRENT_USER_ID' with actual user id logic as needed
+			if (session && session.length > 0 && session[0].id === sessionId && session[0].musicState) {
+				const ms = session[0].musicState;
+				playing = ms.isPlaying ?? false;
+				trackName = ms.track ?? '';
+				artistName = ms.artist ?? '';
+				position = ms.position ?? 0;
+				duration = ms.duration ?? 0;
+				volume = ms.volume ?? 1;
+			}
+		} catch (e) {
+			console.error('Failed to restore music state:', e);
+		}
+	});
 
 	function onPlayPause() {
 		playing = !playing;
@@ -120,6 +163,7 @@
 			{onSkip}
 			{onVolumeUp}
 			{onVolumeDown}
+			on:musicstate={handleMusicState}
 		/>
 		<div class="text-xs text-gray-500 mt-2">Platform detected: {platform}</div>
 	</div>

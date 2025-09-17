@@ -196,9 +196,9 @@ Implement a training logic system where all workout programming, AI summaries, a
 
 **After split selection:**
 
-- [ ] Ask user for equipment available (dumbbell, barbell, cable, machine, etc.)
-- [ ] Ask for exercise preferences (include list / avoid list)
-- [ ] Store this JSON in the user config file:
+- [x] Ask user for equipment available (dumbbell, barbell, cable, machine, etc.)
+- [x] Ask for exercise preferences (include list / avoid list)
+- [x] Store this JSON in the user config file:
 
 ```json
 
@@ -257,7 +257,12 @@ Config stored as JSON string in Convex:
   - [x] Show current track name and artist
 - [x] Implement Capacitor plugin for media control (cordova-plugin-music-controls2 or modern alternative)
 - [x] Auto-detect platform (Apple Music for iOS, Spotify, or system player)
-- [ ] Store music state per session (optional)
+- [x] Design music state data model
+  - Add fields for music state (track, artist, position, isPlaying, etc.) to workout session or a new table in Convex backend.
+- [x] Implement backend logic for music state
+  - Create Convex functions to save and retrieve music state per session/user.
+- [x] Update music controls UI to sync state
+  - Update Svelte music controls component to save music state on change and restore on session load.
 
 **Note:** Check off each task as you complete it. Update this list as new features/specs are added or completed.
 
@@ -266,45 +271,44 @@ Config stored as JSON string in Convex:
 ## Trainer, Marketplace, and Payments Roadmap
 
 ### Phase 1: Data Models (Convex)
-- [ ] Create Trainer table
-  - [ ] Fields: trainerId, userId, certificationVerified, bio, specialties[]
-  - [ ] Role: link trainer accounts to users with role-based permissions
-- [ ] Create Program table
-  - [ ] Fields: programId, trainerId, title, goal, description, durationWeeks, equipment[], priceType ("subscription" | "oneTime"), price, jsonData, createdAt
-- [ ] Create Purchase table
-  - [ ] Fields: purchaseId, userId, programId, type ("subscription" | "oneTime"), status ("active" | "expired" | "canceled"), startDate, endDate, stripeSubscriptionId?
-- [ ] Create ProgramOwnership view
-  - [ ] Joins purchases → programs a user has access to
-  - [ ] Supports revoking if subscription canceled/refunded
+- [x] Create Trainer table
+  - [x] Fields: trainerId, userId, certificationVerified, bio, specialties[]
+  - [x] Role: link trainer accounts to users with role-based permissions
+- [x] Create Program table
+  - [x] Fields: programId, trainerId, title, goal, description, durationWeeks, equipment[], priceType ("subscription" | "oneTime"), price, jsonData, createdAt
+- [x] Create Purchase table
+  - [x] Fields: purchaseId, userId, programId, type ("subscription" | "oneTime"), status ("active" | "expired" | "canceled"), startDate, endDate, stripeSubscriptionId?
+- [x] Create ProgramOwnership view
+  - [x] Joins purchases → programs a user has access to
+  - [x] Supports revoking if subscription canceled/refunded
 
 ### Phase 2: File Upload + Conversion
-- [ ] Build file upload endpoint
-  - [ ] Accepts CSV/Excel/Google Sheets import
-  - [ ] Uses parser (e.g., papaparse for CSV, xlsx for Excel)
-  - [ ] Convert → structured JSON with:
+- [x] Build file upload endpoint
+  - [x] Accepts CSV/Excel/Google Sheets import
+  - [x] Uses parser (e.g., papaparse for CSV, xlsx for Excel)
+  - [x] Convert → structured JSON with:
     ```json
     { "week": 1, "day": "Push", "exercises": [ { "name": "Bench Press", "sets": 4, "reps": "8–12", "load": "70%" } ] }
     ```
-  - [ ] Validate JSON (required fields: exercise, sets, reps, load)
-  - [ ] Auto-reject malformed files
-  - [ ] Attach JSON to Program table
-  - [ ] Store raw JSON in Convex
-  - [ ] Link back to original trainer upload
+  - [x] Validate JSON (required fields: exercise, sets, reps, load)
+  - [x] Auto-reject malformed files
+  - [x] Attach JSON to Program table
+  - [x] Store raw JSON in Convex
+  - [x] Link back to original trainer upload
 
 ### Phase 3: Trainer Account Management
-- [ ] Add trainer onboarding
-  - [ ] Upload certification (PDF/image) → stored securely
-  - [ ] Admin review flag: certificationVerified = true
-  - [ ] Allow only verified trainers to publish programs
-- [ ] Trainer dashboard
-  - [ ] CRUD for programs
-  - [ ] Track purchases/subscriptions
-  - [ ] Revenue summary (linked to Stripe payouts)
+- [x] Add trainer onboarding
+  - [x] Upload certification (PDF/image) → stored securely
+  - [x] Admin review flag: certificationVerified = true
+  - [x] Allow only verified trainers to publish programs
+- [x] Implement Trainer Dashboard
+  - [x] Build trainer dashboard: CRUD for programs, track purchases/subscriptions, show revenue summary (linked to Stripe payouts)
 
 ### Phase 4: Marketplace UI
-- [ ] Marketplace home (browse by goal, duration, trainer, equipment)
-- [ ] Search bar for keywords
-- [ ] Program details page (title, description, duration, trainer info, price)
+- [x] Implement Marketplace Home UI
+  - [x] Build Marketplace home page: browse programs by goal, duration, trainer, equipment. Add search bar and program cards.
+- [x] Implement Program Details Page
+  - [x] Build program details page: show full program info, trainer info, and purchase button. Link from Marketplace home.
 - [ ] Purchase flow
   - [ ] One-time → checkout → unlock permanent access
   - [ ] Subscription → checkout → recurring billing via Stripe

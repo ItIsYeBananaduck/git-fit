@@ -49,6 +49,8 @@
 		if (selectedSplit) {
 			// TODO: Save user's training split preference
 			console.log('Selected split:', selectedSplit);
+			goto('/onboarding/equipment-preferences');
+			return;
 		}
 
 		goto('/onboarding/complete');

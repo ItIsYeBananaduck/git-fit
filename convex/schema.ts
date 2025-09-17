@@ -87,4 +87,14 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }),
+
+  trainers: defineTable({
+    trainerId: v.string(),
+    userId: v.string(),
+    certificationVerified: v.boolean(),
+    bio: v.optional(v.string()),
+    specialties: v.optional(v.array(v.string())),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
 });

@@ -262,4 +262,20 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Program Import Section -->
+	<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mt-8">
+		<h2 class="text-xl font-semibold text-gray-900 mb-4">Import Training Program (CSV/Excel)</h2>
+		<a href="/admin/program-import" class="text-primary underline hover:text-primary/80"
+			>Go to Program Import Page</a
+		>
+	</div>
+
+	<!-- Trainer Certification Review Section -->
+	<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mt-8">
+		<h2 class="text-xl font-semibold text-gray-900 mb-4">Trainer Certification Review</h2>
+		<a href="/admin/certifications" class="text-primary underline hover:text-primary/80"
+			>Go to Certification Review Page</a
+		>
+	</div>
 </div>

@@ -1,6 +1,6 @@
 import { ConvexHttpClient } from "convex/browser";
-// Import will be added when Convex is properly deployed
-// import { api as convexApi } from "../../convex/_generated/api";
+import { api as convexApi } from "../../convex/_generated/api";
+import { useConvex } from "convex/react";
 
 // Create Convex client - using a placeholder URL for now
 // In production, this would come from environment variables

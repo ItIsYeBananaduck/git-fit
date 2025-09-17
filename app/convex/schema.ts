@@ -1,3 +1,64 @@
+  // Trainer certifications (PDF/image uploads)
+  trainerCertifications: defineTable({
+    trainerId: v.id("trainers"),
+    userId: v.id("users"),
+    filename: v.string(),
+    mimetype: v.string(),
+    fileContent: v.string(), // base64-encoded
+    uploadedAt: v.string(),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    reviewedBy: v.optional(v.id("adminUsers")),
+    reviewedAt: v.optional(v.string()),
+    reviewNotes: v.optional(v.string()),
+  }).index("by_trainer", ["trainerId"]).index("by_user", ["userId"]),
+  // Uploaded program files (for import/parsing)
+  programFiles: defineTable({
+    trainerId: v.id("users"),
+    filename: v.string(),
+    mimetype: v.string(),
+    fileContent: v.string(), // base64-encoded
+    uploadedAt: v.string(),
+    status: v.string(), // uploaded, parsed, error
+    error: v.optional(v.string()),
+  }).index("by_trainer", ["trainerId"]),
+  // Marketplace: Purchases
+  purchases: defineTable({
+    purchaseId: v.string(), // unique purchase identifier
+    userId: v.id("users"),
+    programId: v.id("programs"),
+    type: v.union(v.literal("subscription"), v.literal("oneTime")),
+    status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled")),
+    startDate: v.string(),
+    endDate: v.optional(v.string()),
+    stripeSubscriptionId: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_user", ["userId"]).index("by_program", ["programId"]).index("by_status", ["status"]),
+  // Marketplace: Programs
+  programs: defineTable({
+    programId: v.string(), // unique program identifier
+    trainerId: v.id("users"),
+    title: v.string(),
+    goal: v.string(),
+    description: v.string(),
+    durationWeeks: v.number(),
+    equipment: v.array(v.string()),
+    priceType: v.union(v.literal("subscription"), v.literal("oneTime")),
+    price: v.number(),
+    jsonData: v.string(), // structured JSON for program details
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_trainer", ["trainerId"]).index("by_price_type", ["priceType"]),
+  // Trainer accounts
+  trainers: defineTable({
+    trainerId: v.string(), // unique trainer identifier
+    userId: v.id("users"), // link to user
+    certificationVerified: v.boolean(),
+    bio: v.optional(v.string()),
+    specialties: v.array(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_user", ["userId"]).index("by_certification", ["certificationVerified"]),
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -246,6 +307,16 @@ export default defineSchema({
     averageHeartRate: v.optional(v.number()),
     maxHeartRate: v.optional(v.number()),
     caloriesBurned: v.optional(v.number()),
+    // Music state for this session
+    musicState: v.optional(v.object({
+      track: v.optional(v.string()),
+      artist: v.optional(v.string()),
+      position: v.optional(v.number()), // seconds
+      isPlaying: v.optional(v.boolean()),
+      album: v.optional(v.string()),
+      coverUrl: v.optional(v.string()),
+      source: v.optional(v.string()), // e.g. 'spotify', 'apple_music'
+    })),
     createdAt: v.string(),
   }).index("by_user", ["userId"]).index("by_user_and_workout", ["userId", "workoutId"]),
 

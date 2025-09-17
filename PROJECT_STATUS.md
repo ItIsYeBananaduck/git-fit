@@ -1,3 +1,6 @@
+- Trainer certification upload and admin review (secure file storage, admin approval, verification flag) – completed 2025-09-16
+- File upload endpoint and import flow (CSV/Excel, frontend parsing, Convex storage) – completed 2025-09-16
+
 # Project Status Summary – Technically Fit
 
 _Last updated: 2025-09-16_
@@ -17,7 +20,7 @@ This file lists all completed features and major components, including those not
 - Native music player controls (UI, Capacitor plugin, platform detection)
 - Training split recommendation engine (backend logic, UI integration)
 - Custom split creation and management (UI, backend)
-- Accessibility: ARIA, keyboard navigation, color contrast, screen reader support
+- Accessibility: ARIA, keyboard navigation, color contrast, screen reader support (fully complete, all widgets and flows audited as of 2025-09-16)
 - Wearable device integration (Apple Watch, WHOOP, Fitbit, Polar, Oura)
 - Live Activity & Dynamic Island (iOS): real-time stats, rest timer, voice nudge
 - Smart set nudging (rest timer, strain-based nudge, wearable API integration)
@@ -34,6 +37,17 @@ This file lists all completed features and major components, including those not
 - Payments and distribution logic (Apple fee, web checkout, PWA fallback)
 - IP protection and secrets management
 - API hardening and device attestation
+- Equipment and exercise preference selection (UI after split selection, config storage) – completed 2025-09-16
+- Trainer table (Convex schema and backend logic) – completed 2025-09-16
+- Program table (Convex schema and backend logic) – completed 2025-09-16
+- Purchase table (Convex schema and backend logic) – completed 2025-09-16
+- ProgramOwnership view (Convex query for user program access) – completed 2025-09-16
+- Music state per workout session (backend, UI, and sync) – completed 2025-09-16
+  - Music controls UI now syncs state with backend and restores on session load (2025-09-16)
+- Trainer onboarding (certification upload, admin review, verified-only publishing) – completed 2025-09-16
+- Trainer dashboard (CRUD for programs, purchases/subscriptions, revenue summary) – completed 2025-09-16
+- Marketplace home (browse by goal, duration, trainer, equipment, search, program cards) – completed 2025-09-16
+- Program details page (full info, trainer, purchase button, linked from Marketplace) – completed 2025-09-16
 
 ---
 

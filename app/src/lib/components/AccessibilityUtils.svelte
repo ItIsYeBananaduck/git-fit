@@ -76,6 +76,84 @@
 		}
 	}
 
+	// Enhanced keyboard navigation for menus and lists
+	export function createMenuNavigation(
+		items: HTMLElement[],
+		onSelect?: (index: number) => void,
+		onEscape?: () => void
+	): (event: KeyboardEvent) => void {
+		let currentIndex = -1;
+
+		return (event: KeyboardEvent) => {
+			switch (event.key) {
+				case 'ArrowDown':
+					event.preventDefault();
+					currentIndex = Math.min(currentIndex + 1, items.length - 1);
+					items[currentIndex]?.focus();
+					break;
+				case 'ArrowUp':
+					event.preventDefault();
+					currentIndex = Math.max(currentIndex - 1, 0);
+					items[currentIndex]?.focus();
+					break;
+				case 'Home':
+					event.preventDefault();
+					currentIndex = 0;
+					items[currentIndex]?.focus();
+					break;
+				case 'End':
+					event.preventDefault();
+					currentIndex = items.length - 1;
+					items[currentIndex]?.focus();
+					break;
+				case 'Enter':
+				case ' ':
+					event.preventDefault();
+					if (currentIndex >= 0 && onSelect) {
+						onSelect(currentIndex);
+					}
+					break;
+				case 'Escape':
+					event.preventDefault();
+					if (onEscape) onEscape();
+					break;
+			}
+		};
+	}
+
+	// Focus trap for modals and dropdowns
+	export function createFocusTrap(container: HTMLElement): () => void {
+		const focusableElements = container.querySelectorAll(
+			'a[href], button, textarea, input[type="text"], input[type="radio"], input[type="checkbox"], select, [tabindex]:not([tabindex="-1"])'
+		);
+		const firstElement = focusableElements[0] as HTMLElement;
+		const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+		function handleTabKey(e: KeyboardEvent): void {
+			if (e.key !== 'Tab') return;
+
+			if (e.shiftKey) {
+				if (document.activeElement === firstElement) {
+					lastElement.focus();
+					e.preventDefault();
+				}
+			} else {
+				if (document.activeElement === lastElement) {
+					firstElement.focus();
+					e.preventDefault();
+				}
+			}
+		}
+
+		container.addEventListener('keydown', handleTabKey);
+
+		// Focus first element when trap is created
+		setTimeout(() => firstElement?.focus(), 10);
+
+		// Return cleanup function
+		return () => container.removeEventListener('keydown', handleTabKey);
+	}
+
 	// Color contrast utilities (basic implementation)
 	export function hasGoodContrast(foreground: string, background: string): boolean {
 		// This is a simplified version - in production, use a proper color contrast library

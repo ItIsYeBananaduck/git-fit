@@ -178,3 +178,26 @@ export const getUserWorkoutSessions = query({
     return args.limit ? sorted.slice(0, args.limit) : sorted;
   },
 });
+
+export const updateMusicState = mutation({
+  args: {
+    sessionId: v.id("workoutSessions"),
+    musicState: v.object({
+      track: v.optional(v.string()),
+      artist: v.optional(v.string()),
+      album: v.optional(v.string()),
+      position: v.optional(v.number()),
+      duration: v.optional(v.number()),
+      isPlaying: v.optional(v.boolean()),
+      platform: v.optional(v.string()),
+      volume: v.optional(v.number()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.sessionId, {
+      musicState: args.musicState,
+      musicStateUpdatedAt: new Date().toISOString(),
+    });
+    return { success: true };
+  },
+});
