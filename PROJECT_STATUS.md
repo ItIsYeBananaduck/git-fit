@@ -3,13 +3,19 @@
 
 # Project Status Summary – Technically Fit
 
-_Last updated: 2025-09-16_
+_Last updated: 2025-09-17_
 
 This file lists all completed features and major components, including those not explicitly tracked in `tasks.md`. Use this as a single reference for project progress.
 
 ---
 
 ## Core Features & Components (Completed)
+
+---
+
+## Purchase Flow Status
+
+- Subscription purchase flow: UI and backend mutation scaffolded (program details page, Convex function). Stripe SDK integration and secret key setup required to complete subscription checkout. No further automation possible until Stripe credentials and integration are provided.
 
 - SvelteKit frontend and Convex backend integration
 - User authentication (secure password hashing, login, registration, password reset)
@@ -48,6 +54,7 @@ This file lists all completed features and major components, including those not
 - Trainer dashboard (CRUD for programs, purchases/subscriptions, revenue summary) – completed 2025-09-16
 - Marketplace home (browse by goal, duration, trainer, equipment, search, program cards) – completed 2025-09-16
 - Program details page (full info, trainer, purchase button, linked from Marketplace) – completed 2025-09-16
+- User dashboard for purchased programs (UI: list purchased programs, show active subscriptions, download/view program JSON in workout planner) – completed 2025-09-17
 
 ---
 

@@ -28,7 +28,7 @@ export class EmailService {
    */
   async sendPasswordResetEmail(email: string, resetToken: string, userName?: string): Promise<EmailResult> {
     const resetUrl = `${this.getBaseUrl()}/auth/reset-password/${resetToken}`;
-    
+
     const html = this.generatePasswordResetEmailHTML(resetUrl, userName);
     const text = this.generatePasswordResetEmailText(resetUrl, userName);
 
@@ -60,7 +60,7 @@ export class EmailService {
    */
   async sendEmailVerificationEmail(email: string, verificationToken: string, userName?: string): Promise<EmailResult> {
     const verificationUrl = `${this.getBaseUrl()}/auth/verify-email/${verificationToken}`;
-    
+
     const html = this.generateEmailVerificationHTML(verificationUrl, userName);
     const text = this.generateEmailVerificationText(verificationUrl, userName);
 
@@ -80,7 +80,7 @@ export class EmailService {
     try {
       // TODO: Replace with actual email service integration
       // Examples: Resend, SendGrid, AWS SES, Nodemailer, etc.
-      
+
       // For development, log the email instead of sending
       if (process.env.NODE_ENV === 'development') {
         console.log('📧 Email would be sent:', {
@@ -88,7 +88,7 @@ export class EmailService {
           subject: options.subject,
           preview: options.text?.substring(0, 100) + '...'
         });
-        
+
         // Simulate successful send
         return {
           success: true,
@@ -200,9 +200,14 @@ If you didn't request a password reset, you can safely ignore this email. Your p
    * Generate welcome email HTML
    */
   private generateWelcomeEmailHTML(userName: string, userRole: 'client' | 'trainer'): string {
-    const roleSpecificContent = userRole === 'trainer' 
+    const roleSpecificContent = userRole === 'trainer'
       ? '<p>As a trainer, you can create and sell training programs, connect with clients, and build your fitness business on our platform.</p>'
       : '<p>As a client, you can browse training programs, connect with certified trainers, and track your fitness journey with our comprehensive tools.</p>';
+
+    const marketplaceSection = `
+      <p><strong>Did you know?</strong> You can browse and purchase training plans from our <a href="https://yourmarketplace.example.com" target="_blank" style="color: #2563eb; text-decoration: underline;">web marketplace</a> and import them into the app at any time.</p>
+      <p>You can also link with a real trainer and subscribe to custom plans and insights for a fully personalized experience.</p>
+    `;
 
     return `
 <!DOCTYPE html>
@@ -232,6 +237,7 @@ If you didn't request a password reset, you can safely ignore this email. Your p
     <p>Welcome to Technically Fit! We're excited to have you join our community of fitness enthusiasts and professionals.</p>
     
     ${roleSpecificContent}
+    ${userRole === 'client' ? marketplaceSection : ''}
     
     <p style="text-align: center; margin: 30px 0;">
       <a href="${this.getBaseUrl()}/dashboard" class="button">Get Started</a>
@@ -251,15 +257,21 @@ If you didn't request a password reset, you can safely ignore this email. Your p
    * Generate welcome email plain text
    */
   private generateWelcomeEmailText(userName: string, userRole: 'client' | 'trainer'): string {
-    const roleSpecificContent = userRole === 'trainer' 
+    const roleSpecificContent = userRole === 'trainer'
       ? 'As a trainer, you can create and sell training programs, connect with clients, and build your fitness business on our platform.'
       : 'As a client, you can browse training programs, connect with certified trainers, and track your fitness journey with our comprehensive tools.';
+
+    const marketplaceText = `
+Did you know? You can browse and purchase training plans from our web marketplace (https://yourmarketplace.example.com) and import them into the app at any time.
+You can also link with a real trainer and subscribe to custom plans and insights for a fully personalized experience.
+`;
 
     return `Hi ${userName},
 
 Welcome to Technically Fit! We're excited to have you join our community of fitness enthusiasts and professionals.
 
 ${roleSpecificContent}
+${userRole === 'client' ? marketplaceText : ''}
 
 Get started: ${this.getBaseUrl()}/dashboard
 
@@ -339,7 +351,7 @@ This verification link will expire in 24 hours.
     if (typeof window !== 'undefined') {
       return window.location.origin;
     }
-    
+
     // For server-side rendering or development
     return process.env.PUBLIC_APP_URL || 'http://localhost:5173';
   }

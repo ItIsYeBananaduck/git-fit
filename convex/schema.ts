@@ -43,6 +43,7 @@ export default defineSchema({
     name: v.string(),
     description: v.string(),
     exercises: v.array(v.object({})), // Array of exercise objects
+    price: v.number(), // price in cents
     createdAt: v.number(),
     updatedAt: v.number(),
   }),
@@ -96,5 +97,30 @@ export default defineSchema({
     specialties: v.optional(v.array(v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),
+    stripeAccountId: v.optional(v.string()), // Stripe Connect account ID
+    commissionPercent: v.optional(v.number()), // Current commission % (e.g. 30 for 30%)
+  })
+    .index("trainerId", ["trainerId"]),
+
+  payouts: defineTable({
+    trainerId: v.string(),
+    amount: v.number(), // payout amount in cents
+    currency: v.string(),
+    periodStart: v.number(),
+    periodEnd: v.number(),
+    status: v.string(), // e.g. 'pending', 'paid', 'failed'
+    stripePayoutId: v.optional(v.string()),
+    createdAt: v.number(),
   }),
+
+  purchases: defineTable({
+    userId: v.string(),
+    programId: v.string(),
+    type: v.string(), // "oneTime" | "subscription"
+    status: v.string(), // "active" | "expired" | "canceled"
+    startDate: v.number(),
+    endDate: v.optional(v.number()),
+    stripeSubscriptionId: v.optional(v.string()),
+  })
+    .index("by_stripeSubscriptionId", ["stripeSubscriptionId"])
 });
