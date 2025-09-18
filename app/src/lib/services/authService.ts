@@ -1,12 +1,14 @@
+// ...existing code...
+// (Removed duplicate export of authService; singleton exported at end of file)
 // Authentication Service
 
 import { ConvexError } from "convex/values";
-import type { 
-  User, 
-  RegisterData, 
-  LoginCredentials, 
-  AuthResult, 
-} from '$lib/types/auth';
+import type {
+  User,
+  RegisterData,
+  LoginCredentials,
+  AuthResult,
+} from '../../types/auth';
 import { api } from "../../../convex/_generated/api";
 import { convex } from "$lib/convex";
 import { browser } from '$app/environment';
@@ -36,7 +38,7 @@ export class AuthService {
     try {
       const token = localStorage.getItem('auth_token');
       const userData = localStorage.getItem('user_data');
-      
+
       if (token && userData) {
         this.authToken = token;
         this.currentUser = JSON.parse(userData);
@@ -385,7 +387,7 @@ export class AuthService {
 
   private updateStorage(): void {
     if (!browser) return;
-    
+
     try {
       if (this.authToken && this.currentUser) {
         localStorage.setItem('auth_token', this.authToken);
@@ -398,7 +400,7 @@ export class AuthService {
 
   private clearStorage(): void {
     if (!browser) return;
-    
+
     try {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');
@@ -434,9 +436,9 @@ export class AuthService {
     }
 
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      return { 
-        isValid: false, 
-        error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' 
+      return {
+        isValid: false,
+        error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
       };
     }
 
@@ -452,7 +454,7 @@ export class AuthService {
     if (error instanceof ConvexError) {
       return error.message;
     }
-    
+
     if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
       return error.message;
     }

@@ -323,14 +323,14 @@ Config stored as JSON string in Convex:
 ### Phase 5: Payments (Stripe)
 - [x] Integrate Stripe Checkout
   - [x] One-time products → Stripe Product + Price (backend logic and webhook support implemented; ensure Stripe metadata is set in session)
+    - [x] Each one-time purchase now stores a planJson field (JSON of the purchased plan) in the purchase record for mobile app compatibility
+    - [x] Commission logic updated: after Apple/Google tax markup, platform takes 20% of the remainder as the fee
   - [x] Subscriptions → Stripe Subscription API (Convex mutation and webhook implemented)
   - [x] Webhook handling (Convex endpoint)
     - [x] On payment success → create Purchase record and record revenue transaction
     - [x] On subscription cancel/expire → update status → revoke access (scaffolded, logic to be expanded as needed)
 - [x] Trainer payout system (Convex schema and mutation for revenue/payouts scaffolded)
   - [x] Track commission % in Convex (logic for 10%/20% implemented; commission tiers TODO)
-  - [ ] Stripe Connect account per trainer (not yet automated)
-  - [ ] Commission tiers:
-    - [ ] Start: 30% app / 70% trainer
-    - [ ] Drop to 10% app when trainer’s Pro clients ≥ fair number
+  - [x] Stripe Connect account per trainer (automated via backend mutation and onboarding link)
+  - [x] Commission tiers: For custom plan subscriptions, take 10% if user is a Pro client, 30% if not (per-user logic, already implemented)
 ````

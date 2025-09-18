@@ -1,5 +1,7 @@
+
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import path from 'path';
 
 export default defineConfig({
         plugins: [sveltekit()],
@@ -11,10 +13,11 @@ export default defineConfig({
         },
         resolve: {
                 alias: {
-                        $lib: '/src/lib',
-                        $components: '/src/lib/components',
-                        $services: '/src/lib/services',
-                        $utils: '/src/lib/utils'
+                        $lib: path.resolve(__dirname, 'src/lib'),
+                        $components: path.resolve(__dirname, 'src/lib/components'),
+                        $services: path.resolve(__dirname, 'src/lib/services'),
+                        $utils: path.resolve(__dirname, 'src/lib/utils'),
+                        '$lib/convex': path.resolve(__dirname, 'convex')
                 }
         },
         test: {
@@ -41,7 +44,8 @@ export default defineConfig({
                                         name: 'server',
                                         environment: 'node',
                                         include: ['src/**/*.{test,spec}.{js,ts}'],
-                                        exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+                                        exclude: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+                                        setupFiles: ['./vitest-setup-client.ts']
                                 }
                         }
                 ]

@@ -22,8 +22,12 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@sveltejs/kit": "^2.42.1",
+    "@types/dotenv": "^8.2.3",
     "@types/node": "^24.4.0",
+    "dotenv": "^17.2.2",
     "typescript": "5.9.2",
     "vitest": "^3.2.4"
-  }
+  },
+  "type": "module"
 }

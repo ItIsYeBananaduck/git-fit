@@ -1,8 +1,8 @@
 // Authentication Store
 
 import { writable, derived } from 'svelte/store';
-import type { User, AuthState, AuthError } from '$lib/types/auth';
-import { authService } from '$lib/services/authService';
+import type { User, AuthState, AuthError } from '../../types/auth';
+import { authService } from '../services/authService';
 import { browser } from '$app/environment';
 
 // Create the auth store

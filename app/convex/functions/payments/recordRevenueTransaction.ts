@@ -12,11 +12,12 @@ export const recordRevenueTransaction = mutation({
         paymentMethod: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        // Commission logic: 10% for pre-made programs, 20% for custom coaching
+        // Commission logic: 20% after Apple/Google tax markup for one-time purchases, 20% for custom coaching
         let platformFee = 0;
         let trainerEarnings = 0;
         if (args.type === "program_purchase") {
-            platformFee = Math.round(args.grossAmount * 0.10 * 100) / 100;
+            // Assume grossAmount includes Apple/Google markup already
+            platformFee = Math.round(args.grossAmount * 0.20 * 100) / 100;
             trainerEarnings = args.grossAmount - platformFee;
         } else if (args.type === "coaching_service") {
             platformFee = Math.round(args.grossAmount * 0.20 * 100) / 100;

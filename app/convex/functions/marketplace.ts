@@ -14,7 +14,7 @@ export const getMarketplacePrograms = query({
     let query = ctx.db.query("trainingPrograms")
       .filter(q => q.eq(q.field("isPublished"), true));
 
-  // We'll apply category filtering after fetching since `category` is an array field
+    // We'll apply category filtering after fetching since `category` is an array field
 
     if (args.difficulty) {
       query = query.filter(q => q.eq(q.field("difficulty"), args.difficulty));
@@ -77,7 +77,7 @@ export const getAvailableTrainers = query({
     search: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-  const query = ctx.db.query("users")
+    const query = ctx.db.query("users")
       .filter(q => q.eq(q.field("role"), "trainer"))
       .filter(q => q.eq(q.field("isVerified"), true));
 
@@ -176,9 +176,16 @@ export const purchaseProgram = mutation({
       throw new Error("You already own this program");
     }
 
-    // Calculate commission (10% for pre-made programs)
-    const platformFee = program.price * 0.10;
-    const trainerEarnings = program.price * 0.90;
+
+    // Commission logic: 20% after Apple/Google tax markup for one-time purchases
+    const platformFee = Math.round(program.price * 0.20 * 100) / 100;
+    const trainerEarnings = program.price - platformFee;
+
+    // Store the JSON of the purchased plan for mobile app
+    let planJson = "{}";
+    if (typeof program.jsonData === "string" && program.jsonData.length > 0) {
+      planJson = program.jsonData;
+    }
 
     // Create purchase record
     const purchaseId = await ctx.db.insert("programPurchases", {
@@ -187,6 +194,7 @@ export const purchaseProgram = mutation({
       trainerId: program.trainerId!,
       purchaseType: "program",
       amount: program.price,
+      planJson,
       platformFee,
       trainerEarnings,
       paymentStatus: "completed",

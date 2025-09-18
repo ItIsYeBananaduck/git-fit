@@ -1,8 +1,8 @@
 // Authentication route guards
 
 import { redirect } from '@sveltejs/kit';
-import { authService } from '$lib/services/authService';
-import type { User } from '$lib/types/auth';
+import { authService } from '../services/authService';
+import type { User } from '../../types/auth';
 
 /**
  * Require authentication for a route
@@ -19,13 +19,13 @@ export function requireAuth(user: User | null, currentPath: string) {
  */
 export function requireRole(user: User | null, requiredRole: string | string[], currentPath: string) {
   const authenticatedUser = requireAuth(user, currentPath);
-  
+
   const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-  
+
   if (!allowedRoles.includes(authenticatedUser.role)) {
     throw redirect(302, '/unauthorized');
   }
-  
+
   return authenticatedUser;
 }
 

@@ -2,7 +2,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthService } from '../authService';
-import type { RegisterData, LoginCredentials } from '$lib/types/auth';
+import type { RegisterData, LoginCredentials } from "../../../../src/types/auth";
 
 // Mock Convex
 vi.mock('$lib/convex', () => ({
@@ -23,7 +23,10 @@ describe('AuthService', () => {
   beforeEach(() => {
     // Clear localStorage
     localStorage.clear();
-    
+
+    // Debugging: Log localStorage state
+    console.log('localStorage before clear:', localStorage);
+
     // Create new instance
     authService = new AuthService();
   });
@@ -39,7 +42,7 @@ describe('AuthService', () => {
       };
 
       const result = await authService.register(invalidData);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
     });
@@ -71,7 +74,7 @@ describe('AuthService', () => {
       });
 
       const result = await authService.register(validData);
-      
+
       expect(result.success).toBe(true);
       expect(result.user).toBeDefined();
       expect(result.token).toBeDefined();
@@ -86,7 +89,7 @@ describe('AuthService', () => {
       };
 
       const result = await authService.login(invalidCredentials);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBe('Email and password are required');
     });
@@ -112,7 +115,7 @@ describe('AuthService', () => {
       });
 
       const result = await authService.login(credentials);
-      
+
       expect(result.success).toBe(true);
       expect(result.user).toBeDefined();
       expect(result.token).toBeDefined();

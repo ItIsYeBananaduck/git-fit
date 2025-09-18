@@ -51,16 +51,16 @@ export default defineSchema({
     weight: v.optional(v.number()), // in kg
     fitnessLevel: v.optional(v.union(v.literal("beginner"), v.literal("intermediate"), v.literal("advanced"))),
     goals: v.optional(v.array(v.string())), // weight loss, muscle gain, endurance, etc.
-  // Trainer-specific fields
-  certifications: v.optional(v.array(v.string())),
-  specialties: v.optional(v.array(v.string())),
-  bio: v.optional(v.string()),
-  hourlyRate: v.optional(v.number()),
-  experience: v.optional(v.number()), // years
-  isVerified: v.optional(v.boolean()),
-  rating: v.optional(v.number()),
-  totalClients: v.optional(v.number()),
-  commissionTier: v.optional(v.number()), // Default 0.3 (30% app/70% trainer). For every Pro client, only 10% is taken on their transactions (per-client commission logic).
+    // Trainer-specific fields
+    certifications: v.optional(v.array(v.string())),
+    specialties: v.optional(v.array(v.string())),
+    bio: v.optional(v.string()),
+    hourlyRate: v.optional(v.number()),
+    experience: v.optional(v.number()), // years
+    isVerified: v.optional(v.boolean()),
+    rating: v.optional(v.number()),
+    totalClients: v.optional(v.number()),
+    commissionTier: v.optional(v.number()), // Default 0.3 (30% app/70% trainer). For every Pro client, only 10% is taken on their transactions (per-client commission logic).
     // User preferences
     preferences: v.optional(v.object({
       units: v.optional(v.union(v.literal("metric"), v.literal("imperial"))),
@@ -145,6 +145,7 @@ export default defineSchema({
     rating: v.optional(v.number()),
     totalPurchases: v.optional(v.number()),
     tags: v.array(v.string()),
+    jsonData: v.optional(v.string()), // structured JSON for program details
   }).index("by_trainer", ["trainerId"]).index("by_difficulty", ["difficulty"]).index("by_published", ["isPublished"]),
 
   // Individual workouts within a program
@@ -336,8 +337,9 @@ export default defineSchema({
     trainerId: v.id("users"),
     purchaseType: v.literal("program"), // pre-made program
     amount: v.number(), // total amount paid by user
-    platformFee: v.number(), // 10% commission for pre-made programs
-    trainerEarnings: v.number(), // 90% goes to trainer
+    planJson: v.string(), // JSON of the purchased plan for mobile app
+    platformFee: v.number(), // 20% after Apple/Google tax markup
+    trainerEarnings: v.number(),
     paymentStatus: v.union(v.literal("pending"), v.literal("completed"), v.literal("failed"), v.literal("refunded")),
     paymentIntentId: v.optional(v.string()), // Stripe payment intent ID
     purchaseDate: v.string(),
