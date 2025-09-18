@@ -15,7 +15,7 @@ This file lists all completed features and major components, including those not
 
 ## Purchase Flow Status
 
-- Subscription purchase flow: UI and backend mutation scaffolded (program details page, Convex function). Stripe SDK integration and secret key setup required to complete subscription checkout. No further automation possible until Stripe credentials and integration are provided.
+- Subscription purchase flow: UI and backend mutation scaffolded (program details page, Convex function). Webhook handler (webhook.js) and subscription record logic are ready for Stripe secret integration. No further automation possible until Stripe credentials and integration are provided.
 
 - SvelteKit frontend and Convex backend integration
 - User authentication (secure password hashing, login, registration, password reset)

@@ -49,6 +49,34 @@
 			alert(e.message || 'Failed to start checkout.');
 		}
 	}
+
+	async function handleSubscribe() {
+		const currentUser = get(user);
+		if (!currentUser) {
+			alert('You must be logged in to subscribe.');
+			return;
+		}
+		try {
+			const successUrl = window.location.origin + '/marketplace/success';
+			const cancelUrl = window.location.href;
+			const result = await api.mutation(
+				'functions/subscriptions:createSubscriptionCheckoutSession',
+				{
+					programId: program._id,
+					userId: currentUser._id,
+					successUrl,
+					cancelUrl
+				}
+			);
+			if (result?.url) {
+				window.location.href = result.url;
+			} else {
+				alert('Failed to start subscription checkout.');
+			}
+		} catch (e) {
+			alert(e.message || 'Failed to start subscription checkout.');
+		}
+	}
 </script>
 
 <div class="max-w-3xl mx-auto py-12 px-4">
@@ -81,40 +109,6 @@
 		<button class="bg-blue-600 text-white px-6 py-2 rounded" on:click={handlePurchase}>
 			Purchase Program
 		</button>
-
-		<script lang="ts">
-			// ...existing code...
-
-			async function handleSubscribe() {
-				const currentUser = get(user);
-				if (!currentUser) {
-					alert('You must be logged in to subscribe.');
-					return;
-				}
-				try {
-					const successUrl = window.location.origin + '/marketplace/success';
-					const cancelUrl = window.location.href;
-					// You need to implement this backend mutation:
-					// functions/payments:createSubscriptionCheckoutSession
-					const result = await api.mutation(
-						'functions/payments:createSubscriptionCheckoutSession',
-						{
-							programId: program._id,
-							userId: currentUser._id,
-							successUrl,
-							cancelUrl
-						}
-					);
-					if (result?.url) {
-						window.location.href = result.url;
-					} else {
-						alert('Failed to start subscription checkout.');
-					}
-				} catch (e) {
-					alert(e.message || 'Failed to start subscription checkout.');
-				}
-			}
-		</script>
 	{:else}
 		<div>Program not found.</div>
 	{/if}

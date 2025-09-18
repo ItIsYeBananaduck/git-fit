@@ -1,64 +1,4 @@
-  // Trainer certifications (PDF/image uploads)
-  trainerCertifications: defineTable({
-    trainerId: v.id("trainers"),
-    userId: v.id("users"),
-    filename: v.string(),
-    mimetype: v.string(),
-    fileContent: v.string(), // base64-encoded
-    uploadedAt: v.string(),
-    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
-    reviewedBy: v.optional(v.id("adminUsers")),
-    reviewedAt: v.optional(v.string()),
-    reviewNotes: v.optional(v.string()),
-  }).index("by_trainer", ["trainerId"]).index("by_user", ["userId"]),
-  // Uploaded program files (for import/parsing)
-  programFiles: defineTable({
-    trainerId: v.id("users"),
-    filename: v.string(),
-    mimetype: v.string(),
-    fileContent: v.string(), // base64-encoded
-    uploadedAt: v.string(),
-    status: v.string(), // uploaded, parsed, error
-    error: v.optional(v.string()),
-  }).index("by_trainer", ["trainerId"]),
-  // Marketplace: Purchases
-  purchases: defineTable({
-    purchaseId: v.string(), // unique purchase identifier
-    userId: v.id("users"),
-    programId: v.id("programs"),
-    type: v.union(v.literal("subscription"), v.literal("oneTime")),
-    status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled")),
-    startDate: v.string(),
-    endDate: v.optional(v.string()),
-    stripeSubscriptionId: v.optional(v.string()),
-    createdAt: v.string(),
-    updatedAt: v.string(),
-  }).index("by_user", ["userId"]).index("by_program", ["programId"]).index("by_status", ["status"]),
-  // Marketplace: Programs
-  programs: defineTable({
-    programId: v.string(), // unique program identifier
-    trainerId: v.id("users"),
-    title: v.string(),
-    goal: v.string(),
-    description: v.string(),
-    durationWeeks: v.number(),
-    equipment: v.array(v.string()),
-    priceType: v.union(v.literal("subscription"), v.literal("oneTime")),
-    price: v.number(),
-    jsonData: v.string(), // structured JSON for program details
-    createdAt: v.string(),
-    updatedAt: v.string(),
-  }).index("by_trainer", ["trainerId"]).index("by_price_type", ["priceType"]),
-  // Trainer accounts
-  trainers: defineTable({
-    trainerId: v.string(), // unique trainer identifier
-    userId: v.id("users"), // link to user
-    certificationVerified: v.boolean(),
-    bio: v.optional(v.string()),
-    specialties: v.array(v.string()),
-    createdAt: v.string(),
-    updatedAt: v.string(),
-  }).index("by_user", ["userId"]).index("by_certification", ["certificationVerified"]),
+
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -111,15 +51,16 @@ export default defineSchema({
     weight: v.optional(v.number()), // in kg
     fitnessLevel: v.optional(v.union(v.literal("beginner"), v.literal("intermediate"), v.literal("advanced"))),
     goals: v.optional(v.array(v.string())), // weight loss, muscle gain, endurance, etc.
-    // Trainer-specific fields
-    certifications: v.optional(v.array(v.string())),
-    specialties: v.optional(v.array(v.string())),
-    bio: v.optional(v.string()),
-    hourlyRate: v.optional(v.number()),
-    experience: v.optional(v.number()), // years
-    isVerified: v.optional(v.boolean()),
-    rating: v.optional(v.number()),
-    totalClients: v.optional(v.number()),
+  // Trainer-specific fields
+  certifications: v.optional(v.array(v.string())),
+  specialties: v.optional(v.array(v.string())),
+  bio: v.optional(v.string()),
+  hourlyRate: v.optional(v.number()),
+  experience: v.optional(v.number()), // years
+  isVerified: v.optional(v.boolean()),
+  rating: v.optional(v.number()),
+  totalClients: v.optional(v.number()),
+  commissionTier: v.optional(v.number()), // Default 0.3 (30% app/70% trainer). For every Pro client, only 10% is taken on their transactions (per-client commission logic).
     // User preferences
     preferences: v.optional(v.object({
       units: v.optional(v.union(v.literal("metric"), v.literal("imperial"))),

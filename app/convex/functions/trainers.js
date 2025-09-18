@@ -1,3 +1,47 @@
+// Stripe Connect onboarding for trainers
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2022-11-15",
+});
+
+export const createStripeConnectOnboarding = mutation({
+  args: {
+    trainerId: v.string(),
+    refreshUrl: v.string(),
+    returnUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Get trainer
+    const trainer = await ctx.db
+      .query("trainers")
+      .withIndex("by_user", (q) => q.eq("trainerId", args.trainerId))
+      .first();
+    if (!trainer) throw new Error("Trainer not found");
+
+    // If already has a Stripe account, use it; otherwise, create one
+    let stripeAccountId = trainer.stripeAccountId;
+    if (!stripeAccountId) {
+      const account = await stripe.accounts.create({
+        type: "express",
+        email: trainer.email, // optional, if available
+        capabilities: { transfers: { requested: true } },
+        metadata: { trainerId: args.trainerId },
+      });
+      stripeAccountId = account.id;
+      await ctx.db.patch(trainer._id, { stripeAccountId });
+    }
+
+    // Create onboarding link
+    const accountLink = await stripe.accountLinks.create({
+      account: stripeAccountId,
+      refresh_url: args.refreshUrl,
+      return_url: args.returnUrl,
+      type: "account_onboarding",
+    });
+    return { onboardingUrl: accountLink.url, stripeAccountId };
+  },
+});
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
 

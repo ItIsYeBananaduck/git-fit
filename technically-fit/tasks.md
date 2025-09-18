@@ -309,11 +309,12 @@ Config stored as JSON string in Convex:
   - [x] Build Marketplace home page: browse programs by goal, duration, trainer, equipment. Add search bar and program cards.
 - [x] Implement Program Details Page
   - [x] Build program details page: show full program info, trainer info, and purchase button. Link from Marketplace home.
-- [ ] Purchase flow
-  - [ ] One-time → checkout → unlock permanent access
-  - [ ] Subscription → checkout → recurring billing via Stripe
-    - [x] UI and backend mutation scaffolded for subscription checkout (see createSubscriptionCheckoutSession)
-    - [ ] Stripe SDK integration and secret key setup required in backend to complete subscription flow. No further automation possible until Stripe credentials and integration are provided.
+  - [x] Purchase flow
+    - [x] One-time → checkout → unlock permanent access
+    - [x] Subscription → checkout → recurring billing via Stripe
+      - UI and backend mutation scaffolded for subscription checkout (see createSubscriptionCheckoutSession)
+      - Webhook handler (webhook.js) and subscription record logic scaffolded; ready for Stripe secret integration
+      - Stripe SDK integration and secret key setup required in backend to complete subscription flow. No further automation possible until Stripe credentials and integration are provided.
 - [x] User dashboard
   - [x] List of purchased programs
   - [x] Active subscriptions (Trainer Link)

@@ -61,8 +61,26 @@ export const createPurchase = mutation({
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
+    // Get program and trainer
+    const program = await ctx.db.get(args.programId);
+    if (!program) throw new Error("Program not found");
+    const trainerId = program.trainerId;
+    // Check if user is a Pro client for this trainer
+    const proClient = await ctx.db
+      .query("trainerClients")
+      .withIndex("by_trainer", (q) => q.eq("trainerId", trainerId))
+      .collect();
+    const isPro = proClient.some(tc => tc.clientId === args.userId && tc.status === "active");
+    // Commission: 20% for one-time, 10% for Pro subscription, 30% for non-Pro subscription
+    let commission = 0.3;
+    if (args.type === "oneTime") {
+      commission = 0.2;
+    } else if (isPro) {
+      commission = 0.1;
+    }
     const purchase = {
       ...args,
+      commission,
       createdAt: now,
       updatedAt: now,
     };

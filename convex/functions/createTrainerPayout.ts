@@ -39,12 +39,19 @@ export const createTrainerPayout = mutation({
             purchase.status === "active"
         );
 
-        // 3. Sum the purchase amounts (assumes you have a price field or can look it up)
-        // TODO: Replace 0 with actual price lookup per program or purchase
-        const grossAmount = filteredPurchases.length * 0; // Replace 0 with price per purchase
 
-        // Calculate payout
-        const payoutAmount = Math.round(grossAmount * (1 - commissionPercent / 100));
+        // 3. Sum the purchase amounts and calculate payout using per-purchase commission
+        let grossAmount = 0;
+        let payoutAmount = 0;
+        for (const purchase of filteredPurchases) {
+            // Find program price
+            const program = programs.find((p: any) => p._id === purchase.programId);
+            if (!program) continue;
+            const price = program.price || 0;
+            grossAmount += price;
+            const commission = purchase.commission ?? 0.3;
+            payoutAmount += price * (1 - commission);
+        }
 
         // Record payout
         await ctx.db.insert("payouts", {
