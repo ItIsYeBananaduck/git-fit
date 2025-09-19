@@ -239,11 +239,6 @@
     gap: 12px;
   }
 
-  .title-section .icon {
-    width: 28px;
-    height: 28px;
-  }
-
   .title-section h3 {
     margin: 0;
     font-size: 24px;
@@ -265,11 +260,6 @@
     background: rgba(34, 197, 94, 0.3);
   }
 
-  .status-icon {
-    width: 16px;
-    height: 16px;
-  }
-
   .error-message {
     display: flex;
     align-items: center;
@@ -280,12 +270,6 @@
     padding: 12px;
     margin-bottom: 16px;
     font-size: 14px;
-  }
-
-  .error-icon {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
   }
 
   .connection-form {
@@ -489,20 +473,6 @@
     background: rgba(220, 38, 38, 0.2);
     border-color: rgba(220, 38, 38, 0.4);
     color: white;
-  }
-
-  .button-icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .spinning {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
   }
 
   .refresh-button:disabled,

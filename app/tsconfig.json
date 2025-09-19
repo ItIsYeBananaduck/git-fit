@@ -10,33 +10,8 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "node16",
-		"ignoreDeprecations": "6.0",
 		"module": "Node16",
-		"target": "es2022",
-		"baseUrl": "./src",
-		"paths": {
-			"$lib/*": [
-				"src/lib/*"
-			],
-			"$lib/convex": [
-				"../convex"
-			],
-			"$types": [
-				"src/types/index.ts"
-			],
-			"$types/*": [
-				"src/types/*"
-			],
-			"$components/*": [
-				"src/lib/components/*"
-			],
-			"$services/*": [
-				"src/lib/services/*"
-			],
-			"$utils/*": [
-				"src/lib/utils/*"
-			]
-		}
+		"target": "es2022"
 	},
 	"include": [
 		"src/**/*",

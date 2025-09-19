@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { api } from '../convex';
+	import { api } from '../../../convex/_generated/api.js';
 
 	const dispatch = createEventDispatcher();
 
@@ -42,7 +42,6 @@
 
 <button
 	class="bg-white rounded-xl shadow p-6 flex flex-col items-center justify-center min-h-[120px] w-full text-left cursor-pointer hover:shadow-lg transition-shadow focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-	role="region"
 	aria-labelledby="stats-title"
 	on:keydown={handleKeydown}
 	on:focus={() => dispatch('focus', { widget: 'stats' })}

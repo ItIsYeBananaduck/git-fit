@@ -3,7 +3,7 @@ This demonstrates the complete wearable workout experience
 -->
 
 <script lang="ts">
-	import WearableWorkoutController from '../lib/components/WearableWorkoutController.svelte';
+	import WearableWorkoutController from '../../lib/components/WearableWorkoutController.svelte';
 
 	// Sample workout data
 	let workout = {

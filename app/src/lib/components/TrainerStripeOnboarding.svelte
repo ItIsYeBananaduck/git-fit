@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { api } from '$lib/convex/_generated/api';
+	import { api } from '../../../convex/_generated/api.js';
 	import { onMount } from 'svelte';
 	let onboardingUrl = '';
 	let onboardingStatus = '';
@@ -23,7 +23,7 @@
 			onboardingStatus = 'Onboarding link ready!';
 			window.open(onboardingUrl, '_blank');
 		} catch (e) {
-			error = e.message || 'Failed to start onboarding.';
+			error = e instanceof Error ? e.message : 'Failed to start onboarding.';
 			onboardingStatus = '';
 		}
 	}

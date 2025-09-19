@@ -245,9 +245,8 @@ Config stored as JSON string in Convex:
 "strainNudges": true
 }
 
-````
-
 🎧 NATIVE MUSIC PLAYER CONTROLS (IN-WORKOUT)
+
 ## Native Music Player Controls (In-Workout)
 
 - [x] Add music controls UI to workout session screen
@@ -271,6 +270,7 @@ Config stored as JSON string in Convex:
 ## Trainer, Marketplace, and Payments Roadmap
 
 ### Phase 1: Data Models (Convex)
+
 - [x] Create Trainer table
   - [x] Fields: trainerId, userId, certificationVerified, bio, specialties[]
   - [x] Role: link trainer accounts to users with role-based permissions
@@ -283,12 +283,19 @@ Config stored as JSON string in Convex:
   - [x] Supports revoking if subscription canceled/refunded
 
 ### Phase 2: File Upload + Conversion
+
 - [x] Build file upload endpoint
   - [x] Accepts CSV/Excel/Google Sheets import
   - [x] Uses parser (e.g., papaparse for CSV, xlsx for Excel)
   - [x] Convert → structured JSON with:
     ```json
-    { "week": 1, "day": "Push", "exercises": [ { "name": "Bench Press", "sets": 4, "reps": "8–12", "load": "70%" } ] }
+    {
+      "week": 1,
+      "day": "Push",
+      "exercises": [
+        { "name": "Bench Press", "sets": 4, "reps": "8–12", "load": "70%" }
+      ]
+    }
     ```
   - [x] Validate JSON (required fields: exercise, sets, reps, load)
   - [x] Auto-reject malformed files
@@ -297,6 +304,7 @@ Config stored as JSON string in Convex:
   - [x] Link back to original trainer upload
 
 ### Phase 3: Trainer Account Management
+
 - [x] Add trainer onboarding
   - [x] Upload certification (PDF/image) → stored securely
   - [x] Admin review flag: certificationVerified = true
@@ -305,6 +313,7 @@ Config stored as JSON string in Convex:
   - [x] Build trainer dashboard: CRUD for programs, track purchases/subscriptions, show revenue summary (linked to Stripe payouts)
 
 ### Phase 4: Marketplace UI
+
 - [x] Implement Marketplace Home UI
   - [x] Build Marketplace home page: browse programs by goal, duration, trainer, equipment. Add search bar and program cards.
 - [x] Implement Program Details Page
@@ -321,6 +330,7 @@ Config stored as JSON string in Convex:
   - [x] Download/view program JSON in workout planner
 
 ### Phase 5: Payments (Stripe)
+
 - [x] Integrate Stripe Checkout
   - [x] One-time products → Stripe Product + Price (backend logic and webhook support implemented; ensure Stripe metadata is set in session)
     - [x] Each one-time purchase now stores a planJson field (JSON of the purchased plan) in the purchase record for mobile app compatibility
@@ -330,7 +340,176 @@ Config stored as JSON string in Convex:
     - [x] On payment success → create Purchase record and record revenue transaction
     - [x] On subscription cancel/expire → update status → revoke access (scaffolded, logic to be expanded as needed)
 - [x] Trainer payout system (Convex schema and mutation for revenue/payouts scaffolded)
-  - [x] Track commission % in Convex (logic for 10%/20% implemented; commission tiers TODO)
+  - [x] Track commission % in Convex (logic for 10%/20% implemented; commission tiers completed)
   - [x] Stripe Connect account per trainer (automated via backend mutation and onboarding link)
   - [x] Commission tiers: For custom plan subscriptions, take 10% if user is a Pro client, 30% if not (per-user logic, already implemented)
-````
+
+---
+
+## AI-Powered Adaptive Workout Coaching System (Alice & Aiden)
+
+### Phase 0 - Coach Selection & Onboarding
+
+- [ ] Implement Coach Selection UI
+
+  - Create coach selection UI allowing users to choose between Alice (encouraging/firmer) and Aiden (steady/pushy) personas
+  - Persist choice in user profile
+  - Trigger only once at Pro subscription signup
+
+- [ ] Create Onboarding Flow
+
+  - Build onboarding flow with demographics (height, weight, age, weekly activity level)
+  - Goals selection (strength, hypertrophy, recomposition, mobility, fat loss)
+  - Equipment assessment (full gym/home gym/limited equipment)
+  - Rest logic explanation (adaptive rest system with HR checks)
+  - Voice rules explanation (no mid-set talking, only pre/post and rest)
+  - Tone toggle (light vs firm for Alice, steady vs pushy for Aiden)
+  - Sensor linking offer (watch/Wearable connection)
+
+- [ ] Develop Persona Narration Scripts
+  - Create onboarding/scripts.json with full narration scripts for both personas and tones
+  - Welcome → intro & role script
+  - Demographics collection narration
+  - Goals explanation and selection
+  - Equipment assessment dialogue
+  - Rest system explanation
+  - Voice rules and tone selection
+  - Sensor connection guidance
+  - Closing message: "Setup done. See you at Set 1."
+
+### Phase 1 - Personas & Phrase Libraries
+
+- [ ] Build Phrase Libraries
+
+  - Expand personas/alice.json with 20-30 randomized lines per category
+  - Expand personas/aiden.json with 20-30 randomized lines per category
+  - Categories: set_start, set_end_no_pr, set_end_pr, rest_start_standard, rest_ready_30, rest_ready_60, rest_force_90, exercise_transition
+  - No-repeat logic to avoid repeating last used line
+  - Focus strictly on effort, energy, recovery, strain, PRs, and milestones
+  - Never mention form or technique
+
+- [ ] Implement Pronunciation Guide
+  - Create personas/pronunciation.json for exercise names and terms
+  - Examples: hypertrophy ("high-PURR-troh-fee"), RDL ("ar-dee-ell")
+  - Include common fitness terminology and exercise names
+
+### Phase 2 - HR-Aware Adaptive Rest
+
+- [ ] Audit Existing Rest Logic
+
+  - Audit existing rest logic and create rest_engine/audit_report.md
+  - Compare current implementation vs new HR-aware spec
+  - Document conflicts and required changes
+
+- [ ] Implement HR-Aware Rest Engine
+  - Build rest_engine/adaptive_rest.py with HR-aware logic
+  - At 30s: trigger if HR drop ≥30 bpm
+  - At 60s: trigger if HR drop ≥25 bpm
+  - At 90s: always trigger (force rest)
+  - Add lighten-load suggestion if HR still elevated
+  - Cap rest at 90s with no exceptions
+  - System logs for HR deltas and completion outcomes
+  - AI learns rest preferences over time
+
+### Phase 3 - Narration Composer
+
+- [ ] Build Narration Composer
+  - Create narration/composer.py to generate utterance timelines
+  - Input: persona, tone, set number, PR status, exercise, HR readings, strain, next exercise
+  - Output: timeline of utterances with timing
+  - Flow: Pre-set motivation → Post-set response → Rest cues → HR-driven checks → Exercise transitions
+  - No mid-set chatter, respect HR rest decisions
+  - Unit tests with sample contexts
+
+### Phase 4 - Evidence-Based Knowledge Base
+
+- [ ] Create Knowledge Base Schema
+
+  - Set up schema for guidelines, rules, and food items
+  - guideline_chunk: {id, source, url, topic, population, evidence_level, text, retrieved_at}
+  - rule_pack: JSON mapping conditions → recommendations with citations
+  - food_item: {id, name, macros, micros, serving_size, source, last_updated}
+
+- [ ] Integrate Trusted Data Sources
+  - Implement APIs for CDC, WHO, ACSM guidelines
+  - PubMed abstracts/reviews integration
+  - USDA FoodData Central + OpenFoodFacts APIs
+  - Refresh schedule: guidelines yearly, nutrition monthly, PubMed weekly
+  - Learning loop for PRs, recovery speed, adherence adjustments
+
+### Phase 5 - CSV Ingestion & Exercise Mapping
+
+- [x] Create CSV Ingestion System
+
+  - Build csv_ingestor.py with auto-detection (delimiter, encoding)
+  - Normalize units (kg → lb, km → miles)
+  - Fuzzy match exercise names using RapidFuzz
+  - Fallback to embeddings API for unmapped names
+  - Log unknowns for trainer review
+
+- [x] Build Exercise Mapping
+
+  - Implement exercise_mapper.py with RapidFuzz matching
+  - Embeddings API fallback for unmapped exercises
+  - Output unified TechnicallyFit_Workout schema
+
+- [x] Define Workout Schema
+  - Create schemas/workout_schema.json for unified workout data format
+  - Support external fitness app imports
+  - Standardized field mappings
+
+### Phase 6 - Trainer Assistant
+
+- [x] Implement Trainer Calendar
+
+  - Build trainer calendar CRUD operations
+  - Client workout summaries integration
+  - Calendar management interface
+
+- [x] Build AI Training Suggestions
+  - Create AI suggestions for progression, deloads, volume adjustments
+  - APIs: getClientSummary, getTrainerCalendar, suggestAdjustments
+  - Integration with knowledge base recommendations
+
+### Phase 7 - TTS Integration
+
+- [x] Create TTS Integration
+  - Implement TTS with persona-voice mapping
+  - Apply pronunciation replacements before synthesis
+  - Cache common lines for performance
+  - Provide fallback (text or haptic) if TTS fails
+  - Create tts/voice_map.json and tts/speak.py
+- [x] Build TTS Control Component
+  - Create TTSControls.svelte with voice selection, volume/rate controls
+  - Implement queue management and status display
+  - Add event dispatching for parent component integration
+  - Include accessibility features and browser compatibility checks
+
+### Phase 8 - Deployment
+
+- [ ] Build FastAPI Backend
+
+  - Set up FastAPI with all required endpoints
+  - Endpoints: /onboarding/_, /narration/compose, /rest/decision, /kb/_, /csv/_, /trainer/_
+  - Create main.py and requirements.txt
+
+- [ ] Setup Deployment Configuration
+  - Configure Render deployment with render.yaml and Procfile
+  - Environment setup and scaling configuration
+
+### Global Requirements
+
+- [ ] Add Feature Flags
+
+  - Implement feature flags for all new modules
+  - Toggleable functionality for AI coaching system
+  - Configuration management
+
+- [ ] Generate Audit Reports
+  - Create comprehensive audit reports for existing logic conflicts
+  - reports/conflicts_rest.md, reports/conflicts_kb.md, etc.
+  - Document all changes and backward compatibility
+
+---
+
+**Note:** Check off each task as you complete it. This AI coaching system will transform Technically Fit into an intelligent, personalized training platform with adaptive narration and evidence-based recommendations.

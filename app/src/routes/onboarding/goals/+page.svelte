@@ -5,6 +5,7 @@
 	import GoalSelector from '$lib/components/onboarding/GoalSelector.svelte';
 	import SecondaryGoals from '$lib/components/onboarding/SecondaryGoals.svelte';
 	import GoalSummary from '$lib/components/onboarding/GoalSummary.svelte';
+	import CoachSelection from '$lib/components/onboarding/CoachSelection.svelte';
 	import { getAuthUser } from '$lib/stores/auth';
 	import { api } from '$lib/convex/_generated/api';
 	import type { Id } from '$lib/convex/_generated/dataModel';
@@ -14,12 +15,14 @@
 	let primaryGoal: string = '';
 	let secondaryGoals: string[] = [];
 	let goalDetails: any = {};
+	let selectedCoach: 'alice' | 'aiden' | null = null;
 	let isLoading = false;
 
 	const steps = [
 		{ title: 'Primary Goal', component: GoalSelector },
 		{ title: 'Secondary Goals', component: SecondaryGoals },
-		{ title: 'Goal Summary', component: GoalSummary }
+		{ title: 'Goal Summary', component: GoalSummary },
+		{ title: 'Choose Your Coach', component: CoachSelection }
 	];
 
 	onMount(async () => {
@@ -42,11 +45,21 @@
 	}
 
 	function handleGoalConfirmed() {
-		saveGoals();
+		nextStep();
 	}
 
-	async function saveGoals() {
-		if (!user) return;
+	function handleCoachSelected(event: CustomEvent) {
+		selectedCoach = event.detail.coach;
+		nextStep();
+	}
+
+	function handleCoachConfirmed(event: CustomEvent) {
+		selectedCoach = event.detail.coach;
+		saveGoalsAndCoach();
+	}
+
+	async function saveGoalsAndCoach() {
+		if (!user || !selectedCoach) return;
 
 		isLoading = true;
 		try {
@@ -67,10 +80,16 @@
 				});
 			}
 
+			// Save coach preference
+			await api.users.setCoachPreference({
+				userId: user._id,
+				coachType: selectedCoach
+			});
+
 			// Navigate to next onboarding step
 			goto('/onboarding/training-splits');
 		} catch (error) {
-			console.error('Error saving goals:', error);
+			console.error('Error saving goals and coach:', error);
 			// Handle error
 		} finally {
 			isLoading = false;
@@ -120,8 +139,10 @@
 					Choose your main fitness goal to get personalized recommendations
 				{:else if currentStep === 1}
 					Select up to 3 secondary goals to support your primary objective
-				{:else}
+				{:else if currentStep === 2}
 					Review your goals and confirm to continue
+				{:else}
+					Choose your AI coach to guide your fitness journey
 				{/if}
 			</p>
 		</div>
@@ -132,13 +153,19 @@
 				<GoalSelector on:goalSelected={handlePrimaryGoalSelected} {user} />
 			{:else if currentStep === 1}
 				<SecondaryGoals on:goalsSelected={handleSecondaryGoalsSelected} {primaryGoal} {user} />
-			{:else}
+			{:else if currentStep === 2}
 				<GoalSummary
 					on:goalConfirmed={handleGoalConfirmed}
 					{primaryGoal}
 					{secondaryGoals}
 					{goalDetails}
 					{isLoading}
+				/>
+			{:else}
+				<CoachSelection
+					on:select={handleCoachSelected}
+					on:confirm={handleCoachConfirmed}
+					{selectedCoach}
 				/>
 			{/if}
 		</div>

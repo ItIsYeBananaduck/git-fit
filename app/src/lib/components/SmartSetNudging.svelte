@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/convex';
-	import { useMutation } from 'convex-svelte';
+	import { useConvexClient } from 'convex-svelte';
 	import { getUserId } from '$lib/auth';
 
 	export let avgRestSec: number = 90; // Default, can be passed in
@@ -15,7 +15,10 @@
 	let nudgeTriggered = false;
 	let userId: string = '';
 
-	const updateSmartSetNudgeSettings = useMutation(api.users.updateSmartSetNudgeSettings);
+	const client = useConvexClient();
+	// const updateSmartSetNudgeSettings = async (data: any) => {
+	// 	return await client.mutation(api.users.updateSmartSetNudgeSettings, data);
+	// };
 
 	onMount(async () => {
 		userId = await getUserId();

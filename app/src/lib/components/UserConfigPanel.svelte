@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/convex';
-	import { useMutation, useQuery } from 'convex-svelte';
+	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { getUserId } from '$lib/auth'; // Assumes you have a helper for userId
 
 	let userId: string = '';
@@ -10,7 +10,10 @@
 	let error = '';
 
 	const getUserConfig = useQuery(api.userConfigs.getUserConfig);
-	const setUserConfig = useMutation(api.userConfigs.setUserConfig);
+	const client = useConvexClient();
+	const setUserConfig = async (data: any) => {
+		return await client.mutation(api.userConfigs.setUserConfig, data);
+	};
 
 	// Default config structure
 	const defaultConfig = {

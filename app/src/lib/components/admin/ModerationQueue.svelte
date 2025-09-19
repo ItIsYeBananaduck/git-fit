@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { contentModerationService } from '../../services/contentModerationService';
-	import type { ModerationItem, ModerationDecision } from '../../types/admin';
-	import type { Id } from '../../../../../convex/_generated/dataModel';
+	import { contentModerationService } from '../../services/contentModerationService.js';
+	import type { ModerationItem, ModerationDecision } from '../../types/admin.js';
+	import type { Id } from '../../../../../convex/_generated/dataModel.js';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;

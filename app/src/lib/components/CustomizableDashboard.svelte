@@ -1,4 +1,9 @@
 <script lang="ts">
+	import StatsWidget from './StatsWidget.svelte';
+	import ChartWidget from './ChartWidget.svelte';
+	import ActivityWidget from './ActivityWidget.svelte';
+	import DashboardWidget from './DashboardWidget.svelte';
+
 	// Placeholder for dashboard widget configuration
 	let widgets = [{ type: 'stats' }, { type: 'chart' }, { type: 'activity' }, { type: 'dashboard' }];
 

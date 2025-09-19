@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { userReportService } from '../../services/userReportService';
+	import { userReportService } from '../../services/userReportService.js';
 	import type {
 		UserReport,
 		Investigation,
 		ModerationAction
-	} from '../../services/userReportService';
-	import type { Id } from '../../../../../convex/_generated/dataModel';
+	} from '../../services/userReportService.js';
+	import type { Id } from '../../../../../convex/_generated/dataModel.js';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -663,9 +663,12 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">Evidence</label>
+						<label for="evidenceInput" class="block text-sm font-medium text-gray-700 mb-2"
+							>Evidence</label
+						>
 						<div class="flex space-x-2 mb-2">
 							<input
+								id="evidenceInput"
 								type="text"
 								bind:value={evidenceInput}
 								on:keydown={(e) => e.key === 'Enter' && addEvidence()}

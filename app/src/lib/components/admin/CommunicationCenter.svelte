@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { supportService } from '../../services/supportService';
-	import type { Id } from '../../../../../convex/_generated/dataModel';
+	import { supportService } from '../../services/supportService.js';
+	import type { Id } from '../../../../convex/_generated/dataModel.js';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;

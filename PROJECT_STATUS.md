@@ -1,9 +1,9 @@
+# Project Status Summary – Technically Fit
+
 - Trainer certification upload and admin review (secure file storage, admin approval, verification flag) – completed 2025-09-16
 - File upload endpoint and import flow (CSV/Excel, frontend parsing, Convex storage) – completed 2025-09-16
 
-# Project Status Summary – Technically Fit
-
-_Last updated: 2025-09-17_
+## Last updated: 2025-09-17
 
 This file lists all completed features and major components, including those not explicitly tracked in `tasks.md`. Use this as a single reference for project progress.
 
@@ -17,7 +17,7 @@ This file lists all completed features and major components, including those not
 
 - Subscription purchase flow: UI and backend mutation scaffolded (program details page, Convex function). Webhook handler (webhook.js) and subscription record logic are ready for Stripe secret integration. No further automation possible until Stripe credentials and integration are provided.
 
-- One-time purchase flow: Each purchase record now stores a planJson field (JSON of the purchased plan) for mobile app compatibility. Commission logic updated: after Apple/Google tax markup, platform takes 20% of the remainder as the fee. (Live in backend as of 2025-09-18)
+- Commission tier automation: Implemented per-purchase commission rates (20% for one-time purchases, 10% for Pro client subscriptions, 30% for non-Pro subscriptions). Payout logic updated to use per-purchase commission for accurate trainer payouts. (Completed 2025-09-18)
 
 - SvelteKit frontend and Convex backend integration
 - User authentication (secure password hashing, login, registration, password reset)
@@ -62,7 +62,7 @@ This file lists all completed features and major components, including those not
 
 ## Exercise List Automation (Updated)
 
-- Exercise list is now imported from the open-source exercise-db dataset (https://github.com/wrkout/exercise-db)
+- Exercise list is now imported from the open-source exercise-db dataset (<https://github.com/wrkout/exercise-db>)
 - Images (GIFs) are included for each exercise (no videos by default)
 - Automation script (`scripts/auto-import-exercises-db.ts`) imports and updates the exercise list with no API limits or cost
 - (Optional) Schedule this script with a cron job or CI/CD for full automation
@@ -73,14 +73,14 @@ This file lists all completed features and major components, including those not
 
 - Admins/trainers can add custom exercises via `/admin/add-exercise` (UI, backend mutation)
 - Custom exercise creation is restricted to trainers, admins, and users with an active paid subscription (UI and backend access control)
-- To contribute to the global exercise-db dataset, open a pull request at https://github.com/wrkout/exercise-db with your new exercise or correction (see their README for format)
+- To contribute to the global exercise-db dataset, open a pull request at <https://github.com/wrkout/exercise-db> with your new exercise or correction (see their README for format)
 
 ---
 
 ## Contributing to exercise-db (Upstream)
 
 - Trainers and admins can contribute new exercises or corrections to the open-source exercise-db project:
-  - Visit https://github.com/wrkout/exercise-db
+  - Visit <https://github.com/wrkout/exercise-db>
   - Follow the contribution guidelines in their README
   - Open a pull request with your new exercise or fix
   - (Optional) Add images/GIFs as described in the repo

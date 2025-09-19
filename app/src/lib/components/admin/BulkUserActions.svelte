@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { supportService } from '../../services/supportService';
-	import { userManagementService } from '../../services/userManagementService';
-	import type { Id, BulkUserAction, UserSearchCriteria } from '../../types/admin';
+	import { supportService } from '../../services/supportService.js';
+	import { userManagementService } from '../../services/userManagementService.js';
+	import type { Id, BulkUserAction, UserSearchCriteria } from '../../types/admin.js';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -168,7 +168,9 @@
 
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 					<div>
-						<label for="searchQuery" class="block text-sm font-medium text-gray-700 mb-1">Search Query</label>
+						<label for="searchQuery" class="block text-sm font-medium text-gray-700 mb-1"
+							>Search Query</label
+						>
 						<input
 							id="searchQuery"
 							type="text"
@@ -192,7 +194,9 @@
 					</div>
 
 					<div>
-						<label for="subscriptionStatus" class="block text-sm font-medium text-gray-700 mb-1">Subscription Status</label>
+						<label for="subscriptionStatus" class="block text-sm font-medium text-gray-700 mb-1"
+							>Subscription Status</label
+						>
 						<select
 							id="subscriptionStatus"
 							bind:value={searchCriteria.subscriptionStatus}
@@ -206,7 +210,9 @@
 					</div>
 
 					<div>
-						<label for="activityLevel" class="block text-sm font-medium text-gray-700 mb-1">Activity Level</label>
+						<label for="activityLevel" class="block text-sm font-medium text-gray-700 mb-1"
+							>Activity Level</label
+						>
 						<select
 							id="activityLevel"
 							bind:value={searchCriteria.activityLevel}
@@ -368,7 +374,9 @@
 
 					{#if bulkAction.action === 'suspend'}
 						<div>
-							<label for="duration" class="block text-sm font-medium text-gray-700 mb-1">Duration (days)</label>
+							<label for="duration" class="block text-sm font-medium text-gray-700 mb-1"
+								>Duration (days)</label
+							>
 							<input
 								id="duration"
 								type="number"

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { userReportService } from '../../services/userReportService';
-	import type { ContentAnalytics } from '../../services/userReportService';
-	import type { Id } from '../../../../../convex/_generated/dataModel';
+	import { userReportService } from '../../services/userReportService.js';
+	import type { ContentAnalytics } from '../../services/userReportService.js';
+	import type { Id } from '../../../../convex/_generated/dataModel.js';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;

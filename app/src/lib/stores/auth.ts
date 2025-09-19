@@ -1,8 +1,8 @@
 // Authentication Store
 
 import { writable, derived } from 'svelte/store';
-import type { User, AuthState, AuthError } from '../../types/auth';
-import { authService } from '../services/authService';
+import type { User, AuthState } from '../../types/auth.js';
+import { authService } from '../services/authService.js';
 import { browser } from '$app/environment';
 
 // Create the auth store
@@ -111,7 +111,7 @@ function createAuthStore() {
     },
 
     // Register
-    async register(userData: any) {
+    async register(userData: { email: string; password: string; [key: string]: string | number | boolean }) {
       update(state => ({ ...state, isLoading: true, error: null }));
 
       try {
@@ -277,3 +277,6 @@ export const user = derived(authStore, $auth => $auth.user);
 export const isAuthenticated = derived(authStore, $auth => $auth.isAuthenticated);
 export const isLoading = derived(authStore, $auth => $auth.isLoading);
 export const authError = derived(authStore, $auth => $auth.error);
+
+// Export getAuthUser function
+export const getAuthUser = () => authStore.getAuthUser();

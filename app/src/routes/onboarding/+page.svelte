@@ -22,7 +22,7 @@
 	let error = '';
 
 	import { convex } from '$lib/convex';
-	import { api } from 'convex/_generated/api';
+	import { api } from '$lib/convex/_generated/api';
 
 	async function saveMedicalScreening(data) {
 		submitting = true;

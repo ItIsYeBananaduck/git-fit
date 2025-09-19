@@ -1,8 +1,24 @@
 <script lang="ts">
 	import Papa from 'papaparse';
 	import * as XLSX from 'xlsx';
-	import { api } from '$lib/convex/_generated/api';
 	import { onMount } from 'svelte';
+
+	// Type declarations for papaparse
+	declare module 'papaparse' {
+		interface ParseResult<T> {
+			data: T[];
+			errors: any[];
+			meta: any;
+		}
+
+		interface ParseConfig {
+			header?: boolean;
+			complete?: (results: ParseResult<any>) => void;
+			error?: (error: any) => void;
+		}
+
+		function parse(file: File, config: ParseConfig): void;
+	}
 
 	let file: File | null = null;
 	let error = '';
@@ -19,10 +35,10 @@
 		if (ext === 'csv') {
 			Papa.parse(file, {
 				header: true,
-				complete: (results) => {
+				complete: (results: any) => {
 					parsedData = results.data;
 				},
-				error: (err) => {
+				error: (err: any) => {
 					error = 'CSV parse error: ' + err.message;
 				}
 			});
@@ -59,8 +75,8 @@
 					}
 				}
 			}
-			// Upload as JSON string
-			await api.upload.uploadProgramFile({
+			// TODO: Implement actual upload to backend
+			console.log('Uploading program data:', {
 				file: btoa(JSON.stringify(parsedData)),
 				filename: file.name,
 				mimetype: file.type,

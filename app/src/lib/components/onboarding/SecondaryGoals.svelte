@@ -2,7 +2,6 @@
 	import { createEventDispatcher } from 'svelte';
 
 	export let primaryGoal: string;
-	export let user: any;
 
 	const dispatch = createEventDispatcher();
 
@@ -86,8 +85,9 @@
 
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 		{#each availableGoals as goal}
-			<div
-				class="border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-md {selectedGoals.includes(
+			<button
+				type="button"
+				class="border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-md text-left w-full {selectedGoals.includes(
 					goal.id
 				)
 					? 'border-blue-500 bg-blue-50'
@@ -119,7 +119,7 @@
 						</div>
 					{/if}
 				</div>
-			</div>
+			</button>
 		{/each}
 	</div>
 
@@ -128,7 +128,7 @@
 			<h4 class="font-medium text-blue-900 mb-2">Selected Goals:</h4>
 			<div class="flex flex-wrap gap-2">
 				{#each selectedGoals as goalId}
-					{@const goal = availableGoals.find((g) => g.id === goalId)}
+					{@const goal = availableGoals.find((g: any) => g.id === goalId)}
 					{#if goal}
 						<span
 							class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"

@@ -1,38 +1,31 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { authStore, user, isAuthenticated } from '$lib/stores/auth';
+	import { authStore, user, isAuthenticated } from '../stores/auth.js';
 	import { goto } from '$app/navigation';
-	import {
-		Home,
-		Target,
-		Dumbbell,
-		BarChart3,
-		Settings,
-		Plus,
-		Users,
-		Shield,
-		User,
-		Brain,
-		ShoppingBag,
-		LogOut,
-		LogIn,
-		Apple,
-		Search,
-		Bell,
-		Menu,
-		X,
-		ChevronDown,
-		Heart,
-		TrendingUp,
-		Sparkles,
-		Lightbulb
-	} from 'lucide-svelte';
 
 	let mobileMenuOpen = false;
 	let searchQuery = '';
 	let showUserMenu = false;
 	let showNotifications = false;
 	let activeSection = 'main';
+
+	function handleClickOutside(event: MouseEvent): void {
+		const target = event.target as HTMLElement;
+		const userMenu = document.querySelector('.user-menu');
+		const notifications = document.querySelector('[aria-label="View notifications"]');
+
+		if (userMenu && !userMenu.contains(target)) {
+			showUserMenu = false;
+		}
+
+		if (notifications && !notifications.contains(target)) {
+			showNotifications = false;
+		}
+
+		if (mobileMenuOpen && !document.querySelector('nav')?.contains(target)) {
+			mobileMenuOpen = false;
+		}
+	}
 
 	// Keyboard navigation for user menu
 	function handleUserMenuKeydown(event: KeyboardEvent): void {
@@ -91,28 +84,28 @@
 			{
 				href: '/',
 				label: 'Dashboard',
-				icon: Home,
+				icon: '🏠',
 				description: 'Overview & quick stats',
 				badge: null
 			},
 			{
 				href: '/workouts',
 				label: 'Workouts',
-				icon: Dumbbell,
+				icon: '🎯',
 				description: 'Track & plan workouts',
 				badge: null
 			},
 			{
 				href: '/programs',
 				label: 'Programs',
-				icon: Target,
+				icon: '📋',
 				description: 'Training programs',
 				badge: null
 			},
 			{
 				href: '/nutrition',
 				label: 'Nutrition',
-				icon: Apple,
+				icon: '🍎',
 				description: 'Meal planning & tracking',
 				badge: null
 			}
@@ -121,21 +114,21 @@
 			{
 				href: '/adaptive-training',
 				label: 'AI Training',
-				icon: Brain,
+				icon: '🧠',
 				description: 'Smart recommendations',
 				badge: 'NEW'
 			},
 			{
 				href: '/recommendations',
 				label: 'Recommendations',
-				icon: Lightbulb,
+				icon: '💡',
 				description: 'Personalized suggestions',
 				badge: null
 			},
 			{
 				href: '/achievements',
 				label: 'Achievements',
-				icon: Sparkles,
+				icon: '✨',
 				description: 'Milestones & badges',
 				badge: null
 			}
@@ -144,14 +137,14 @@
 			{
 				href: '/fitness-data',
 				label: 'Analytics',
-				icon: BarChart3,
+				icon: '📊',
 				description: 'Progress & insights',
 				badge: null
 			},
 			{
 				href: '/marketplace',
 				label: 'Marketplace',
-				icon: ShoppingBag,
+				icon: '🛒',
 				description: 'Programs & services',
 				badge: null
 			}
@@ -160,24 +153,57 @@
 			{
 				href: '/create-program',
 				label: 'Create Program',
-				icon: Plus,
+				icon: '➕',
+				description: 'Create training programs',
 				roles: ['trainer'],
 				badge: null
 			},
-			{ href: '/clients', label: 'My Clients', icon: Users, roles: ['trainer'], badge: null },
-			{ href: '/admin', label: 'Admin Panel', icon: Shield, roles: ['admin'], badge: null }
+			{
+				href: '/clients',
+				label: 'My Clients',
+				icon: '👥',
+				description: 'Manage client relationships',
+				roles: ['trainer'],
+				badge: null
+			},
+			{
+				href: '/admin',
+				label: 'Admin Panel',
+				icon: '🛡️',
+				description: 'System administration',
+				roles: ['admin'],
+				badge: null
+			}
 		],
 		utility: [
-			{ href: '/exercise-demo', label: 'Equipment Demo', icon: Settings, badge: null },
-			{ href: '/equipment-clean', label: 'Equipment', icon: Dumbbell, badge: null },
-			{ href: '/profile', label: 'Profile', icon: User, badge: null }
+			{
+				href: '/exercise-demo',
+				label: 'Equipment Demo',
+				icon: '⚙️',
+				description: 'Demo equipment features',
+				badge: null
+			},
+			{
+				href: '/equipment-clean',
+				label: 'Equipment',
+				icon: '🏋️',
+				description: 'Manage gym equipment',
+				badge: null
+			},
+			{
+				href: '/profile',
+				label: 'Profile',
+				icon: '👤',
+				description: 'User profile settings',
+				badge: null
+			}
 		]
 	};
 
 	// Flatten all nav items for filtering
 	$: allNavItems = Object.values(navigationSections).flat();
 	$: filteredNavItems = $user
-		? allNavItems.filter((item) => !item.roles || item.roles.includes($user.role))
+		? allNavItems.filter((item) => !('roles' in item) || item.roles!.includes($user.role))
 		: navigationSections.main.concat(navigationSections.utility);
 
 	// Get current section based on active route
@@ -202,7 +228,7 @@
 					<div
 						class="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-sm"
 					>
-						<Dumbbell class="w-6 h-6 text-white" aria-hidden="true" />
+						<span class="text-white font-bold text-lg">💪</span>
 					</div>
 					<div class="hidden sm:block">
 						<div
@@ -228,7 +254,7 @@
 						title={item.description}
 						aria-current={$page.url.pathname === item.href ? 'page' : undefined}
 					>
-						<svelte:component this={item.icon} size={18} aria-hidden="true" />
+						<span class="text-lg" aria-hidden="true">{item.icon}</span>
 						<span>{item.label}</span>
 						{#if item.badge}
 							<span
@@ -253,7 +279,7 @@
 						title={item.description}
 						aria-current={$page.url.pathname === item.href ? 'page' : undefined}
 					>
-						<svelte:component this={item.icon} size={18} aria-hidden="true" />
+						<span class="text-lg" aria-hidden="true">{item.icon}</span>
 						<span>{item.label}</span>
 						{#if item.badge}
 							<span
@@ -278,7 +304,7 @@
 						title={item.description}
 						aria-current={$page.url.pathname === item.href ? 'page' : undefined}
 					>
-						<svelte:component this={item.icon} size={18} aria-hidden="true" />
+						<span class="text-lg" aria-hidden="true">{item.icon}</span>
 						<span>{item.label}</span>
 					</a>
 				{/each}
@@ -297,7 +323,7 @@
 							aria-label="Search workouts and programs"
 							role="searchbox"
 						/>
-						<Search class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" aria-hidden="true" />
+						<span class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" aria-hidden="true">🔍</span>
 					</div>
 				</div>
 
@@ -310,7 +336,7 @@
 						aria-label="View notifications"
 						aria-expanded="false"
 					>
-						<Bell size={20} aria-hidden="true" />
+						<span class="text-lg" aria-hidden="true">🔔</span>
 						<span
 							class="absolute -top-1 -right-1 w-2 h-2 bg-accent rounded-full"
 							aria-label="New notification"
@@ -337,7 +363,7 @@
 									{$user.name.charAt(0)}
 								</span>
 							</div>
-							<ChevronDown size={16} class="text-gray-500" aria-hidden="true" />
+							<span class="text-sm text-gray-500" aria-hidden="true">▼</span>
 						</button>
 
 						<!-- User Dropdown Menu -->
@@ -360,7 +386,7 @@
 										class="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
 										role="menuitem"
 									>
-										<User size={16} aria-hidden="true" />
+										<span class="text-sm" aria-hidden="true">👤</span>
 										<span>Profile Settings</span>
 									</a>
 									<a
@@ -368,7 +394,7 @@
 										class="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
 										role="menuitem"
 									>
-										<Sparkles size={16} aria-hidden="true" />
+										<span class="text-sm" aria-hidden="true">✨</span>
 										<span>Achievements</span>
 									</a>
 									<a
@@ -376,7 +402,7 @@
 										class="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
 										role="menuitem"
 									>
-										<Lightbulb size={16} aria-hidden="true" />
+										<span class="text-sm" aria-hidden="true">💡</span>
 										<span>Recommendations</span>
 									</a>
 								</div>
@@ -386,7 +412,7 @@
 										class="flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
 										role="menuitem"
 									>
-										<LogOut size={16} aria-hidden="true" />
+										<span class="text-sm" aria-hidden="true">🚪</span>
 										<span>Sign out</span>
 									</button>
 								</div>
@@ -419,8 +445,8 @@
 					class="lg:hidden p-2 text-gray-600 hover:text-primary hover:bg-gray-100 rounded-xl transition-colors"
 					aria-label="Toggle mobile menu"
 				>
-					<Menu size={20} class={mobileMenuOpen ? 'hidden' : 'block'} />
-					<X size={20} class={mobileMenuOpen ? 'block' : 'hidden'} />
+					<span class="text-lg" class:hidden={mobileMenuOpen}>☰</span>
+					<span class="text-lg" class:hidden={!mobileMenuOpen}>✕</span>
 				</button>
 			</div>
 		</div>
@@ -446,7 +472,7 @@
 								on:click={() => (mobileMenuOpen = false)}
 								aria-current={$page.url.pathname === item.href ? 'page' : undefined}
 							>
-								<svelte:component this={item.icon} size={20} aria-hidden="true" />
+								<span class="text-lg" aria-hidden="true">{item.icon}</span>
 								<span>{item.label}</span>
 							</a>
 						{/each}
@@ -460,7 +486,7 @@
 							class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full text-left"
 							aria-label="Sign out of your account"
 						>
-							<LogOut size={20} aria-hidden="true" />
+							<span class="text-lg" aria-hidden="true">🚪</span>
 							<span>Sign out</span>
 						</button>
 					</div>
@@ -488,7 +514,7 @@
 							on:click={() => (mobileMenuOpen = false)}
 							aria-label="Sign in to your account"
 						>
-							<LogIn size={20} aria-hidden="true" />
+							<span class="text-lg" aria-hidden="true">🔑</span>
 							<span>Sign in</span>
 						</a>
 						<a
@@ -497,7 +523,7 @@
 							on:click={() => (mobileMenuOpen = false)}
 							aria-label="Create a new account"
 						>
-							<User size={20} aria-hidden="true" />
+							<span class="text-lg" aria-hidden="true">👤</span>
 							<span>Sign up</span>
 						</a>
 					</div>

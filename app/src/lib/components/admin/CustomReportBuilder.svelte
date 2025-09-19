@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { advancedAnalyticsService } from '$lib/services/advancedAnalyticsService';
-	import type { CustomReport } from '$lib/types/admin';
+	import { advancedAnalyticsService } from '$lib/services/advancedAnalyticsService.js';
+	import type { CustomReport } from '$lib/types/admin.js';
 
 	export let adminId: string;
 	export let dateRange: { start: string; end: string };
@@ -202,16 +202,21 @@
 			</div>
 
 			<div class="form-group">
-				<label>Date Range</label>
+				<label for="date-start">Date Range</label>
 				<div class="date-range-inputs">
-					<input type="date" bind:value={reportConfig.dateRange.start} class="form-input" />
+					<input
+						id="date-start"
+						type="date"
+						bind:value={reportConfig.dateRange.start}
+						class="form-input"
+					/>
 					<span>to</span>
 					<input type="date" bind:value={reportConfig.dateRange.end} class="form-input" />
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label>Metrics to Include</label>
+				<h4 class="form-group-title">Metrics to Include</h4>
 				<div class="metrics-grid">
 					{#each availableMetrics[reportConfig.type] as metric}
 						<label class="metric-checkbox">
@@ -335,10 +340,11 @@
 		gap: 8px;
 	}
 
-	.form-group label {
+	.form-group-title {
 		font-size: 14px;
 		font-weight: 500;
 		color: #374151;
+		margin: 0 0 8px 0;
 	}
 
 	.form-input,

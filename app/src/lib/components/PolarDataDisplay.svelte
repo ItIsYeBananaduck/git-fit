@@ -246,19 +246,6 @@
     margin-bottom: 12px;
   }
 
-  .metric-icon {
-    width: 20px;
-    height: 20px;
-    color: #ff6b00;
-  }
-
-  .recovery .metric-icon { color: #22c55e; }
-  .hrv .metric-icon { color: #8b5cf6; }
-  .heart-rate .metric-icon { color: #ef4444; }
-  .sleep .metric-icon { color: #6366f1; }
-  .steps .metric-icon { color: #10b981; }
-  .calories .metric-icon { color: #f59e0b; }
-
   .metric-title {
     font-weight: 600;
     color: #374151;
@@ -312,13 +299,6 @@
     text-align: center;
     padding: 40px 20px;
     color: #64748b;
-  }
-
-  .no-data-icon {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 16px;
-    opacity: 0.5;
   }
 
   .no-data p {

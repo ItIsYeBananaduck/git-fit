@@ -1,5 +1,5 @@
 // Convex mutation to calculate and record a payout for a trainer
-import { mutation } from "../_generated/server";
+import { mutation } from "../_generated/server.js";
 import { v } from "convex/values";
 
 export const createTrainerPayout = mutation({

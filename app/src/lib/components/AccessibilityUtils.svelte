@@ -14,7 +14,7 @@
 		}
 	}
 
-	export function trapFocus(container: HTMLElement): void {
+	export function trapFocus(container: HTMLElement): () => void {
 		const focusableElements = container.querySelectorAll(
 			'a[href], button, textarea, input[type="text"], input[type="radio"], input[type="checkbox"], select'
 		);

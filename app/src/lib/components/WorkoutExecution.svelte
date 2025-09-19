@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import type { TrainingParameters } from '$lib/services/adaptiveTraining';
-	import { CheckCircle, TrendingDown, Minus, TrendingUp } from 'lucide-svelte';
 
 	export let currentSet: number = 1;
 	export let totalSets: number = 3;
@@ -24,13 +22,13 @@
 	function getDifficultyIcon(difficulty: string) {
 		switch (difficulty) {
 			case 'easy':
-				return TrendingDown;
+				return '↓';
 			case 'moderate':
-				return Minus;
+				return '→';
 			case 'hard':
-				return TrendingUp;
+				return '↑';
 			default:
-				return Minus;
+				return '→';
 		}
 	}
 
@@ -95,7 +93,7 @@
 			)}"
 			disabled={!isActive}
 		>
-			<svelte:component this={getDifficultyIcon('easy')} size={20} class="mr-3" />
+			<span class="mr-3">{getDifficultyIcon('easy')}</span>
 			{getDifficultyText('easy')}
 		</button>
 
@@ -107,7 +105,7 @@
 			)}"
 			disabled={!isActive}
 		>
-			<svelte:component this={getDifficultyIcon('moderate')} size={20} class="mr-3" />
+			<span class="mr-3">{getDifficultyIcon('moderate')}</span>
 			{getDifficultyText('moderate')}
 		</button>
 
@@ -119,7 +117,7 @@
 			)}"
 			disabled={!isActive}
 		>
-			<svelte:component this={getDifficultyIcon('hard')} size={20} class="mr-3" />
+			<span class="mr-3">{getDifficultyIcon('hard')}</span>
 			{getDifficultyText('hard')}
 		</button>
 	</div>

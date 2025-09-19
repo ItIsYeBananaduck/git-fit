@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { api } from '$lib/convex';
 
-	export let userId;
 	export let compact = false;
 
 	let progressData = {

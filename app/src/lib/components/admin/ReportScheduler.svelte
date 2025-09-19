@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { advancedAnalyticsService } from '$lib/services/advancedAnalyticsService';
-	import type { ReportSchedule } from '$lib/types/admin';
+	import { advancedAnalyticsService } from '$lib/services/advancedAnalyticsService.js';
+	import type { ReportSchedule } from '$lib/types/admin.js';
 
 	export let adminId: string;
 
@@ -322,7 +322,7 @@
 			</div>
 
 			<div class="form-group">
-				<label>Metrics to Include</label>
+				<h4 class="form-group-title">Metrics to Include</h4>
 				<div class="metrics-grid">
 					{#each availableMetrics[newSchedule.reportConfig.type] as metric}
 						<label class="metric-checkbox">
@@ -340,10 +340,11 @@
 			</div>
 
 			<div class="form-group">
-				<label>Recipients</label>
+				<label for="recipientEmail">Recipients</label>
 				<div class="recipients-section">
 					<div class="add-recipient">
 						<input
+							id="recipientEmail"
 							type="email"
 							bind:value={recipientEmail}
 							placeholder="Enter email address..."
@@ -527,10 +528,11 @@
 		gap: 6px;
 	}
 
-	.form-group label {
+	.form-group-title {
 		font-size: 14px;
 		font-weight: 500;
 		color: #374151;
+		margin: 0 0 6px 0;
 	}
 
 	.form-input,

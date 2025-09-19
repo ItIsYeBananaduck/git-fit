@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { api } from 'convex/_generated/api';
-	import { useMutation } from 'convex-svelte';
+	import { api } from '$lib/convex/_generated/api';
+	import { useConvexClient } from 'convex-svelte';
 	import { page } from '$app/stores';
 	import { get } from 'svelte/store';
 	import { authStore } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
 
 	const dispatch = createEventDispatcher();
-	const addExercise = useMutation(api.exercises.importExercises);
+	const client = useConvexClient();
+	const addExercise = async (data: any) => {
+		return await client.mutation(api.exercises.importExercises, data);
+	};
 
 	let name = '';
 	let force = '';

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { contentModerationService } from '../../services/contentModerationService';
-	import type { ContentPolicy, PolicyRule } from '../../types/admin';
-	import type { Id } from '../../../../../convex/_generated/dataModel';
+	import { contentModerationService } from '../../services/contentModerationService.js';
+	import type { ContentPolicy, PolicyRule } from '../../types/admin.js';
+	import type { Id } from '../../../../convex/_generated/dataModel.js';
 
 	// Props
 	export let adminId: Id<'adminUsers'>;
@@ -116,7 +116,7 @@
 
 	function openRuleModal(rule?: PolicyRule, index?: number) {
 		if (rule && index !== undefined) {
-			ruleForm = { 
+			ruleForm = {
 				...rule,
 				pattern: rule.pattern || '',
 				keywords: rule.keywords || []
@@ -365,7 +365,7 @@
 						<div class="flex items-start justify-between mb-2">
 							<div>
 								<h3 class="font-medium text-gray-900 text-sm">
-									{policy.type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+									{policy.type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
 								</h3>
 								<p class="text-xs text-gray-600">{policy.rules.length} rules</p>
 							</div>
@@ -414,7 +414,9 @@
 				<div class="flex items-start justify-between mb-4">
 					<div>
 						<h1 class="text-xl font-semibold text-gray-900">
-							{selectedPolicy.type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+							{selectedPolicy.type
+								.replace(/_/g, ' ')
+								.replace(/\b\w/g, (l: string) => l.toUpperCase())}
 						</h1>
 						<p class="text-sm text-gray-600 mt-1">
 							{selectedPolicy.rules.length} rule{selectedPolicy.rules.length !== 1 ? 's' : ''} configured
@@ -559,10 +561,10 @@
 						</label>
 					</div>
 
-					<div aria-label="Rules ({policyForm.rules.length})">
-						<label aria-hidden="true" class="block text-sm font-medium text-gray-700 mb-2">
+					<div>
+						<h4 class="block text-sm font-medium text-gray-700 mb-2">
 							Rules ({policyForm.rules.length})
-						</label>
+						</h4>
 						{#if policyForm.rules.length === 0}
 							<p class="text-sm text-gray-500">No rules added yet</p>
 						{:else}
@@ -691,7 +693,9 @@
 					</div>
 
 					<div>
-						<label for="keywords" class="block text-sm font-medium text-gray-700 mb-2">Keywords</label>
+						<label for="keywords" class="block text-sm font-medium text-gray-700 mb-2"
+							>Keywords</label
+						>
 						<div class="flex space-x-2 mb-2">
 							<input
 								id="keywords"

@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { advancedAnalyticsService } from '$lib/services/advancedAnalyticsService';
 	import type { UserBehaviorAnalytics, ConversionFunnel } from '$lib/types/admin';
-	import type { Id } from 'convex/_generated/dataModel';
+	import type { Id } from '$lib/convex/_generated/dataModel';
 	import UserBehaviorAnalyticsComponent from './UserBehaviorAnalytics.svelte';
 	import ConversionFunnelAnalytics from './ConversionFunnelAnalytics.svelte';
 	import CohortAnalysis from './CohortAnalysis.svelte';

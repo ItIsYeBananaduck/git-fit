@@ -41,6 +41,40 @@
 	$: sortedTrackers = availableTrackers.sort(
 		(a, b) => getCapabilityScore(b) - getCapabilityScore(a)
 	);
+
+	import { onMount } from 'svelte';
+	let modalEl: HTMLDivElement | null = null;
+
+	function handleModalKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			showAddModal = false;
+		}
+		// Trap focus inside modal
+		if (e.key === 'Tab' && modalEl) {
+			const focusable = modalEl.querySelectorAll<HTMLElement>(
+				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			);
+			const first = focusable[0];
+			const last = focusable[focusable.length - 1];
+			if (e.shiftKey) {
+				if (document.activeElement === first) {
+					last.focus();
+					e.preventDefault();
+				}
+			} else {
+				if (document.activeElement === last) {
+					first.focus();
+					e.preventDefault();
+				}
+			}
+		}
+	}
+
+	onMount(() => {
+		if (showAddModal && modalEl) {
+			setTimeout(() => modalEl?.focus(), 0);
+		}
+	});
 </script>
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -122,14 +156,17 @@
 
 	<!-- Add Tracker Modal -->
 	{#if showAddModal}
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<div
-			class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="add-tracker-title"
+			class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+			role="presentation"
+			on:click={(e) => e.target === e.currentTarget && (showAddModal = false)}
 		>
 			<div
 				class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="add-tracker-title"
 				tabindex="-1"
 				bind:this={modalEl}
 				on:keydown={handleModalKeydown}
@@ -223,46 +260,6 @@
 					>
 						Connect Tracker
 					</button>
-					<script lang="ts">
-						// ...existing code...
-						import { onMount } from 'svelte';
-						let modalEl: HTMLDivElement | null = null;
-						function handleModalKeydown(e: KeyboardEvent) {
-							if (e.key === 'Escape') {
-								showAddModal = false;
-							}
-							// Trap focus inside modal
-							if (e.key === 'Tab' && modalEl) {
-								const focusable = modalEl.querySelectorAll<HTMLElement>(
-									'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-								);
-								const first = focusable[0];
-								const last = focusable[focusable.length - 1];
-								if (e.shiftKey) {
-									if (document.activeElement === first) {
-										last.focus();
-										e.preventDefault();
-									}
-								} else {
-									if (document.activeElement === last) {
-										first.focus();
-										e.preventDefault();
-									}
-								}
-							}
-						}
-						onMount(() => {
-							if (showAddModal && modalEl) {
-								setTimeout(() => modalEl?.focus(), 0);
-							}
-						});
-					</script>
-					<style>
-						button:focus {
-							box-shadow: 0 0 0 3px #2563eb55;
-							outline: none;
-						}
-					</style>
 				</div>
 
 				<!-- Capabilities Legend -->
@@ -285,3 +282,10 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	button:focus {
+		box-shadow: 0 0 0 3px #2563eb55;
+		outline: none;
+	}
+</style>

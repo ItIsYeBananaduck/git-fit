@@ -1,26 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { whoopState, whoopData } from '$lib/stores/whoop';
-	import { AdaptiveTrainingEngine } from '$lib/services/adaptiveTraining';
-	import { ProgressionEngine } from '$lib/services/progressionEngine';
-	import { MultiTrackerAdaptiveEngine } from '$lib/services/multiTrackerAdaptive';
-	import { WorkoutExecutionService } from '$lib/services/workoutExecution';
+	import { whoopState, whoopData } from '../stores/whoop.js';
+	import { AdaptiveTrainingEngine } from '../services/adaptiveTraining.js';
+	import { ProgressionEngine } from '../services/progressionEngine.js';
+	import { MultiTrackerAdaptiveEngine } from '../services/multiTrackerAdaptive.js';
+	import { WorkoutExecutionService } from '../services/workoutExecution.js';
 	import WorkoutExecution from './WorkoutExecution.svelte';
-	import type { TrainingParameters } from '$lib/services/adaptiveTraining';
-	import type { SafetySettings, FitnessTracker, TrackerData } from '$lib/types/fitnessTrackers';
-	import { DEFAULT_SAFETY_SETTINGS } from '$lib/types/fitnessTrackers';
-	import {
-		TrendingUp,
-		TrendingDown,
-		Minus,
-		Zap,
-		Clock,
-		Repeat,
-		AlertTriangle,
-		Shield,
-		RotateCcw,
-		Target
-	} from 'lucide-svelte';
+	import type { TrainingParameters } from '../services/adaptiveTraining.js';
+	import type { SafetySettings, FitnessTracker, TrackerData } from '../types/fitnessTrackers.js';
+	import { DEFAULT_SAFETY_SETTINGS } from '../types/fitnessTrackers.js';
 
 	export let connectedTrackers: FitnessTracker[] = [];
 	export let safetySettings: SafetySettings = DEFAULT_SAFETY_SETTINGS;
@@ -224,9 +212,9 @@
 	}
 
 	function getChangeIcon(original: number, current: number) {
-		if (current > original) return TrendingUp;
-		if (current < original) return TrendingDown;
-		return Minus;
+		if (current > original) return '↗️';
+		if (current < original) return '↘️';
+		return '→';
 	}
 
 	function getChangeColor(original: number, current: number): string {
@@ -319,7 +307,7 @@
 						todaysRecommendation.injuryRisk
 					)}"
 				>
-					<Shield size={14} class="inline mr-1" />
+					<span class="inline mr-1">🛡️</span>
 					{todaysRecommendation.injuryRisk} risk
 				</div>
 			{/if}
@@ -329,7 +317,7 @@
 	{#if todaysRecommendation?.shouldStop}
 		<div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
 			<div class="flex items-center mb-2">
-				<AlertTriangle size={20} class="text-red-600 mr-2" />
+				<span class="text-red-600 mr-2">⚠️</span>
 				<p class="text-sm font-bold text-red-900">STOP TRAINING RECOMMENDATION</p>
 			</div>
 			<p class="text-sm text-red-800">{todaysRecommendation.recommendation}</p>
@@ -344,7 +332,7 @@
 	{#if isDeloadWeek}
 		<div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
 			<div class="flex items-center mb-2">
-				<RotateCcw size={20} class="text-blue-600 mr-2" />
+				<span class="text-blue-600 mr-2">🔄</span>
 				<p class="text-sm font-bold text-blue-900">DELOAD WEEK ACTIVE</p>
 			</div>
 			<p class="text-sm text-blue-800">
@@ -354,7 +342,7 @@
 	{:else if progressionDecision?.shouldProgress}
 		<div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
 			<div class="flex items-center mb-1">
-				<TrendingUp size={16} class="text-green-600 mr-2" />
+				<span class="text-green-600 mr-2">📈</span>
 				<p class="text-sm font-medium text-green-900">Progression Update</p>
 			</div>
 			<p class="text-sm text-green-800">{progressionDecision.reasoning}</p>
@@ -372,7 +360,7 @@
 		>
 			<div class="flex items-center justify-between mb-2">
 				<div class="flex items-center">
-					<Target size={16} class="text-gray-600 mr-2" />
+					<span class="text-gray-600 mr-2">🎯</span>
 					<p class="text-sm font-medium text-gray-900">Strain Target</p>
 				</div>
 				<span class="text-sm font-bold text-gray-900"
@@ -402,12 +390,10 @@
 		<!-- Load -->
 		<div class="text-center">
 			<div class="flex items-center justify-center mb-2">
-				<Zap size={20} class="{getChangeColor(exercise.baseParams.load, todaysParams.load)} mr-2" />
-				<svelte:component
-					this={getChangeIcon(exercise.baseParams.load, todaysParams.load)}
-					size={16}
-					class={getChangeColor(exercise.baseParams.load, todaysParams.load)}
-				/>
+				<span class="text-lg mr-2">⚡</span>
+				<span class={getChangeColor(exercise.baseParams.load, todaysParams.load)}
+					>{getChangeIcon(exercise.baseParams.load, todaysParams.load)}</span
+				>
 			</div>
 			<p class="text-2xl font-bold text-gray-900">{todaysParams.load}%</p>
 			<p class="text-sm text-gray-600">Load</p>
@@ -419,15 +405,10 @@
 		<!-- Reps -->
 		<div class="text-center">
 			<div class="flex items-center justify-center mb-2">
-				<Repeat
-					size={20}
-					class="{getChangeColor(exercise.baseParams.reps, todaysParams.reps)} mr-2"
-				/>
-				<svelte:component
-					this={getChangeIcon(exercise.baseParams.reps, todaysParams.reps)}
-					size={16}
-					class={getChangeColor(exercise.baseParams.reps, todaysParams.reps)}
-				/>
+				<span class="text-lg mr-2">🔄</span>
+				<span class={getChangeColor(exercise.baseParams.reps, todaysParams.reps)}
+					>{getChangeIcon(exercise.baseParams.reps, todaysParams.reps)}</span
+				>
 			</div>
 			<p class="text-2xl font-bold text-gray-900">{todaysParams.reps}</p>
 			<p class="text-sm text-gray-600">Reps</p>
@@ -448,18 +429,11 @@
 		<!-- Rest -->
 		<div class="text-center">
 			<div class="flex items-center justify-center mb-2">
-				<Clock
-					size={20}
-					class="{getChangeColor(
-						exercise.baseParams.restBetweenSets,
-						todaysParams.restBetweenSets
-					)} mr-2"
-				/>
-				<svelte:component
-					this={getChangeIcon(exercise.baseParams.restBetweenSets, todaysParams.restBetweenSets)}
-					size={16}
+				<span class="text-lg mr-2">⏱️</span>
+				<span
 					class={getChangeColor(exercise.baseParams.restBetweenSets, todaysParams.restBetweenSets)}
-				/>
+					>{getChangeIcon(exercise.baseParams.restBetweenSets, todaysParams.restBetweenSets)}</span
+				>
 			</div>
 			<p class="text-2xl font-bold text-gray-900">{formatTime(todaysParams.restBetweenSets)}</p>
 			<p class="text-sm text-gray-600">Rest</p>

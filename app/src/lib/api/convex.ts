@@ -1,6 +1,4 @@
 import { ConvexHttpClient } from "convex/browser";
-import { api as convexApi } from "../../convex/_generated/api";
-import { useConvex } from "convex/react";
 
 // Create Convex client - using a placeholder URL for now
 // In production, this would come from environment variables
@@ -22,11 +20,12 @@ if (convexUrl && convexUrl !== "https://convex-cloud.com") {
 }
 
 export const api = {
-  query: async (functionName: string, args: any = {}) => {
+  query: async (functionName: string, args: Record<string, unknown> = {}) => {
     // If Convex client is available, use it
     if (convexClient) {
       try {
         // Use the function name directly until API is properly deployed
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return await convexClient.query(functionName as any, args);
       } catch (error) {
         console.warn(`Convex query failed for ${functionName}, using mock data:`, error);
@@ -125,11 +124,12 @@ export const api = {
     return [];
   },
   
-  mutation: async (functionName: string, args: any = {}) => {
+  mutation: async (functionName: string, args: Record<string, unknown> = {}) => {
     // If Convex client is available, use it
     if (convexClient) {
       try {
         // Use the function name directly until API is properly deployed
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return await convexClient.mutation(functionName as any, args);
       } catch (error) {
         console.warn(`Convex mutation failed for ${functionName}, using mock response:`, error);

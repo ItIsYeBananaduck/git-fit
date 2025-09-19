@@ -16,8 +16,7 @@ export default defineConfig({
                         $lib: path.resolve(__dirname, 'src/lib'),
                         $components: path.resolve(__dirname, 'src/lib/components'),
                         $services: path.resolve(__dirname, 'src/lib/services'),
-                        $utils: path.resolve(__dirname, 'src/lib/utils'),
-                        '$lib/convex': path.resolve(__dirname, 'convex')
+                        $utils: path.resolve(__dirname, 'src/lib/utils')
                 }
         },
         test: {
