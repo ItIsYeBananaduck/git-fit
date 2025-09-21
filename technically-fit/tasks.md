@@ -1,8 +1,9 @@
-## Nutrition AI – Auto Macro Adjustment on Plateau
+# Nutrition AI – Auto Macro Adjustment on Plateau
 
+- [x] Create unified RestManager service to coordinate all rest-related functionality
 - [x] Detect plateau from `monthlySummary`: - No change in average/max volume or load for 3+ weeks - Weight has not changed in 3+ weeks (if goal is weight-based)
 - [x] Confirm user is **compliant** (logs/workouts consistent)
-- [x] Adjust macros carefully: - Bulk: +5–10% carbs or protein - Cut: -5–10% carbs or fats - Recomp: micro-adjust around training window
+- [x] Adjust macros carefully: - Bulk: +5–10% carbs or protein - Cut: -5–10% carbs or fats - Recomp: micro-adjust arou- [x] Audit existing rest logic and create rest_engine/audit_report.mdd training window
 - [x] Update `nutritionConfig.currentMacros` and push to `macroHistory[]`
 - [x] Generate adjustment note (example):
 
@@ -24,7 +25,7 @@ Send notification: "We adjusted your macros to help you break through your plate
 
 Disable auto-adjust if wearable or weight log is unavailable for over 14 days.
 
-# Implementation Tasks for Technically Fit
+## Implementation Tasks for Technically Fit
 
 This document outlines the actionable tasks needed to implement the missing specs and features identified in your project.
 
@@ -100,7 +101,7 @@ This document outlines the actionable tasks needed to implement the missing spec
   - Integrated into onboarding and dashboard flows.
   - Users can view, compare, and select splits with contextual guidance.
 
-# Training Split Customization
+## Training Split Customization
 
 - [x] Allow user to set and save a custom training split
   - Implement UI and backend logic to let users define, save, and retrieve a fully custom training split (e.g., PPL + arm/core + cardio) as part of their config.
@@ -201,22 +202,29 @@ Implement a training logic system where all workout programming, AI summaries, a
 - [x] Store this JSON in the user config file:
 
 ```json
-
+{
+  "equipment": ["dumbbell", "barbell"],
+  "preferences": {
+    "include": ["squats", "bench press"],
+    "avoid": ["kettlebell swings"]
+  }
 }
- [x] Show countdown timer (based on AI-configured avgRestSec)
- [x] Show current strain
- [x] Optionally trigger Siri voice nudge when strain drops (if user has nudges enabled)
+```
+
+- [x] Show countdown timer (based on AI-configured avgRestSec)
+- [x] Show current strain
+- [x] Optionally trigger Siri voice nudge when strain drops (if user has nudges enabled)
 
 Preference list
- [x] Create Swift `WorkoutAttributes` struct with `ActivityAttributes` + `ContentState`
- [x] Add Live Activity support using ActivityKit (iOS 16.1+)
- [x] Design Dynamic Island compact/expanded UI using WidgetKit + SwiftUI
- [x] Add logic to update the Live Activity in real-time as workout progresses
- [x] Display reps + strain in Dynamic Island during active sets
- [x] Display rest timer + strain in Dynamic Island during rest
- [x] Integrate wearable strain values (Apple Watch via HealthKit or WHOOP if available)
- [x] Auto-disable Live Activity if no wearable connected or permissions are denied
- [x] Voice assistant nudge (optional): Use Siri Shortcuts or AVSpeechSynthesizer to say “Let’s go! Start your next set.” if nudging is enabled and recovery is detected
+[x] Create Swift `WorkoutAttributes` struct with `ActivityAttributes` + `ContentState`
+[x] Add Live Activity support using ActivityKit (iOS 16.1+)
+[x] Design Dynamic Island compact/expanded UI using WidgetKit + SwiftUI
+[x] Add logic to update the Live Activity in real-time as workout progresses
+[x] Display reps + strain in Dynamic Island during active sets
+[x] Display rest timer + strain in Dynamic Island during rest
+[x] Integrate wearable strain values (Apple Watch via HealthKit or WHOOP if available)
+[x] Auto-disable Live Activity if no wearable connected or permissions are denied
+[x] Voice assistant nudge (optional): Use Siri Shortcuts or AVSpeechSynthesizer to say “Let’s go! Start your next set.” if nudging is enabled and recovery is detected
 
 AI suitability based on prior summary (replace stale or disliked exercises)
 
@@ -236,14 +244,12 @@ totalVolume
 🧠 AI CONFIG SUPPORT
 Config stored as JSON string in Convex:
 
-```
-
-"trackRepsSetsLoad": "avg_max",
-[x] Add fallback notification system for unsupported iPhones (non-Pro or older than iPhone 14)
-[x] Show volume trend or fatigue warning if set strain is too low
-[x] Add settings toggle to disable Live Activity
-"strainNudges": true
+```json
+{
+  "trackRepsSetsLoad": "avg_max",
+  "strainNudges": true
 }
+```
 
 🎧 NATIVE MUSIC PLAYER CONTROLS (IN-WORKOUT)
 
@@ -285,9 +291,11 @@ Config stored as JSON string in Convex:
 ### Phase 2: File Upload + Conversion
 
 - [x] Build file upload endpoint
+
   - [x] Accepts CSV/Excel/Google Sheets import
   - [x] Uses parser (e.g., papaparse for CSV, xlsx for Excel)
   - [x] Convert → structured JSON with:
+
     ```json
     {
       "week": 1,
@@ -297,6 +305,7 @@ Config stored as JSON string in Convex:
       ]
     }
     ```
+
   - [x] Validate JSON (required fields: exercise, sets, reps, load)
   - [x] Auto-reject malformed files
   - [x] Attach JSON to Program table

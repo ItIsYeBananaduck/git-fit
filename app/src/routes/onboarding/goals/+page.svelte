@@ -17,12 +17,12 @@
 	let goalDetails: any = {};
 	let selectedCoach: 'alice' | 'aiden' | null = null;
 	let isLoading = false;
+	let steps: Array<{ title: string; component: any }> = [];
 
-	const steps = [
+	const baseSteps = [
 		{ title: 'Primary Goal', component: GoalSelector },
 		{ title: 'Secondary Goals', component: SecondaryGoals },
-		{ title: 'Goal Summary', component: GoalSummary },
-		{ title: 'Choose Your Coach', component: CoachSelection }
+		{ title: 'Goal Summary', component: GoalSummary }
 	];
 
 	onMount(async () => {
@@ -30,6 +30,23 @@
 		if (!user) {
 			goto('/auth/login');
 			return;
+		}
+
+		// Initialize with base steps
+		steps = [...baseSteps];
+
+		// Check if user has Pro subscription and hasn't selected a coach yet
+		try {
+			const coachPref = await api.users.getCoachPreference({ userId: user._id });
+			const hasProSubscription = user.role === 'client' && user.subscriptionType === 'pro'; // Assuming this field exists
+
+			// Only include coach selection for Pro users who haven't selected a coach
+			if (hasProSubscription && !coachPref) {
+				steps.push({ title: 'Choose Your Coach', component: CoachSelection });
+			}
+		} catch (error) {
+			console.error('Error checking coach preference:', error);
+			// Continue without coach selection if there's an error
 		}
 	});
 
@@ -59,7 +76,7 @@
 	}
 
 	async function saveGoalsAndCoach() {
-		if (!user || !selectedCoach) return;
+		if (!user) return;
 
 		isLoading = true;
 		try {
@@ -80,11 +97,13 @@
 				});
 			}
 
-			// Save coach preference
-			await api.users.setCoachPreference({
-				userId: user._id,
-				coachType: selectedCoach
-			});
+			// Save coach preference if selected
+			if (selectedCoach) {
+				await api.users.setCoachPreference({
+					userId: user._id,
+					coachType: selectedCoach
+				});
+			}
 
 			// Navigate to next onboarding step
 			goto('/onboarding/training-splits');
@@ -141,8 +160,10 @@
 					Select up to 3 secondary goals to support your primary objective
 				{:else if currentStep === 2}
 					Review your goals and confirm to continue
-				{:else}
+				{:else if steps[currentStep] && steps[currentStep].title === 'Choose Your Coach'}
 					Choose your AI coach to guide your fitness journey
+				{:else}
+					Complete your onboarding to get started
 				{/if}
 			</p>
 		</div>
@@ -161,7 +182,7 @@
 					{goalDetails}
 					{isLoading}
 				/>
-			{:else}
+			{:else if steps[currentStep] && steps[currentStep].title === 'Choose Your Coach'}
 				<CoachSelection
 					on:select={handleCoachSelected}
 					on:confirm={handleCoachConfirmed}

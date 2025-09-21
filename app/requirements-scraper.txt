@@ -1,0 +1,14 @@
+# Web scraping and HTTP requests
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+
+# Environment variables
+python-dotenv>=0.19.0
+
+# Data processing
+urllib3>=1.26.0
+
+# Development and testing
+pytest>=7.0.0
+black>=22.0.0
+flake8>=4.0.0

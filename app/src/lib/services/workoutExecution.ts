@@ -1,4 +1,6 @@
-import type { WorkoutSession, SetCompletion, TrainingParameters } from './adaptiveTraining';
+import type { WorkoutSession, SetCompletion, TrainingParameters } from './adaptiveTraining.js';
+import { restManager } from './restManager.js';
+import type { Id } from '$lib/convex/_generated/dataModel.js';
 
 export interface WorkoutState {
   sessionId: string;
@@ -15,6 +17,14 @@ export interface WorkoutState {
 
 export class WorkoutExecutionService {
   private workoutState: WorkoutState | null = null;
+  private restEnabled: boolean = true;
+
+  /**
+   * Configure rest management
+   */
+  setRestEnabled(enabled: boolean): void {
+    this.restEnabled = enabled;
+  }
 
   /**
    * Start a new workout session
@@ -40,7 +50,7 @@ export class WorkoutExecutionService {
   /**
    * Complete a set with difficulty feedback
    */
-  completeSet(difficulty: 'easy' | 'moderate' | 'hard', repsCompleted?: number): SetCompletion | null {
+  async completeSet(difficulty: 'easy' | 'moderate' | 'hard', repsCompleted?: number): Promise<SetCompletion | null> {
     if (!this.workoutState || !this.workoutState.isActive) {
       return null;
     }
@@ -71,6 +81,15 @@ export class WorkoutExecutionService {
       // Move to next set
       this.workoutState.currentSet++;
       this.workoutState.currentReps = 0; // Reset rep counter for next set
+
+      // Start rest session if enabled and not the last set
+      if (this.restEnabled && this.workoutState.currentSet <= this.workoutState.totalSets) {
+        try {
+          await this.startRestForNextSet();
+        } catch (error) {
+          console.warn('Failed to start rest session:', error);
+        }
+      }
     }
 
     return setCompletion;
@@ -161,56 +180,46 @@ export class WorkoutExecutionService {
   }
 
   /**
-   * Get progression recommendations based on set completion feedback
+   * Start rest session for the next set
    */
-  getProgressionRecommendation(completions: SetCompletion[]): {
-    shouldIncreaseLoad: boolean;
-    shouldIncreaseVolume: boolean;
-    shouldDecreaseLoad: boolean;
-    reasoning: string;
-  } {
-    if (completions.length === 0) {
-      return {
-        shouldIncreaseLoad: false,
-        shouldIncreaseVolume: false,
-        shouldDecreaseLoad: false,
-        reasoning: 'No completion data available'
-      };
-    }
+  private async startRestForNextSet(): Promise<void> {
+    if (!this.workoutState) return;
 
-    const easySets = completions.filter(c => c.difficulty === 'easy').length;
-    const moderateSets = completions.filter(c => c.difficulty === 'moderate').length;
-    const hardSets = completions.filter(c => c.difficulty === 'hard').length;
+    const nextSetNumber = this.workoutState.currentSet;
+    const perceivedEffort = this.calculateAverageDifficulty(this.workoutState.completedSets);
 
-    const totalSets = completions.length;
-    const easyPercentage = easySets / totalSets;
-    const hardPercentage = hardSets / totalSets;
+    await restManager.startRest(
+      this.workoutState.exerciseId,
+      nextSetNumber,
+      {
+        userId: 'current-user' as Id<'users'>, // TODO: Get from auth context
+        workoutId: 'current-workout' as Id<'workouts'>, // TODO: Get from workout context
+        totalSets: this.workoutState.totalSets,
+        perceivedEffort: this.difficultyToRPE(perceivedEffort),
+        exerciseIntensity: 'moderate', // TODO: Determine from exercise data
+        userFitnessLevel: 'intermediate' // TODO: Get from user profile
+      }
+    );
+  }
 
-    // Progression logic based on difficulty feedback
-    if (easyPercentage >= 0.7) {
-      // 70%+ sets were easy - increase load
-      return {
-        shouldIncreaseLoad: true,
-        shouldIncreaseVolume: false,
-        shouldDecreaseLoad: false,
-        reasoning: `${Math.round(easyPercentage * 100)}% of sets felt easy - ready for progression`
-      };
-    } else if (hardPercentage >= 0.5) {
-      // 50%+ sets were hard - decrease load
-      return {
-        shouldIncreaseLoad: false,
-        shouldIncreaseVolume: false,
-        shouldDecreaseLoad: true,
-        reasoning: `${Math.round(hardPercentage * 100)}% of sets felt hard - reduce load`
-      };
-    } else {
-      // Mostly moderate - maintain current load
-      return {
-        shouldIncreaseLoad: false,
-        shouldIncreaseVolume: moderateSets > easySets, // If more moderate than easy, add volume
-        shouldDecreaseLoad: false,
-        reasoning: 'Sets felt appropriately challenging - maintain current parameters'
-      };
-    }
+  /**
+   * Get current rest status
+   */
+  getRestStatus() {
+    return restManager.getRestStatus();
+  }
+
+  /**
+   * Complete current rest session
+   */
+  async completeRest(): Promise<void> {
+    await restManager.completeRest();
+  }
+
+  /**
+   * Cancel current rest session
+   */
+  async cancelRest(): Promise<void> {
+    await restManager.cancelRest();
   }
 }

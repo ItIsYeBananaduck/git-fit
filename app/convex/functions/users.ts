@@ -859,3 +859,38 @@ export const updateSmartSetNudgeSettings = mutation({
     return { success: true };
   }
 });
+
+// Set coach preference mutation
+export const setCoachPreference = mutation({
+  args: {
+    userId: v.id("users"),
+    coachType: v.union(v.literal("alice"), v.literal("aiden")),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) throw new ConvexError("User not found");
+
+    await ctx.db.patch(args.userId, {
+      coachPreference: {
+        coachType: args.coachType,
+        selectedAt: new Date().toISOString(),
+      },
+      updatedAt: new Date().toISOString(),
+    });
+
+    return { success: true };
+  },
+});
+
+// Get coach preference query
+export const getCoachPreference = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) return null;
+
+    return user.coachPreference || null;
+  },
+});
