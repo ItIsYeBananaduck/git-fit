@@ -1,4 +1,3 @@
-
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -85,6 +84,11 @@ export default defineSchema({
       v.literal("fitbit"),
       v.literal("polar")
     )),
+    // AI Coach Preference
+    coachPreference: v.optional(v.object({
+      coachType: v.union(v.literal("alice"), v.literal("aiden")),
+      selectedAt: v.string(),
+    })),
   }).index("by_email", ["email"]).index("by_role", ["role"]).index("by_active", ["isActive"]),
 
   // User sessions for authentication

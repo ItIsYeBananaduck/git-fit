@@ -16,6 +16,7 @@ from datetime import datetime
 from typing import List, Dict
 from tqdm import tqdm
 
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -23,6 +24,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class PubMedScraper:
+    """Scraper for PubMed studies via E-Utilities API."""
+
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
@@ -59,6 +62,24 @@ class PubMedScraper:
 
     def search_pubmed(self, max_results: int = 10) -> List[Dict]:
         try:
+            'oxygen saturation'
+        ]
+        self.junk_keywords = [
+            'cancer', 'apnea', 'heart failure', 'cardiovascular disease',
+            'breast', 'padel', 'tetralogy', 'snoring'
+        ]
+
+    def is_relevant_study(self, title: str, abstract: str) -> bool:
+        """Check if study is relevant to fitness/strength training."""
+        text_to_check = f"{title} {abstract}".lower()
+        has_relevant = any(keyword in text_to_check for keyword in self.relevant_keywords)
+        has_junk = any(keyword in text_to_check for keyword in self.junk_keywords)
+        return has_relevant and not has_junk
+
+    def search_pubmed(self, max_results: int = 10) -> List[Dict]:
+        """Search PubMed for relevant studies and return study data."""
+        try:
+            # ESearch for PMIDs
             search_url = f"{self.base_url}esearch.fcgi?db=pubmed&term={quote(self.search_query)}&retmax={max_results}&usehistory=y&retmode=xml"
             response = self.session.get(search_url)
             response.raise_for_status()
@@ -67,6 +88,8 @@ class PubMedScraper:
             logger.info(f"Found {len(pmids)} PMIDs for query: {self.search_query}")
             studies = []
             for pmid in tqdm(pmids, desc="Processing PubMed studies"):
+            for pmid in pmids:
+                # EFetch for abstract and metadata
                 fetch_url = f"{self.base_url}efetch.fcgi?db=pubmed&id={pmid}&retmode=xml&rettype=abstract"
                 fetch_response = self.session.get(fetch_url)
                 fetch_response.raise_for_status()
@@ -90,6 +113,9 @@ class PubMedScraper:
                         'row_id': f'pubmed-{pmid}'
                     })
                 time.sleep(0.5)
+                        'row_id': f'pubmed-{pmid}'
+                    })
+                time.sleep(0.5)  # Respect API rate limits (10/sec)
             return studies
         except Exception as e:
             logger.error(f"Failed to search PubMed: {e}")
@@ -103,10 +129,20 @@ class PubMedScraper:
         return f"{summary} Small steps like these build big gains. Keep it up."
 
     def run(self, output_file: str = 'data/rss_knowledge.jsonl'):
+        """Summarize text to max_words."""
+        words = text.split()
+        if len(words) <= self.max_words:
+            return text
+        return ' '.join(words[:self.max_words]) + '...'
+
+    def run(self, output_file: str = 'rss_knowledge.jsonl'):
+        """Fetch PubMed studies and append to JSONL."""
         logger.info("Starting PubMed scraping process...")
         studies = self.search_pubmed()
         processed_articles = []
         for study in studies:
+            summary = self.summarize_text(study['content'])
+            study['summary'] = summary
             processed_articles.append(study)
         try:
             with open(output_file, 'a', encoding='utf-8') as f:

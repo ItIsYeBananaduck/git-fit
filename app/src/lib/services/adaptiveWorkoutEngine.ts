@@ -1,4 +1,5 @@
 import type { Id } from '$lib/convex/_generated/dataModel.js';
+import { restManager } from './restManager.js';
 
 // Performance data interfaces
 export interface PerformanceData {
@@ -431,36 +432,59 @@ export function getHeartRateZone(heartRate: number): HeartRateZone | null {
 	) || null;
 }
 
-export function calculateOptimalRestTime(heartRate: number, perceivedEffort: number): number {
-	const zone = getHeartRateZone(heartRate);
-	if (!zone) return 90; // Default 90 seconds
+export async function calculateOptimalRestTime(
+	heartRate: number,
+	perceivedEffort: number,
+	exerciseId: string = 'current-exercise',
+	setNumber: number = 1,
+	userId?: Id<'users'>,
+	workoutId?: Id<'workouts'>
+): Promise<number> {
+	try {
+		// Use RestManager for consistent rest calculation
+		const restSession = await restManager.startRest(exerciseId, setNumber, {
+			userId: userId || ('current-user' as Id<'users'>),
+			workoutId: workoutId || ('current-workout' as Id<'workouts'>),
+			totalSets: 3,
+			perceivedEffort,
+			exerciseIntensity: perceivedEffort >= 8 ? 'high' : perceivedEffort >= 6 ? 'moderate' : 'low',
+			userFitnessLevel: 'intermediate',
+			currentHeartRate: heartRate
+		});
 
-	// Base rest time on heart rate zone and perceived effort
-	let baseRest = 60; // Base 60 seconds
+		return restSession.targetRestDuration;
+	} catch (error) {
+		console.error('Failed to calculate optimal rest time:', error);
+		// Fallback to simple calculation
+		const zone = getHeartRateZone(heartRate);
+		if (!zone) return 90; // Default 90 seconds
 
-	switch (zone.zone) {
-		case 'recovery':
-			baseRest = 45;
-			break;
-		case 'fat-burn':
-			baseRest = 60;
-			break;
-		case 'cardio':
-			baseRest = 90;
-			break;
-		case 'threshold':
-			baseRest = 120;
-			break;
-		case 'maximum':
-			baseRest = 180;
-			break;
+		let baseRest = 60; // Base 60 seconds
+
+		switch (zone.zone) {
+			case 'recovery':
+				baseRest = 45;
+				break;
+			case 'fat-burn':
+				baseRest = 60;
+				break;
+			case 'cardio':
+				baseRest = 90;
+				break;
+			case 'threshold':
+				baseRest = 120;
+				break;
+			case 'maximum':
+				baseRest = 180;
+				break;
+		}
+
+		// Adjust based on perceived effort
+		if (perceivedEffort >= 8) baseRest += 30;
+		if (perceivedEffort <= 4) baseRest -= 15;
+
+		return Math.max(30, Math.min(baseRest, 300)); // Between 30 seconds and 5 minutes
 	}
-
-	// Adjust based on perceived effort
-	if (perceivedEffort >= 8) baseRest += 30;
-	if (perceivedEffort <= 4) baseRest -= 15;
-
-	return Math.max(30, Math.min(baseRest, 300)); // Between 30 seconds and 5 minutes
 }
 
 export function generateWorkoutModifications(

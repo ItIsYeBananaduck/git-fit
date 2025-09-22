@@ -32,6 +32,9 @@ export const setUserConfig = mutation({
     },
 });
 
+// Alias for setUserConfig to match the onboarding usage
+export const updateUserConfig = setUserConfig;
+
 // Get user config (latest version)
 export const getUserConfig = query({
     args: {

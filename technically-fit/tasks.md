@@ -1,4 +1,4 @@
-## Nutrition AI – Auto Macro Adjustment on Plateau
+# Nutrition AI – Auto Macro Adjustment on Plateau
 
 - [x] Detect plateau from `monthlySummary`:
   - [x] No change in average/max volume or load for 3+ weeks
@@ -21,10 +21,24 @@
 }
 ```
 
+<<<<<<< HEAD
 - [x] Prioritize safe calorie levels — never drop below clinical minimums.
 - [x] Include config toggle: "autoAdjustMacros": true
 - [x] Send notification: "We adjusted your macros to help you break through your plateau. You can view or revert this change in your settings."
 - [x] Disable auto-adjust if wearable or weight log is unavailable for over 14 days.
+=======
+Prioritize safe calorie levels — never drop below clinical minimums.
+
+Include config toggle: "autoAdjustMacros": true
+
+Send notification: "We adjusted your macros to help you break through your plateau. You can view or revert this change in your settings."
+
+Disable auto-adjust if wearable or weight log is unavailable for over 14 days.
+
+## Implementation Tasks for Technically Fit
+
+This document outlines the actionable tasks needed to implement the missing specs and features identified in your project.
+>>>>>>> 15c02d0a1ef58566a001d430a9080ced589664d9
 
 ---
 
@@ -90,7 +104,21 @@
 - [x] Add data encryption and privacy compliance
 - [x] Create user data management tools
 
+<<<<<<< HEAD
 ### Training Split Customization
+=======
+- [x] Add medical screening questionnaire (injury/condition tracking)
+- [x] Build goal identification interface (primary/secondary objectives)
+  - Build UI and backend logic for users to identify and set primary/secondary fitness goals. (COMPLETED: Feature is implemented in onboarding and backend, see GoalIdentificationStep and convex/functions/goals.ts)
+- [x] Implement recommendation engine for training splits
+- [x] Create split comparison interface and educational content
+  - UI for comparing different training splits implemented in SplitComparisonPanel.svelte and SplitSelectionFlow.svelte.
+  - Educational content and pros/cons for each split included in the UI.
+  - Integrated into onboarding and dashboard flows.
+  - Users can view, compare, and select splits with contextual guidance.
+
+## Training Split Customization
+>>>>>>> 15c02d0a1ef58566a001d430a9080ced589664d9
 
 - [x] Allow user to set and save a custom training split
   - Implement UI and backend logic to let users define, save, and retrieve a fully custom training split (e.g., PPL + arm/core + cardio) as part of their config.
@@ -139,7 +167,91 @@
 
 ### Trainer, Marketplace, and Payments Roadmap
 
+<<<<<<< HEAD
 #### Phase 1: Data Models (Convex)
+=======
+**After split selection:**
+
+- [x] Ask user for equipment available (dumbbell, barbell, cable, machine, etc.)
+- [x] Ask for exercise preferences (include list / avoid list)
+- [x] Store this JSON in the user config file:
+
+```json
+{
+  "equipment": ["dumbbell", "barbell"],
+  "preferences": {
+    "include": ["squats", "bench press"],
+    "avoid": ["kettlebell swings"]
+  }
+}
+```
+
+- [x] Show countdown timer (based on AI-configured avgRestSec)
+- [x] Show current strain
+- [x] Optionally trigger Siri voice nudge when strain drops (if user has nudges enabled)
+
+Preference list
+[x] Create Swift `WorkoutAttributes` struct with `ActivityAttributes` + `ContentState`
+[x] Add Live Activity support using ActivityKit (iOS 16.1+)
+[x] Design Dynamic Island compact/expanded UI using WidgetKit + SwiftUI
+[x] Add logic to update the Live Activity in real-time as workout progresses
+[x] Display reps + strain in Dynamic Island during active sets
+[x] Display rest timer + strain in Dynamic Island during rest
+[x] Integrate wearable strain values (Apple Watch via HealthKit or WHOOP if available)
+[x] Auto-disable Live Activity if no wearable connected or permissions are denied
+[x] Voice assistant nudge (optional): Use Siri Shortcuts or AVSpeechSynthesizer to say “Let’s go! Start your next set.” if nudging is enabled and recovery is detected
+
+AI suitability based on prior summary (replace stale or disliked exercises)
+
+avgRest
+totalVolume
+
+### Monthly AI Adjustments to Exercise Pool
+
+- [x] Pull monthlySummary JSON at each mesocycle transition
+- [x] Track avg + max for sets, reps, load, avgRest, and totalVolume
+- [x] Identify and flag exercises that are stalled (no load or volume increase over 2 cycles)
+- [x] Identify exercises with low user rating
+- [x] Identify exercises with poor strain-to-rep correlation (optional)
+- [x] Replace 20–30% of exercise pool with new exercises at each mesocycle transition
+- [x] Update program JSON for new mesocycle with updated exercises
+
+🧠 AI CONFIG SUPPORT
+Config stored as JSON string in Convex:
+
+```json
+{
+  "trackRepsSetsLoad": "avg_max",
+  "strainNudges": true
+}
+```
+
+🎧 NATIVE MUSIC PLAYER CONTROLS (IN-WORKOUT)
+
+## Native Music Player Controls (In-Workout)
+
+- [x] Add music controls UI to workout session screen
+  - [x] Play / Pause button
+  - [x] Skip track button
+  - [x] Volume up/down controls
+  - [x] Show current track name and artist
+- [x] Implement Capacitor plugin for media control (cordova-plugin-music-controls2 or modern alternative)
+- [x] Auto-detect platform (Apple Music for iOS, Spotify, or system player)
+- [x] Design music state data model
+  - Add fields for music state (track, artist, position, isPlaying, etc.) to workout session or a new table in Convex backend.
+- [x] Implement backend logic for music state
+  - Create Convex functions to save and retrieve music state per session/user.
+- [x] Update music controls UI to sync state
+  - Update Svelte music controls component to save music state on change and restore on session load.
+
+**Note:** Check off each task as you complete it. Update this list as new features/specs are added or completed.
+
+---
+
+## Trainer, Marketplace, and Payments Roadmap
+
+### Phase 1: Data Models (Convex)
+>>>>>>> 15c02d0a1ef58566a001d430a9080ced589664d9
 
 - [x] Create Trainer table
   - [x] Fields:
@@ -179,9 +291,11 @@
 #### Phase 2: File Upload + Conversion
 
 - [x] Build file upload endpoint
+
   - [x] Accepts CSV/Excel/Google Sheets import
   - [x] Uses parser (e.g., papaparse for CSV, xlsx for Excel)
   - [x] Convert → structured JSON with:
+
     ```json
     {
       "week": 1,
@@ -191,6 +305,7 @@
       ]
     }
     ```
+
   - [x] Validate JSON (required fields: exercise, sets, reps, load)
   - [x] Auto-reject malformed files
   - [x] Attach JSON to Program table
