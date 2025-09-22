@@ -1,8 +1,8 @@
 // File: aiTrainingEngine.test.ts
 
 import { describe, it, expect } from 'vitest';
-import { AITrainingEngineImpl } from '../aiTrainingEngine';
-import type { WeeklyData, PerformanceAnalysis } from '../aiTrainingEngine';
+import { AITrainingEngineImpl } from '../aiTrainingEngine.js';
+import type { WeeklyData, PerformanceAnalysis } from '../aiTrainingEngine.js';
 
 describe('AITrainingEngine', () => {
   const aiEngine = new AITrainingEngineImpl();
@@ -45,7 +45,7 @@ describe('AITrainingEngine', () => {
 
   it('should analyze weekly performance correctly', async () => {
     const analysis = await aiEngine.analyzeWeeklyPerformance('user1', mockWeeklyData);
-    
+
     expect(analysis).toBeDefined();
     expect(analysis.consistencyScore).toBeGreaterThanOrEqual(0);
     expect(analysis.consistencyScore).toBeLessThanOrEqual(100);
@@ -63,8 +63,8 @@ describe('AITrainingEngine', () => {
       adaptationScore: 85
     };
 
-    const adjustments = await aiEngine.calculateProgramAdjustments(analysis, {} as any);
-    
+    const adjustments = await aiEngine.calculateProgramAdjustments(analysis);
+
     expect(adjustments).toBeDefined();
     expect(typeof adjustments.loadAdjustment).toBe('number');
     expect(typeof adjustments.volumeAdjustment).toBe('number');
@@ -74,7 +74,7 @@ describe('AITrainingEngine', () => {
   it('should predict RIR for exercises', async () => {
     const exercise = { name: 'Bench Press', muscleGroup: 'chest', equipment: 'barbell' };
     const prediction = await aiEngine.predictRIR('user1', exercise, 2);
-    
+
     expect(prediction).toBeDefined();
     expect(prediction.predictedRIR).toBeGreaterThanOrEqual(0);
     expect(prediction.confidence).toBeGreaterThanOrEqual(0);
@@ -83,7 +83,7 @@ describe('AITrainingEngine', () => {
 
   it('should assess recovery status', async () => {
     const recoveryStatus = await aiEngine.assessRecoveryStatus(mockWeeklyData.recoveryMetrics);
-    
+
     expect(recoveryStatus).toBeDefined();
     expect(recoveryStatus.recoveryScore).toBe(68);
     expect(['low', 'moderate', 'high', 'very_high']).toContain(recoveryStatus.fatigueLevel);
@@ -91,11 +91,11 @@ describe('AITrainingEngine', () => {
 
   it('should determine deload timing', async () => {
     const deloadRec = await aiEngine.determineDeloadTiming(
-      'user1', 
-      4, 
+      'user1',
+      4,
       { trend: 'stable', averageRecovery: 68 }
     );
-    
+
     expect(deloadRec).toBeDefined();
     expect(typeof deloadRec.shouldDeload).toBe('boolean');
     expect(typeof deloadRec.reasoning).toBe('string');
@@ -103,14 +103,16 @@ describe('AITrainingEngine', () => {
 
   it('should calculate rest adjustments based on strain', async () => {
     const strainMetrics = {
-      currentStrain: 16,
-      heartRate: 140,
-      hrvDeviation: 15,
-      perceivedExertion: 8
+      currentStrain: 5,
+      heartRate: 75,
+      hrvDeviation: -2,
+      perceivedExertion: 6,
+      strain: 10, // Added missing property
+      duration: 60 // Added missing property
     };
 
     const restAdjustment = await aiEngine.calculateRestAdjustment(strainMetrics, 120);
-    
+
     expect(restAdjustment).toBeDefined();
     expect(restAdjustment.adjustedRestTime).toBeGreaterThan(120); // Should increase rest due to high strain
     expect(typeof restAdjustment.reason).toBe('string');
@@ -128,7 +130,7 @@ describe('AITrainingEngine', () => {
     ];
 
     const safetyOverride = await aiEngine.generateSafetyOverride(dangerSignals);
-    
+
     expect(safetyOverride).toBeDefined();
     expect(safetyOverride.shouldStop).toBe(true); // High severity should trigger stop
     expect(safetyOverride.warnings.length).toBeGreaterThan(0);

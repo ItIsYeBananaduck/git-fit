@@ -8,6 +8,14 @@
 import type { TrainingProgram } from '../types/sharedTypes';
 import type { RecoveryData, TrainingSession, NotificationPreferences, FatigueNotification } from '../types/sharedTypes';
 import type { Id } from '../../../convex/_generated/dataModel';
+import { adaptiveTrainingConfig } from '../services/ai-config/adaptiveTrainingConfig.js';
+
+export interface RecoveryData {
+  userId: string;
+  recoveryScore: number; // 0-100 scale
+  fatigueLevel: 'low' | 'moderate' | 'high';
+  timestamp: string; // ISO 8601 format
+}
 
 export interface AITrainingEngine {
   /**
@@ -208,7 +216,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
 
     // Use enhanced ML model for prediction
     const prediction = this.predictRIRWithML(model, exercise, setNumber);
-    
+
     return {
       predictedRIR: Math.round(prediction.rir),
       confidence: prediction.confidence
@@ -234,7 +242,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
     // Use trained model parameters for prediction
     const baseRIR = this.calculateBaseRIR(model, features);
     const adjustment = this.calculateContextualAdjustment(model, features);
-    
+
     const predictedRIR = Math.max(0, Math.min(5, baseRIR + adjustment));
     const confidence = this.calculatePredictionConfidence(model, features);
 
@@ -246,7 +254,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
     // Categorize exercises by movement pattern
     const compoundExercises = ['squat', 'deadlift', 'bench press', 'overhead press', 'pull-up', 'row'];
     const isolationExercises = ['bicep curl', 'tricep extension', 'leg extension', 'leg curl', 'lateral raise'];
-    
+
     const exerciseName = exercise.name.toLowerCase();
     if (compoundExercises.some(compound => exerciseName.includes(compound))) {
       return 'compound';
@@ -263,44 +271,44 @@ export class AITrainingEngineImpl implements AITrainingEngine {
 
   private calculateBaseRIR(model: RIRModel, features: { setNumber: number; exerciseType: string; muscleGroup: string; equipment: string; timeOfDay: number; recentFatigue: number; trainingAge: number; lastSessionRIR: number }): number {
     let baseRIR = model.parameters.baselineRIR;
-    
+
     // Apply exercise type modifier
     const exerciseModifier = model.parameters.exerciseTypeModifier[features.exerciseType] || 0;
     baseRIR += exerciseModifier;
-    
+
     // Apply muscle group modifier
     const muscleModifier = model.parameters.muscleGroupModifier[features.muscleGroup] || 0;
     baseRIR += muscleModifier;
-    
+
     // Apply time of day modifier
     const timeModifier = model.parameters.timeOfDayModifier[Math.floor(features.timeOfDay / 6)] || 0;
     baseRIR += timeModifier;
-    
+
     return Math.max(0, Math.min(5, baseRIR));
   }
 
   private calculateContextualAdjustment(model: RIRModel, features: { setNumber: number; exerciseType: string; muscleGroup: string; equipment: string; timeOfDay: number; recentFatigue: number; trainingAge: number; lastSessionRIR: number }): number {
     let adjustment = 0;
-    
+
     // Fatigue adjustment
     adjustment -= features.recentFatigue * 0.1;
-    
+
     // Training age adjustment (more experienced = better RIR estimation)
     adjustment += Math.min(features.trainingAge * 0.01, 0.5);
-    
+
     // Set number adjustment (later sets typically have lower RIR)
     adjustment -= features.setNumber * model.parameters.fatigueRate;
-    
+
     return adjustment;
   }
 
   private calculatePredictionConfidence(model: RIRModel, features: { setNumber: number; exerciseType: string; muscleGroup: string; equipment: string; timeOfDay: number; recentFatigue: number; trainingAge: number; lastSessionRIR: number }): number {
     let confidence = model.accuracy;
-    
+
     // Reduce confidence for new/unfamiliar contexts
     if (features.trainingAge < 10) confidence *= 0.8;
     if (features.recentFatigue > 7) confidence *= 0.9;
-    
+
     return Math.max(0.1, Math.min(1.0, confidence));
   }
 
@@ -308,7 +316,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
     // Simplified training algorithm - in production would use proper ML
     const avgRIR = performanceData.reduce((sum, data) => sum + data.actualRIR, 0) / performanceData.length;
     const accuracy = 0.85; // Placeholder accuracy
-    
+
     const parameters: RIRModelParameters = {
       baselineRIR: avgRIR,
       fatigueRate: 0.2,
@@ -317,9 +325,10 @@ export class AITrainingEngineImpl implements AITrainingEngine {
       timeOfDayModifier: { 0: -0.2, 1: 0, 2: 0.1, 3: -0.1 }, // Early morning, morning, afternoon, evening
       confidenceThreshold: 0.7
     };
-    
+
     return {
       success: true,
+      details: "Training parameters initialized successfully.",
       accuracy,
       improvement: 0,
       newVersion: 1,
@@ -350,28 +359,28 @@ export class AITrainingEngineImpl implements AITrainingEngine {
 
   private calculateRecentAccuracy(feedbackData: RIRFeedback[]): number {
     if (feedbackData.length === 0) return 0;
-    
+
     const recentFeedback = feedbackData.slice(-10); // Last 10 feedback points
     const avgRating = recentFeedback.reduce((sum, fb) => sum + fb.performanceRating, 0) / recentFeedback.length;
-    
+
     return avgRating / 5; // Convert 1-5 scale to 0-1
   }
 
   private generateModelRecommendations(model: RIRModel, recentAccuracy: number): string[] {
     const recommendations: string[] = [];
-    
+
     if (model.trainingAge < 20) {
       recommendations.push('Complete more training sessions to improve model accuracy');
     }
-    
+
     if (recentAccuracy < 0.7) {
       recommendations.push('Recent predictions less accurate - model may need retraining');
     }
-    
+
     if (model.accuracy > 0.9) {
       recommendations.push('Model performing excellently - continue providing feedback');
     }
-    
+
     return recommendations;
   }
 
@@ -381,30 +390,30 @@ export class AITrainingEngineImpl implements AITrainingEngine {
   private analyzeFatigueState(recoveryData: RecoveryData[], recentSessions: TrainingSession[]): FatigueAnalysis {
     let fatigueScore = 50; // Base score
     let strainAccumulation = 0;
-    
+
     // Analyze recovery data
     if (recoveryData.length > 0) {
       const latestRecovery = recoveryData[recoveryData.length - 1];
       const avgRecovery = recoveryData.reduce((sum, r) => sum + r.recoveryScore, 0) / recoveryData.length;
-      
+
       // Lower recovery score increases fatigue
       fatigueScore -= (100 - avgRecovery) * 0.5;
-      
+
       // HRV below 40 indicates high fatigue
       if (latestRecovery.hrvScore < 40) {
         fatigueScore += 20;
       }
-      
+
       // High resting heart rate indicates fatigue
       if (latestRecovery.restingHeartRate > 75) {
         fatigueScore += 15;
       }
-      
+
       // Poor sleep increases fatigue
       if (latestRecovery.sleepPerformance < 60) {
         fatigueScore += 10;
       }
-      
+
       // Calculate strain accumulation
       strainAccumulation = recoveryData.slice(-7).reduce((sum, r) => sum + (r.strainYesterday || 0), 0) / 7;
       fatigueScore += strainAccumulation * 2;
@@ -415,7 +424,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
       const recentLoad = this.calculateAcuteLoad(recentSessions);
       const chronicLoad = this.calculateChronicLoad(recentSessions);
       const acwr = chronicLoad > 0 ? recentLoad / chronicLoad : 1;
-      
+
       // High ACWR indicates potential overtraining
       if (acwr > 1.3) {
         fatigueScore += (acwr - 1.3) * 20;
@@ -437,10 +446,10 @@ export class AITrainingEngineImpl implements AITrainingEngine {
     if (recoveryData.length >= 7) {
       const recent = recoveryData.slice(-3);
       const earlier = recoveryData.slice(-7, -3);
-      
+
       const recentAvg = recent.reduce((sum, r) => sum + r.recoveryScore, 0) / recent.length;
       const earlierAvg = earlier.reduce((sum, r) => sum + r.recoveryScore, 0) / earlier.length;
-      
+
       if (recentAvg > earlierAvg + 5) {
         trend = 'improving';
       } else if (recentAvg < earlierAvg - 5) {
@@ -520,13 +529,13 @@ export class AITrainingEngineImpl implements AITrainingEngine {
    * Train or update RIR model with new performance data
    */
   async trainRIRModel(
-    userId: string, 
-    exercise: Exercise, 
+    userId: string,
+    exercise: Exercise,
     performanceData: RIRTrainingData[]
   ): Promise<ModelTrainingResult> {
     const modelKey = `${userId}-${exercise.name}`;
     const trainingResult = this.performModelTraining(performanceData);
-    
+
     // Update or create model
     const updatedModel: RIRModel = {
       userId,
@@ -543,6 +552,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
 
     return {
       success: true,
+      details: "RIR model updated successfully.",
       accuracy: trainingResult.accuracy,
       improvement: 0,
       newVersion: updatedModel.modelVersion,
@@ -642,8 +652,8 @@ export class AITrainingEngineImpl implements AITrainingEngine {
   }
 
   async determineDeloadTiming(
-    userId: string, 
-    currentWeek: number, 
+    userId: string,
+    currentWeek: number,
     recoveryTrend: RecoveryTrend
   ): Promise<DeloadRecommendation> {
     let shouldDeload = false;
@@ -654,7 +664,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
       shouldDeload = true;
       reasoning = `Scheduled deload at week ${currentWeek}`;
     }
-    
+
     // Recovery-based deload
     if (recoveryTrend.trend === 'declining' && recoveryTrend.averageRecovery < 40) {
       shouldDeload = true;
@@ -668,7 +678,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
   }
 
   async calculateRestAdjustment(
-    realtimeStrain: StrainMetrics, 
+    realtimeStrain: StrainMetrics,
     baseRestTime: number
   ): Promise<RestAdjustment> {
     let multiplier = 1.0;
@@ -695,11 +705,18 @@ export class AITrainingEngineImpl implements AITrainingEngine {
       reason += ', high perceived exertion';
     }
 
+    let adjustedRestTime = Math.round(baseRestTime * multiplier);
+
+    // Enforce maxRestTime from the configuration
+    if (adjustedRestTime > adaptiveTrainingConfig.maxRestTime) {
+      adjustedRestTime = adaptiveTrainingConfig.maxRestTime;
+      reason += `, capped at max rest time (${adaptiveTrainingConfig.maxRestTime}s)`;
+    }
+
     return {
-      adjustedRestTime: Math.round(baseRestTime * multiplier),
+      adjustedRestTime,
       reason,
       multiplier,
-      reasoning: [reason], // Added default reasoning array
     };
   }
 
@@ -716,6 +733,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
     recoveryData: RecoveryData[],
     // Removed unused variables
   ): Promise<AdaptiveLoadAdjustment> {
+    // Ensure AdaptiveLoadAdjustment properties are used correctly
     const adjustments: AdaptiveLoadAdjustment = {
       loadMultiplier: 1.0,
       volumeMultiplier: 1.0,
@@ -728,17 +746,17 @@ export class AITrainingEngineImpl implements AITrainingEngine {
 
     // Analyze recovery status
     const recoveryStatus = await this.assessRecoveryStatus(recoveryData);
-    const avgRecovery = recoveryData.length > 0 
-      ? recoveryData.reduce((sum, r) => sum + r.recoveryScore, 0) / recoveryData.length 
+    const avgRecovery = recoveryData.length > 0
+      ? recoveryData.reduce((sum, r) => sum + r.recoveryScore, 0) / recoveryData.length
       : 50;
 
     // Analyze recent performance
     const recentPerformance = this.analyzeRecentPerformance(recentSessions);
-    
+
     // HRV-based adjustments
     if (recoveryData.length > 0) {
       const latestRecovery = recoveryData[recoveryData.length - 1];
-      
+
       if (latestRecovery.hrvScore < 30) {
         adjustments.loadMultiplier *= 0.7;
         adjustments.volumeMultiplier *= 0.8;
@@ -868,13 +886,13 @@ export class AITrainingEngineImpl implements AITrainingEngine {
   // Private helper methods
   private calculateTrend(values: number[]): number {
     if (values.length < 2) return 0;
-    
+
     const firstHalf = values.slice(0, Math.floor(values.length / 2));
     const secondHalf = values.slice(Math.floor(values.length / 2));
-    
+
     const firstAvg = this.calculateAverage(firstHalf);
     const secondAvg = this.calculateAverage(secondHalf);
-    
+
     return ((secondAvg - firstAvg) / firstAvg) * 100;
   }
 
@@ -899,15 +917,15 @@ export class AITrainingEngineImpl implements AITrainingEngine {
 
     const completionRates = sessions.map(s => this.calculateCompletionRate(s));
     const completionRate = this.calculateAverage(completionRates);
-    
+
     // Calculate average RPE (assuming perceivedEffort maps to RPE)
     const rpeValues = sessions.map(s => s.perceivedEffort || 5);
     const averageRPE = this.calculateAverage(rpeValues);
-    
+
     // Calculate volume trend (simplified)
     const volumes = sessions.map(s => (s.actualParams?.reps || 0) * (s.actualParams?.sets || 0));
     const volumeTrend = volumes.length > 1 ? this.calculateTrend(volumes) : 0;
-    
+
     // Calculate strength gains (simplified - based on completion rate improvement)
     const strengthGains = completionRate > 0.9 ? 0.05 : 0; // 5% gain if consistently completing
 
@@ -923,9 +941,9 @@ export class AITrainingEngineImpl implements AITrainingEngine {
     // Calculate acute load (last 7 days)
     const recentSessions = sessions.slice(-7);
     return recentSessions.reduce((total, session) => {
-      const volume = (session.actualParams?.load || 0) * 
-                    (session.actualParams?.reps || 0) * 
-                    (session.actualParams?.sets || 0);
+      const volume = (session.actualParams?.load || 0) *
+        (session.actualParams?.reps || 0) *
+        (session.actualParams?.sets || 0);
       return total + volume;
     }, 0);
   }
@@ -934,12 +952,12 @@ export class AITrainingEngineImpl implements AITrainingEngine {
     // Calculate chronic load (last 28 days, averaged)
     const chronicSessions = sessions.slice(-28);
     const totalLoad = chronicSessions.reduce((total, session) => {
-      const volume = (session.actualParams?.load || 0) * 
-                    (session.actualParams?.reps || 0) * 
-                    (session.actualParams?.sets || 0);
+      const volume = (session.actualParams?.load || 0) *
+        (session.actualParams?.reps || 0) *
+        (session.actualParams?.sets || 0);
       return total + volume;
     }, 0);
-    
+
     return chronicSessions.length > 0 ? totalLoad / chronicSessions.length : 0;
   }
 
@@ -964,7 +982,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
 
     const averageRecovery = recoveryData.reduce((sum, r) => sum + r.recoveryScore, 0) / recoveryData.length;
     const trend = this.calculateTrend(recoveryData.map(r => r.recoveryScore));
-    
+
     let fatigueLevel: 'low' | 'moderate' | 'high' = 'moderate';
     if (averageRecovery < 40) fatigueLevel = 'high';
     else if (averageRecovery > 70) fatigueLevel = 'low';
@@ -989,10 +1007,10 @@ export class AITrainingEngineImpl implements AITrainingEngine {
 
     const completionRates = performanceHistory.map(p => p.completionRate);
     const completionRate = this.calculateAverage(completionRates);
-    
+
     const rpeValues = performanceHistory.map(p => p.perceivedEffort);
     const averageRPE = this.calculateAverage(rpeValues);
-    
+
     const volumeTrend = this.calculateTrend(
       performanceHistory.map(p => (p.session.actualParams?.reps || 0) * (p.session.actualParams?.sets || 0))
     );
@@ -1010,16 +1028,16 @@ export class AITrainingEngineImpl implements AITrainingEngine {
     recoveryTrend: RecoveryTrendAnalysis,
     performanceTrend: PerformanceTrendAnalysis
   ): boolean {
-    return progressTrend.needsAdjustment || 
-           recoveryTrend.needsAdjustment || 
-           performanceTrend.needsAdjustment;
+    return progressTrend.needsAdjustment ||
+      recoveryTrend.needsAdjustment ||
+      performanceTrend.needsAdjustment;
   }
 
   private generateExerciseSpecificAdjustments(
     performanceHistory: PerformanceData[]
   ): ProgramModification[] {
     const adjustments: ProgramModification[] = [];
-    
+
     // Group by exercise
     const exerciseGroups = performanceHistory.reduce((groups, perf) => {
       if (!groups[perf.exercise]) {
@@ -1033,7 +1051,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
     for (const [exercise, performances] of Object.entries(exerciseGroups)) {
       const avgCompletion = this.calculateAverage(performances.map(p => p.completionRate));
       const avgRPE = this.calculateAverage(performances.map(p => p.perceivedEffort));
-      
+
       if (avgCompletion > 0.95 && avgRPE < 7) {
         // Strong performance - can increase difficulty
         adjustments.push({
@@ -1042,7 +1060,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
           adjustment: {
             action: 'increase_load',
             multiplier: 1.05,
-            reasoning: `Strong performance in ${exercise} (${(avgCompletion * 100).toFixed(1)}% completion)`
+            reasoning: [`Strong performance in ${exercise} (${(avgCompletion * 100).toFixed(1)}% completion)`]
           }
         });
       } else if (avgCompletion < 0.7) {
@@ -1053,7 +1071,7 @@ export class AITrainingEngineImpl implements AITrainingEngine {
           adjustment: {
             action: 'reduce_load',
             multiplier: 0.9,
-            reasoning: `Difficulty in ${exercise} (${(avgCompletion * 100).toFixed(1)}% completion)`
+            reasoning: [`Difficulty in ${exercise} (${(avgCompletion * 100).toFixed(1)}% completion)`]
           }
         });
       }
@@ -1090,8 +1108,8 @@ export class AITrainingEngineImpl implements AITrainingEngine {
 
     // Determine if program needs adjustment
     const needsAdjustment = this.evaluateAdjustmentNeed(
-      progressTrend, 
-      recoveryTrend, 
+      progressTrend,
+      recoveryTrend,
       performanceTrend
     );
 
@@ -1208,193 +1226,195 @@ export class AITrainingEngineImpl implements AITrainingEngine {
     const adjustment: AdjustmentType = {
       load: 0,
       volume: 0,
-      intensity: 0
+      intensity: 0,
+      reasoning: [] as string[]
     };
     return adjustment;
   }
 }
 
-  // Additional type definitions for the implementation
-  interface RIRModel {
-    userId: string;
-    exerciseId: string;
-    modelVersion: number;
-    accuracy: number;
-    parameters: RIRModelParameters;
-    lastUpdated: string;
+// Additional type definitions for the implementation
+interface RIRModel {
+  userId: string;
+  exerciseId: string;
+  modelVersion: number;
+  accuracy: number;
+  parameters: RIRModelParameters;
+  lastUpdated: string;
+  trainingAge: number;
+  lastSessionRIR: number;
+}
+
+interface UserProfile {
+  userId: string;
+  experienceLevel: 'beginner' | 'intermediate' | 'advanced';
+  trainingAge: number; // months
+  preferences: {
+    restPreference: 'minimal' | 'standard' | 'extended';
+    intensityPreference: 'conservative' | 'moderate' | 'aggressive';
+  };
+}
+
+export interface StrainMetrics {
+  strain: number;
+  heartRate: number;
+  duration: number;
+  currentStrain?: number;
+  hrvDeviation?: number;
+  perceivedExertion?: number;
+}
+
+export interface RestAdjustment {
+  adjustedRestTime: number;
+  reason: string;
+  multiplier: number;
+  reasoning?: string; // Optional reasoning property
+}
+
+export interface PerformanceMetrics {
+  completionRate: number;
+  averageRPE: number;
+  volumeTrend: number;
+  strengthGains: number;
+}
+
+export interface AdaptiveLoadAdjustment {
+  loadMultiplier: number;
+  volumeMultiplier: number;
+  intensityMultiplier: number;
+  restMultiplier: number;
+  reasoning: string[];
+  riskLevel: 'low' | 'moderate' | 'high';
+  recommendations: string[];
+}
+
+export interface UserProgressData {
+  userId: string;
+  strengthImprovement: number; // percentage improvement
+  consistencyScore: number;
+  adaptationRate: number;
+  weakAreas: string[];
+  strongAreas: string[];
+}
+
+export interface PerformanceData {
+  session: TrainingSession;
+  completionRate: number;
+  perceivedEffort: number;
+  date: string;
+  exercise: string;
+}
+
+export interface ProgramAdjustmentResult {
+  programModifications: ProgramModification[];
+  reasoning: string[];
+  riskAssessment: 'low' | 'moderate' | 'high';
+  timeline: 'immediate' | 'next_week' | 'next_cycle';
+  requiresSupervision: boolean;
+}
+
+export interface ProgramModification {
+  type: 'load_adjustment' | 'volume_adjustment' | 'progression_acceleration' | 'deload_insertion' | 'recovery_focus' | 'fatigue_management' | 'exercise_specific';
+  scope: 'program_wide' | 'all_exercises' | 'strength_exercises' | 'high_intensity_sessions' | string;
+  adjustment: AdjustmentType; // Replaced `any` type with `AdjustmentType`
+}
+
+interface PerformanceTrendAnalysis {
+  completionRate: number;
+  averageRPE: number;
+  volumeTrend: number;
+  needsAdjustment: boolean;
+}
+
+interface ProgressTrend {
+  strengthImprovement: number;
+  consistencyScore: number;
+  adaptationRate: number;
+  needsAdjustment: boolean;
+}
+
+interface RecoveryTrendAnalysis {
+  averageRecovery: number;
+  trend: 'improving' | 'stable' | 'declining';
+  fatigueLevel: 'low' | 'moderate' | 'high';
+  needsAdjustment: boolean;
+}
+
+interface RIRTrainingData {
+  exercise: string;
+  setNumber: number;
+  actualRIR: number;
+  weight: number;
+  reps: number;
+  perceivedEffort: number;
+  timestamp: string;
+  context?: {
+    fatigueLevel: number;
     trainingAge: number;
-    lastSessionRIR: number;
-  }
+    timeOfDay: number;
+  };
+}
 
-  interface UserProfile {
-    userId: string;
-    experienceLevel: 'beginner' | 'intermediate' | 'advanced';
-    trainingAge: number; // months
-    preferences: {
-      restPreference: 'minimal' | 'standard' | 'extended';
-      intensityPreference: 'conservative' | 'moderate' | 'aggressive';
-    };
-  }
+interface ModelTrainingResult {
+  success: boolean;
+  details: string;
+  parameters: RIRModelParameters; // Updated to match the expected type
+  accuracy: number;
+  improvement: number; // Added missing property
+  newVersion: number; // Added to track AI model version updates
+}
 
-  export interface StrainMetrics {
-    strain: number;
-    heartRate: number;
-    duration: number;
-    currentStrain?: number;
-    hrvDeviation?: number;
-    perceivedExertion?: number;
-  }
+interface RIRModelParameters {
+  baselineRIR: number;
+  fatigueRate: number;
+  exerciseTypeModifier: Record<string, number>;
+  muscleGroupModifier: Record<string, number>;
+  timeOfDayModifier: Record<number, number>;
+  confidenceThreshold: number;
+}
 
-  export interface RestAdjustment {
-    adjustedRestTime: number;
-    reasoning: string[]; // Updated to accept an array of strings
-    multiplier: number;
-    reason?: string; // Added to resolve type error
-  }
+interface RIRFeedback {
+  userId: string;
+  exercise: string;
+  predictedRIR: number;
+  actualRIR: number;
+  setNumber: number;
+  performanceRating: number;
+  timestamp: string;
+  context: {
+    fatigueLevel: number;
+    trainingAge: number;
+    timeOfDay: number;
+  };
+}
 
-  export interface PerformanceMetrics {
-    completionRate: number;
-    averageRPE: number;
-    volumeTrend: number;
-    strengthGains: number;
-  }
+interface FatigueAnalysis {
+  fatigueScore: number;
+  fatigueLevel: 'low' | 'moderate' | 'high';
+  trend: 'improving' | 'stable' | 'worsening';
+  strainAccumulation: number;
+  recommendations: string[];
+}
 
-  export interface AdaptiveLoadAdjustment {
-    loadMultiplier: number;
-    volumeMultiplier: number;
-    intensityMultiplier: number;
-    restMultiplier: number;
-    reasoning: string[];
-    riskLevel: 'low' | 'moderate' | 'high';
-    recommendations: string[];
-  }
+interface RIRModelMetrics {
+  hasModel: boolean;
+  accuracy: number;
+  trainingDataPoints: number;
+  lastUpdated: string | null;
+  recentAccuracy?: number;
+  recommendations: string[];
+}
 
-  export interface UserProgressData {
-    userId: string;
-    strengthImprovement: number; // percentage improvement
-    consistencyScore: number;
-    adaptationRate: number;
-    weakAreas: string[];
-    strongAreas: string[];
-  }
-
-  export interface PerformanceData {
-    session: TrainingSession;
-    completionRate: number;
-    perceivedEffort: number;
-    date: string;
-    exercise: string;
-  }
-
-  export interface ProgramAdjustmentResult {
-    programModifications: ProgramModification[];
-    reasoning: string[];
-    riskAssessment: 'low' | 'moderate' | 'high';
-    timeline: 'immediate' | 'next_week' | 'next_cycle';
-    requiresSupervision: boolean;
-  }
-
-  export interface ProgramModification {
-    type: 'load_adjustment' | 'volume_adjustment' | 'progression_acceleration' | 'deload_insertion' | 'recovery_focus' | 'fatigue_management' | 'exercise_specific';
-    scope: 'program_wide' | 'all_exercises' | 'strength_exercises' | 'high_intensity_sessions' | string;
-    adjustment: AdjustmentType; // Replaced `any` type with `AdjustmentType`
-  }
-
-  interface PerformanceTrendAnalysis {
-    completionRate: number;
-    averageRPE: number;
-    volumeTrend: number;
-    needsAdjustment: boolean;
-  }
-
-  interface ProgressTrend {
-    strengthImprovement: number;
-    consistencyScore: number;
-    adaptationRate: number;
-    needsAdjustment: boolean;
-  }
-
-  interface RecoveryTrendAnalysis {
-    averageRecovery: number;
-    trend: 'improving' | 'stable' | 'declining';
-    fatigueLevel: 'low' | 'moderate' | 'high';
-    needsAdjustment: boolean;
-  }
-
-  interface RIRTrainingData {
-    exercise: string;
-    setNumber: number;
-    actualRIR: number;
-    weight: number;
-    reps: number;
-    perceivedEffort: number;
-    timestamp: string;
-    context?: {
-      fatigueLevel: number;
-      trainingAge: number;
-      timeOfDay: number;
-    };
-  }
-
-  interface ModelTrainingResult {
-    success: boolean;
-    accuracy: number;
-    improvement: number;
-    newVersion: number;
-    parameters: RIRModelParameters;
-  }
-
-  interface RIRModelParameters {
-    baselineRIR: number;
-    fatigueRate: number;
-    exerciseTypeModifier: Record<string, number>;
-    muscleGroupModifier: Record<string, number>;
-    timeOfDayModifier: Record<number, number>;
-    confidenceThreshold: number;
-  }
-
-  interface RIRFeedback {
-    userId: string;
-    exercise: string;
-    predictedRIR: number;
-    actualRIR: number;
-    setNumber: number;
-    performanceRating: number;
-    timestamp: string;
-    context: {
-      fatigueLevel: number;
-      trainingAge: number;
-      timeOfDay: number;
-    };
-  }
-
-  interface FatigueAnalysis {
-    fatigueScore: number;
-    fatigueLevel: 'low' | 'moderate' | 'high';
-    trend: 'improving' | 'stable' | 'worsening';
-    strainAccumulation: number;
-    recommendations: string[];
-  }
-
-  interface RIRModelMetrics {
-    hasModel: boolean;
-    accuracy: number;
-    trainingDataPoints: number;
-    lastUpdated: string | null;
-    recentAccuracy?: number;
-    recommendations: string[];
-  }
-
-  // Refined `AdjustmentType` to include missing properties
-  // Define the `AdjustmentType` interface
-  interface AdjustmentType {
-    load?: number;
-    volume?: number;
-    intensity?: number;
-    action?: string; // e.g., 'increase_load', 'reduce_load'
-    multiplier?: number; // e.g., load or volume multiplier
-    duration?: number; // e.g., duration in weeks
-    frequency?: string; // e.g., 'reduce', 'maintain'
-    replacement?: string; // e.g., 'reduced_intensity'
-    reasoning?: string; // Explanation for the adjustment
-  }
+// Refined `AdjustmentType` to include missing properties
+// Define the `AdjustmentType` interface
+interface AdjustmentType {
+  load?: number;
+  volume?: number;
+  intensity?: number;
+  action?: string; // e.g., 'increase_load', 'reduce_load'
+  multiplier?: number; // e.g., load or volume multiplier
+  duration?: number; // e.g., duration in weeks
+  frequency?: string; // e.g., 'reduce', 'maintain'
+  replacement?: string; // e.g., 'reduced_intensity'
+  reasoning?: string[]; // Changed from `string` to `string[]` to match usage
+}
