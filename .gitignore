@@ -6,3 +6,7 @@
 # Ignore dependencies and editor caches
 node_modules/
 node_modules/.svelte2tsx-language-server-files/
+
+# Large AI model files
+fine_tuned_gpt2/model.safetensors
+fine_tuned_gpt2/*.safetensors

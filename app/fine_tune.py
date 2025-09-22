@@ -13,6 +13,7 @@ from transformers import (
     TrainingArguments,
     DataCollatorForLanguageModeling
 )
+from huggingface_hub import HfApi
 
 def load_dataset(file_path):
     """Load the JSONL dataset"""
@@ -99,10 +100,30 @@ def main():
     trainer.save_model("./fine_tuned_gpt2")
     tokenizer.save_pretrained("./fine_tuned_gpt2")
 
+    # Upload model to Hugging Face
+    print("☁️ Uploading model to Hugging Face...")
+    api = HfApi()
+    repo_id = "ItIsYeBananaduck/git-fit-gpt2"  # Change to your repo
+    try:
+        api.upload_file(
+            path_or_fileobj="./fine_tuned_gpt2/model.safetensors",
+            path_in_repo="model.safetensors",
+            repo_id=repo_id,
+            repo_type="model"
+        )
+        print(f"✅ Model uploaded to https://huggingface.co/{repo_id}")
+    except Exception as e:
+        print(f"❌ Upload failed: {e}. Make sure you're logged in with 'huggingface-cli login' and the repo exists.")
+
+    # Clean up local model file
+    if os.path.exists("./fine_tuned_gpt2/model.safetensors"):
+        os.remove("./fine_tuned_gpt2/model.safetensors")
+        print("🗑️ Local model file removed to keep repo clean.")
+
     print("✅ Fine-tuning complete!")
-    print("📁 Model saved to: ./fine_tuned_gpt2")
+    print("📁 Config and tokenizer saved locally.")
+    print(f"💡 Use the model from Hugging Face: https://huggingface.co/{repo_id}")
     print("\n🎉 Your GPT-2 model is now fine-tuned for Git-Fit coaching!")
-    print("💡 Use this model in your AICoachingEnhancer for better coaching responses.")
 
 if __name__ == "__main__":
     main()
