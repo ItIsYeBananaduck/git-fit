@@ -1,0 +1,5 @@
+gradio==4.36.0
+torch==2.4.1+cpu --find-links https://download.pytorch.org/whl/torch_stable.html
+transformers==4.35.2
+huggingface-hub>=0.19.3
+websockets==10.4
