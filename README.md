@@ -44,4 +44,4 @@ Built with ❤️ for the fitness community. This AI coach combines scientific r
 
 ---
 
-*Powered by Hugging Face Transformers and hosted on Hugging Face Spaces*
+_Powered by Hugging Face Transformers and hosted on Hugging Face Spaces_

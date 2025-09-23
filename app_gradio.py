@@ -1,4 +1,4 @@
-import gradio as gr
+gitimport gradio as gr
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 import torch
 from transformers import BitsAndBytesConfig
