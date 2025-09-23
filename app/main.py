@@ -6,8 +6,8 @@ from transformers import BitsAndBytesConfig
 
 app = FastAPI()
 
-# Use smallest GPT-2 model with 8-bit quantization for maximum memory efficiency
-model_name = "gpt2"  # Base GPT-2 is smaller than distilgpt2
+# Use DistilGPT-2 model with 8-bit quantization for maximum memory efficiency
+model_name = "distilgpt2"  # Smaller than base GPT-2
 
 # Configure 8-bit quantization for CPU
 quantization_config = BitsAndBytesConfig(
