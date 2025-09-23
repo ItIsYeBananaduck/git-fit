@@ -3,9 +3,11 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer
 import os
 
 app = FastAPI()
-model_path = os.path.join(os.getcwd(), "fine_tuned_gpt2.bin")  # LFS pulls to repo
-model = GPT2LMHeadModel.from_pretrained(model_path)
-tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+# Load model from Hugging Face private repo
+model_repo = os.getenv("HF_MODEL_REPO", "yourusername/git-fit-ai-models")  # Replace with your HF repo
+hf_token = os.getenv("HF_TOKEN")  # Set in environment variables
+model = GPT2LMHeadModel.from_pretrained(model_repo, token=hf_token)
+tokenizer = GPT2Tokenizer.from_pretrained(model_repo, token=hf_token)
 
 @app.get("/predict")
 async def predict(text: str):
