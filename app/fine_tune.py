@@ -13,7 +13,7 @@ from transformers import (
     TrainingArguments,
     DataCollatorForLanguageModeling
 )
-from huggingface_hub import HfApi
+from huggingface_hub import HfApi, create_repo
 
 def load_dataset(file_path):
     """Load the JSONL dataset"""
@@ -37,8 +37,8 @@ def main():
     print("=" * 60)
 
     # Check if scripts.jsonl exists
-    if not os.path.exists("scripts.jsonl"):
-        print("❌ Error: scripts.jsonl not found!")
+    if not os.path.exists("app/scripts.jsonl"):
+        print("❌ Error: app/scripts.jsonl not found!")
         return
 
     # Load model and tokenizer
@@ -52,7 +52,7 @@ def main():
 
     # Load dataset
     print("📚 Loading dataset...")
-    dataset = load_dataset("scripts.jsonl")
+    dataset = load_dataset("app/scripts.jsonl")
     print(f"✅ Loaded {len(dataset)} training examples")
 
     # Tokenize dataset
@@ -103,17 +103,18 @@ def main():
     # Upload model to Hugging Face
     print("☁️ Uploading model to Hugging Face...")
     api = HfApi()
-    repo_id = "ItIsYeBananaduck/git-fit-gpt2"  # Change to your repo
+    repo_id = "PhilmoLSC/philmoLSC"
     try:
-        api.upload_file(
-            path_or_fileobj="./fine_tuned_gpt2/model.safetensors",
-            path_in_repo="model.safetensors",
+        # Create the repo if it doesn't exist
+        create_repo(repo_id, private=True, token=os.getenv("HF_TOKEN"))
+        api.upload_folder(
+            folder_path="./fine_tuned_gpt2",
             repo_id=repo_id,
             repo_type="model"
         )
         print(f"✅ Model uploaded to https://huggingface.co/{repo_id}")
     except Exception as e:
-        print(f"❌ Upload failed: {e}. Make sure you're logged in with 'huggingface-cli login' and the repo exists.")
+        print(f"❌ Upload failed: {e}. Make sure HF_TOKEN is set and you have permission.")
 
     # Clean up local model file
     if os.path.exists("./fine_tuned_gpt2/model.safetensors"):
