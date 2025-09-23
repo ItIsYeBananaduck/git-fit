@@ -1,0 +1,8 @@
+gradio==4.36.0
+torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu
+transformers==4.35.2
+bitsandbytes==0.41.3
+accelerate==0.26.0
+python-dotenv==1.0.0
+websockets==10.4
+huggingface-hub>=0.19.3
