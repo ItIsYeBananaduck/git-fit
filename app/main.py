@@ -9,10 +9,10 @@ app = FastAPI()
 # Use smallest GPT-2 model with 8-bit quantization for maximum memory efficiency
 model_name = "gpt2"  # Base GPT-2 is smaller than distilgpt2
 
-# Configure 8-bit quantization
+# Configure 8-bit quantization for CPU
 quantization_config = BitsAndBytesConfig(
     load_in_8bit=True,
-    llm_int8_enable_fp32_cpu_offload=True
+    llm_int8_enable_fp32_cpu_offload=False  # Disable since we're on CPU
 )
 
 # Load tokenizer
@@ -24,9 +24,11 @@ model = GPT2LMHeadModel.from_pretrained(
     model_name,
     quantization_config=quantization_config,
     torch_dtype=torch.float16,
-    low_cpu_mem_usage=True,
-    device_map="auto"  # Automatically handle device placement
+    low_cpu_mem_usage=True
 )
+
+# Force CPU placement for quantized model
+model = model.to('cpu')
 
 @app.get("/predict")
 async def predict(text: str):
