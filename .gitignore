@@ -1,6 +1,7 @@
 # Ignore spec-kit
 .github/spec-kit/
 
+.env
 .env.local
 
 # Ignore dependencies and editor caches

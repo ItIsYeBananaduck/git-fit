@@ -9,6 +9,7 @@ Automated pipeline for updating Git-Fit AI model
 import os
 import subprocess
 import sys
+from dotenv import load_dotenv
 from huggingface_hub import create_repo, upload_folder
 
 def run_command(cmd, cwd=None):
@@ -25,6 +26,9 @@ def run_command(cmd, cwd=None):
 def main():
     print("🚀 Starting Git-Fit AI Model Update Pipeline")
     print("=" * 50)
+
+    # Load environment variables from .env file
+    load_dotenv()
 
     # 1. Update knowledge base
     print("📚 Updating knowledge base from PubMed...")
