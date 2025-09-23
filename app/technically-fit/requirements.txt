@@ -2,4 +2,4 @@ gradio==4.44.0
 torch==2.4.1
 transformers==4.35.2
 huggingface-hub>=0.19.3
-websockets==13.1
+websockets==12.0
