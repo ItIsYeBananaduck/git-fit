@@ -32,11 +32,11 @@ class EventRequest(BaseModel):
     user_data: Dict[str, Any] = {}
 
 def load_model():
-    """Load the fine-tuned DistilGPT2 model from Hugging Face"""
+    """Load the PhilmoLSC/philmoLSC model or fallback options"""
     try:
         logger.info(f"Loading model from {MODEL_REPO}...")
 
-        # Try to load the PhilmoLSC/philmoLSC model directly
+        # Priority 1: Try PhilmoLSC/philmoLSC from Hugging Face
         try:
             model = GPT2LMHeadModel.from_pretrained(
                 MODEL_REPO,
@@ -50,18 +50,38 @@ def load_model():
             )
             tokenizer.pad_token = tokenizer.eos_token
             logger.info("✅ PhilmoLSC/philmoLSC model loaded successfully!")
+            return model, tokenizer
 
         except Exception as e:
             logger.warning(f"Could not load PhilmoLSC/philmoLSC model: {e}")
-            logger.info("🔄 Falling back to base DistilGPT-2 model (constitution compliant)...")
+
+        # Priority 2: Try local fine-tuned model
+        try:
+            local_model_path = "./app/fine_tuned_gpt2"
+            logger.info(f"Trying local model at {local_model_path}...")
             model = GPT2LMHeadModel.from_pretrained(
-                MODEL_NAME,
+                local_model_path,
                 torch_dtype=MODEL_DTYPE,
                 low_cpu_mem_usage=LOW_CPU_MEM
             )
-            tokenizer = GPT2Tokenizer.from_pretrained(MODEL_NAME)
+            tokenizer = GPT2Tokenizer.from_pretrained(local_model_path)
             tokenizer.pad_token = tokenizer.eos_token
-            logger.info("✅ Base DistilGPT-2 model loaded successfully!")
+            logger.info("✅ Local fine-tuned model loaded successfully!")
+            return model, tokenizer
+
+        except Exception as e:
+            logger.warning(f"Could not load local model: {e}")
+
+        # Priority 3: Base DistilGPT-2 fallback (constitution compliant)
+        logger.info("🔄 Falling back to base DistilGPT-2 model (constitution compliant)...")
+        model = GPT2LMHeadModel.from_pretrained(
+            MODEL_NAME,
+            torch_dtype=MODEL_DTYPE,
+            low_cpu_mem_usage=LOW_CPU_MEM
+        )
+        tokenizer = GPT2Tokenizer.from_pretrained(MODEL_NAME)
+        tokenizer.pad_token = tokenizer.eos_token
+        logger.info("✅ Base DistilGPT-2 model loaded successfully!")
 
         return model, tokenizer
 

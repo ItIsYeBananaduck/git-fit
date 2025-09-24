@@ -34,7 +34,7 @@ Ensure transparent AI decision-making with user consent for data usage. Provide 
 
 **Budget**: $0-$10/month for beta, leveraging Fly.io free tier and Tigris storage post-beta.
 **Timeline**: Beta-ready in 1-2 weeks with 10-50 lifters, focusing on wearable integration and recovery.
-**Technology**: Use existing tools: SvelteKit, Convex, FastAPI, distilgpt2 (~475MB), Python 3.10, Node.js 18+. Support wearables (Apple Watch, Fitbit, Whoop, Samsung/Android Watch) with mock data for beta.
+**Technology**: Use existing tools: SvelteKit, Convex, FastAPI, PhilmoLSC/philmoLSC (fine-tuned DistilGPT-2), Python 3.10, Node.js 18+. Support wearables (Apple Watch, Fitbit, Whoop, Samsung/Android Watch) with mock data for beta.
 **Data Sources**: PubMed API (weekly), YouTube API (~40 videos, rss_knowledge.jsonl ~0.01MB).
 **Team**: Solo developer (Phil) with coding AI (GitHub Copilot), limited by syntax challenges.
 
@@ -62,4 +62,4 @@ Ensure transparent AI decision-making with user consent for data usage. Provide 
 
 **Constitution Authority**: This constitution supersedes all other practices. All development decisions must align with these principles. Amendments require justification against success metrics and user impact.
 
-**Version**: 1.1.0 | **Ratified**: 2025-09-24 | **Last Amended**: 2025-09-24
+**Version**: 1.1.1 | **Ratified**: 2025-09-24 | **Last Amended**: 2025-09-24
