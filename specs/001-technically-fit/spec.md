@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-technically-fit`
 **Created**: September 24, 2025
-**Status**: Draft
+**Status**: Clarified
 **Input**: User description: "Develop Technically Fit, a fitness marketplace and AI-powered coaching platform for lifters. It tracks workouts, nutrition, and sleep, integrates with wearables (Apple Watch, Fitbit, Whoop, Samsung/Android Watch) for real-time tweaks (e.g., extend rest if heart rate > 150, reduce intensity if SpO2 < 95), and learns preferences (e.g., rack-pull over deadlift). It offers three tiers: free (no AI), pro ($15/month via Stripe/Apple), and trainer ($20/month via Stripe/Apple). Trainers approve mesocycle shifts and sell programs in a marketplace. The app provides gamified progress tracking and a delightful UI with post-beta 3D avatars (Alice/Aiden). Target beta in 1-2 weeks with 10-50 users, scaling to 100-1,000 at $0-$10/month, profitable with 1-2 pro users or 1 trainer. Use PubMed and YouTube (~40 videos, rss_knowledge.jsonl) for AI training. Ensure <200ms response, 100% uptime, and GDPR/Stripe PCI compliance."
 
 ## Execution Flow (main)
@@ -15,8 +15,7 @@
    → Data: workout logs, nutrition data, wearable data (HR, SpO2), training programs
    → Constraints: $0-$10/month, <200ms response, 100% uptime, GDPR/Stripe PCI
 3. For each unclear aspect:
-   → Wearable data format [NEEDS CLARIFICATION: Specific data format for Apple Watch, Fitbit, Whoop, Samsung/Android Watch?]
-   → YouTube video URLs [NEEDS CLARIFICATION: List of ~40 video URLs unavailable due to playlist issues]
+   → YouTube video URLs deferred to post-beta (use mock data for beta)
 4. Fill User Scenarios & Testing section
    → Completed: Primary story, acceptance scenarios, edge cases defined
 5. Generate Functional Requirements
@@ -24,13 +23,17 @@
 6. Identify Key Entities
    → Completed: User, Workout, NutritionLog, Program, Equipment entities defined
 7. Run Review Checklist
-   → WARNING: Spec has uncertainties ([NEEDS CLARIFICATION] markers remain)
+   → SUCCESS: All critical ambiguities resolved for beta launch
 8. Return: SUCCESS (spec ready for planning, pending clarification of ambiguities)
 ```
 
----
+## Clarifications
 
-## ⚡ Quick Guidelines
+### Session 2025-09-24
+- Q: What data format will be used for wearable device integration? → A: B (HealthKit/Health Connect native APIs)
+- Q: How should Apple's 30% cut be handled in the payment flow? → A: B (Absorb 30% fee in platform pricing)
+- Q: What should happen when wearable devices fail to send data? → A: Use rule-based defaults
+- Q: Should YouTube video URLs be resolved before beta launch? → A: B (Defer to post-beta)
 - ✅ Focus on WHAT users need and WHY
 - ❌ Avoid HOW to implement (no tech stack, APIs, code structure)
 - 👥 Written for business stakeholders, not developers
@@ -67,7 +70,7 @@ A lifter uses Technically Fit to track workouts, nutrition, and sleep, receiving
 4. **Given** a free user, **When** they log a workout, **Then** the app saves it and displays progress without AI tweaks.
 
 ### Edge Cases
-- What happens when a wearable device fails to send data? [NEEDS CLARIFICATION: Fallback behavior for missing HR/SpO2 data?]
+- What happens when a wearable device fails to send data? System uses rule-based defaults for workout adjustments.
 - How does the system handle invalid payment attempts? System must retry payment and notify user after three failures.
 - What happens when a user exceeds the free tier usage limit? System prompts upgrade to pro ($15/month) or trainer ($20/month).
 
@@ -75,7 +78,7 @@ A lifter uses Technically Fit to track workouts, nutrition, and sleep, receiving
 
 ### Functional Requirements
 - **FR-001**: System MUST allow users to log workouts, nutrition, and sleep data to track fitness progress.
-- **FR-002**: System MUST integrate with wearables (Apple Watch, Fitbit, Whoop, Samsung/Android Watch) to collect HR and SpO2 data for real-time tweaks [NEEDS CLARIFICATION: Data format for each device?].
+- **FR-002**: System MUST integrate with wearables (Apple Watch, Fitbit, Whoop, Samsung/Android Watch) using HealthKit/Health Connect native APIs to collect HR and SpO2 data for real-time tweaks.
 - **FR-003**: System MUST adjust workouts in real-time for pro users ($15/month), e.g., extend rest by 30s if HR > 150, reduce intensity if SpO2 < 95.
 - **FR-004**: System MUST learn user preferences (e.g., rack-pull over deadlift) from logged tweaks, achieving ~80% accuracy by week 3.
 - **FR-005**: System MUST ensure no workout rep drops below 80% to maintain intensity.
@@ -83,7 +86,7 @@ A lifter uses Technically Fit to track workouts, nutrition, and sleep, receiving
 - **FR-007**: System MUST allow trainers ($20/month) to approve mesocycle shifts for safe client progress.
 - **FR-008**: System MUST enable trainers to upload and sell programs in a marketplace.
 - **FR-009**: System MUST allow users to browse and purchase programs via subscriptions.
-- **FR-010**: System MUST support payments for pro ($15/month) and trainer ($20/month) tiers via Stripe/Apple [NEEDS CLARIFICATION: Handling of Apple's 30% cut in payment flow?].
+- **FR-010**: System MUST support payments for pro ($15/month) and trainer ($20/month) tiers via Stripe/Apple, with platform absorbing Apple's 30% fee to maintain transparent pricing.
 - **FR-011**: System MUST provide gamified progress tracking with visual feedback for all users.
 - **FR-012**: System MUST allow admins to moderate users and analyze usage data.
 - **FR-013**: System MUST support user registration/login with 2FA (no password for beta).
@@ -108,7 +111,7 @@ A lifter uses Technically Fit to track workouts, nutrition, and sleep, receiving
 - [x] All mandatory sections completed
 
 ### Requirement Completeness
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Scope is clearly bounded
