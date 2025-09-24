@@ -1,4 +1,4 @@
-import { mutation, MutationCtx } from "../_generated/server";
+import { mutation, MutationCtx } from "../../_generated/server";
 import { v } from "convex/values";
 
 // Create a Stripe Checkout session for a subscription purchase

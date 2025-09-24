@@ -1,41 +1,37 @@
 import { query, mutation, action } from '../_generated/server.js';
 import { v } from 'convex/values';
-import type { Id } from '../_generated/dataModel.js';
 import { api } from '../_generated/api.js';
 
-// Recommendation types
-export type RecommendationType = 'workout' | 'nutrition' | 'recovery' | 'progression' | 'plateau_buster';
-export type RecommendationPriority = 'low' | 'medium' | 'high' | 'urgent';
+// AI Service Configuration
+const AI_SERVICE_URL = "https://technically-fit-ai.fly.dev";
 
-export interface AdaptiveRecommendation {
-  id: string;
-  type: RecommendationType;
-  title: string;
-  description: string;
-  reasoning: string;
-  actions: RecommendationAction[];
-  priority: RecommendationPriority;
-  confidence: number; // 0-100
-  expiresAt?: number;
-  createdAt: number;
-}
+// Recommendation types - simplified for JavaScript compatibility
+const RECOMMENDATION_TYPES = {
+  WORKOUT: 'workout',
+  NUTRITION: 'nutrition', 
+  RECOVERY: 'recovery',
+  PROGRESSION: 'progression',
+  PLATEAU_BUSTER: 'plateau_buster'
+} as const;
 
-export interface RecommendationAction {
-  type: 'adjust_workout' | 'modify_nutrition' | 'rest_day' | 'increase_intensity' | 'change_exercise' | 'add_supplement';
-  description: string;
-  parameters: Record<string, any>;
-}
+const RECOMMENDATION_PRIORITIES = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  URGENT: 'urgent'
+} as const;
 
-// Get adaptive recommendations for a user
+// Get adaptive recommendations for a user - AI-powered intelligent agent
 export const getAdaptiveRecommendations = action({
   args: {
     userId: v.string(),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { userId, limit = 10 }) => {
-    const recommendations = await generateRecommendations(userId, ctx);
+    // Call the AI agent to make intelligent workout adjustments
+    const recommendations = await generateIntelligentRecommendations(userId, ctx);
 
-    // Sort by priority and confidence
+    // Sort by priority and confidence  
     const sortedRecommendations = recommendations
       .sort((a, b) => {
         const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
@@ -46,27 +42,132 @@ export const getAdaptiveRecommendations = action({
       .slice(0, limit);
 
     return sortedRecommendations;
-  },
+  }
 });
 
-// Generate personalized recommendations based on user data
-async function generateRecommendations(userId: string, ctx: any): Promise<AdaptiveRecommendation[]> {
-  const recommendations: AdaptiveRecommendation[] = [];
-  const now = Date.now();
-
-  // Get AI-powered recommendations first
+// Generate intelligent recommendations using AI agent
+async function generateIntelligentRecommendations(userId, ctx) {
   try {
-    const aiRecommendations = await getAIRecommendations(userId, ctx);
-    if (aiRecommendations && aiRecommendations.length > 0) {
-      recommendations.push(...aiRecommendations);
-    }
-  } catch (error) {
-    console.warn('AI recommendations failed, falling back to rule-based:', error);
-  }
+    // Get user's complete fitness profile
+    const user = await ctx.runQuery(api.users.getUserById, { userId });
+    if (!user) return [];
 
-  // Get rule-based recommendations
-  const ruleBasedRecommendations = await getRuleBasedRecommendations(userId, ctx);
-  recommendations.push(...ruleBasedRecommendations);
+    // Get recent workout history
+    const recentWorkouts = await ctx.runQuery(api.workouts.getRecentWorkoutsByUser, { 
+      userId, 
+      limit: 10 
+    });
+
+    // Get latest fitness metrics
+    const latestFitnessData = await ctx.runQuery(api.fitnessData.getLatestByUser, { userId });
+
+    // Get current training program
+    const activeProgram = await ctx.runQuery(api.trainingPrograms.getActiveProgram, { userId });
+
+    // Prepare comprehensive data for AI agent
+    const fitnessProfile = {
+      user: {
+        id: userId,
+        goals: user.goals || [],
+        fitnessLevel: user.fitnessLevel || 'beginner',
+        injuryHistory: user.injuryHistory || [],
+        preferences: user.preferences || {}
+      },
+      recentPerformance: recentWorkouts.map(workout => ({
+        date: workout.date,
+        exercises: workout.exercises,
+        totalVolume: workout.totalVolume,
+        duration: workout.duration,
+        rpe: workout.rpe,
+        notes: workout.notes
+      })),
+      currentMetrics: latestFitnessData ? {
+        heartRate: latestFitnessData.heartRate,
+        hrv: latestFitnessData.hrv,
+        spo2: latestFitnessData.spo2,
+        sleep: latestFitnessData.sleep,
+        recovery: latestFitnessData.recovery,
+        strain: latestFitnessData.strain,
+        timestamp: latestFitnessData.timestamp
+      } : null,
+      activeProgram: activeProgram ? {
+        id: activeProgram._id,
+        name: activeProgram.name,
+        phase: activeProgram.currentPhase,
+        periodization: activeProgram.periodization
+      } : null
+    };
+
+    // Call AI service to generate intelligent recommendations
+    const response = await fetch(`${AI_SERVICE_URL}/ai/workout-agent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'analyze_and_adjust',
+        data: fitnessProfile
+      })
+    });
+
+    if (!response.ok) {
+      console.error('AI service error:', response.status, response.statusText);
+      return getFallbackRecommendations(userId, ctx);
+    }
+
+    const aiResponse = await response.json();
+    
+    // Parse AI recommendations into our format
+    const recommendations = aiResponse.recommendations?.map((rec) => ({
+      id: rec.id || `ai_rec_${Date.now()}_${Math.random()}`,
+      type: rec.type || 'adjustment',
+      title: rec.title,
+      description: rec.description,
+      rationale: rec.rationale,
+      priority: rec.priority as 'urgent' | 'high' | 'medium' | 'low',
+      confidence: rec.confidence,
+      category: rec.category,
+      actionItems: rec.actionItems || [],
+      metrics: rec.metrics || {},
+      timestamp: Date.now()
+    })) || [];
+
+    return recommendations;
+
+  } catch (error) {
+    console.error('Error generating AI recommendations:', error);
+    return getFallbackRecommendations(userId, ctx);
+  }
+}
+
+// Fallback recommendations using existing algorithms when AI is unavailable
+async function getFallbackRecommendations(userId, ctx) {
+  const user = await ctx.runQuery(api.users.getUserById, { userId });
+  if (!user) return [];
+
+  const recentWorkouts = await ctx.runQuery(api.workouts.getRecentWorkoutsByUser, { 
+    userId, 
+    limit: 5 
+  });
+
+  const recommendations: AdaptiveRecommendation[] = [];
+
+  // Use existing training algorithms for fallback
+  if (recentWorkouts.length === 0) {
+    recommendations.push({
+      id: `fallback_${Date.now()}_1`,
+      type: 'program_suggestion',
+      title: 'Start Your Fitness Journey',
+      description: 'Begin with our beginner-friendly program designed for your goals',
+      rationale: 'No recent workout history detected',
+      priority: 'high',
+      confidence: 0.9,
+      category: 'program',
+      actionItems: ['Choose a training program', 'Complete fitness assessment'],
+      metrics: { workoutFrequency: 0 },
+      timestamp: Date.now()
+    });
+  }
 
   return recommendations;
 }
@@ -112,9 +213,9 @@ async function getRuleBasedRecommendations(userId: string, ctx: any): Promise<Ad
 async function getAIRecommendations(userId: string, ctx: any): Promise<AdaptiveRecommendation[]> {
   try {
     // Get user profile data for AI context
-    const userGoals = await ctx.db.query("goals").filter(q => q.eq(q.field("userId"), userId)).collect();
+    const userGoals = await ctx.db.query("nutritionGoals").filter((q: any) => q.eq(q.field("userId"), userId)).collect();
     const recentWorkouts = await getRecentWorkouts(userId, ctx);
-    const userFitnessData = await ctx.db.query("fitnessData").filter(q => q.eq(q.field("userId"), userId)).collect();
+    const userFitnessData = await ctx.db.query("fitnessData").filter((q: any) => q.eq(q.field("userId"), userId)).collect();
 
     // Calculate basic metrics for AI context
     const workoutConsistency = calculateWorkoutConsistency(recentWorkouts);
@@ -244,7 +345,7 @@ function calculateStrengthProgress(fitnessData: any[]): Record<string, number> {
     }, {} as Record<string, Array<{ weight: number, date: number }>>);
 
   // Calculate progress percentage for each exercise
-  Object.entries(exerciseData).forEach(([exercise, data]) => {
+  Object.entries(exerciseData).forEach(([exercise, data]: [string, Array<{ weight: number, date: number }>]) => {
     if (data.length >= 2) {
       data.sort((a, b) => a.date - b.date);
       const firstWeight = data[0].weight;

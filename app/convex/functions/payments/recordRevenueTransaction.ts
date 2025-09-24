@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
 
 // Mutation to record a revenue transaction and trigger payout logic

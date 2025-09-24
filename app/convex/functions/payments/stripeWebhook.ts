@@ -1,4 +1,4 @@
-import { httpAction } from "../_generated/server";
+import { httpAction } from "../../_generated/server";
 import { v } from "convex/values";
 
 // Stripe webhook handler for purchase/expiration events

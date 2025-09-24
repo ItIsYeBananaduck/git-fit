@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
 
 // Mutation to create a Stripe Connect account for a trainer and store the account ID
