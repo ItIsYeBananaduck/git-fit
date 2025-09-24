@@ -17,7 +17,13 @@ MODEL_REPO = "PhilmoLSC/philmoLSC"
 MODEL_NAME = "distilgpt2"
 HF_TOKEN = os.getenv("HF_TOKEN")
 MAX_LENGTH = 150
-DEVICE = "cpu" if not torch.cuda.is_available() else "cuda"
+DEVICE = "cpu"  # Force CPU for Fly.io cost optimization
+PORT = int(os.getenv("PORT", 8080))  # Default to 8080 for Fly.io
+
+# Memory optimization settings
+MODEL_DTYPE = torch.float16  # Use float16 for reduced memory usage
+LOW_CPU_MEM = True
+# Remove device_map to avoid accelerate dependency and reduce memory usage
 
 class EventRequest(BaseModel):
     event: str
@@ -31,11 +37,11 @@ def load_model():
         logger.info(f"Loading model from {MODEL_REPO}...")
 
         if not HF_TOKEN:
-            logger.warning("HF_TOKEN not set - using base model")
+            logger.warning("HF_TOKEN not set - using base model with memory optimization")
             model = GPT2LMHeadModel.from_pretrained(
                 MODEL_NAME,
-                torch_dtype=torch.float32,
-                low_cpu_mem_usage=True
+                torch_dtype=MODEL_DTYPE,
+                low_cpu_mem_usage=LOW_CPU_MEM
             )
             tokenizer = GPT2Tokenizer.from_pretrained(MODEL_NAME)
             tokenizer.pad_token = tokenizer.eos_token
@@ -59,8 +65,8 @@ def load_model():
                 model = GPT2LMHeadModel.from_pretrained(
                     MODEL_NAME,
                     state_dict=torch.load(model_path, map_location=DEVICE),
-                    torch_dtype=torch.float32,
-                    low_cpu_mem_usage=True
+                    torch_dtype=MODEL_DTYPE,
+                    low_cpu_mem_usage=LOW_CPU_MEM
                 )
                 tokenizer = GPT2Tokenizer.from_pretrained(MODEL_NAME)
                 tokenizer.pad_token = tokenizer.eos_token
@@ -69,13 +75,12 @@ def load_model():
                 logger.warning(f"Could not load fine-tuned model: {e}. Using base model.")
                 model = GPT2LMHeadModel.from_pretrained(
                     MODEL_NAME,
-                    torch_dtype=torch.float32,
-                    low_cpu_mem_usage=True
+                    torch_dtype=MODEL_DTYPE,
+                    low_cpu_mem_usage=LOW_CPU_MEM
                 )
                 tokenizer = GPT2Tokenizer.from_pretrained(MODEL_NAME)
                 tokenizer.pad_token = tokenizer.eos_token
 
-        model.to(DEVICE)
         logger.info("✅ Model loaded successfully!")
         return model, tokenizer
 
@@ -113,7 +118,7 @@ def generate_ai_tweak(event_type: str, user_data: Dict[str, Any], context: Dict[
         prompt = "\n".join(prompt_parts)
 
         # Tokenize and generate
-        inputs = tokenizer.encode(prompt, return_tensors="pt", max_length=512, truncation=True).to(DEVICE)
+        inputs = tokenizer.encode(prompt, return_tensors="pt", max_length=512, truncation=True)
 
         with torch.no_grad():
             outputs = model.generate(
@@ -215,34 +220,52 @@ except Exception as e:
 @app.post("/event")
 async def handle_event(request: EventRequest):
     """Handle app events and return AI-powered workout tweaks"""
-    if model is None or tokenizer is None:
-        raise HTTPException(status_code=503, detail="AI model not available")
-
+    
     try:
-        tweak = generate_ai_tweak(
-            event_type=request.event,
-            user_data=request.user_data,
-            context=request.context
-        )
+        # If model is not available, use fallback logic
+        if model is None or tokenizer is None:
+            logger.info("Using fallback logic - AI model not available")
+            tweak = generate_fallback_tweak(
+                event_type=request.event,
+                context=request.context
+            )
+        else:
+            tweak = generate_ai_tweak(
+                event_type=request.event,
+                user_data=request.user_data,
+                context=request.context
+            )
 
         return {
             "success": True,
             "tweak": tweak,
             "user_id": request.user_id,
-            "event": request.event
+            "event": request.event,
+            "ai_powered": model is not None
         }
 
     except Exception as e:
         logger.error(f"Error processing event: {e}")
-        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+        # Return fallback even on error
+        tweak = generate_fallback_tweak(request.event, request.context)
+        return {
+            "success": True,
+            "tweak": tweak,
+            "user_id": request.user_id,
+            "event": request.event,
+            "ai_powered": False,
+            "note": "Used fallback due to error"
+        }
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {
-        "status": "healthy" if model is not None else "unhealthy",
-        "model": MODEL_REPO if model is not None else None,
-        "device": DEVICE
+        "status": "healthy",  # Always healthy if the service is running
+        "model_available": model is not None,
+        "model_repo": MODEL_REPO if model is not None else None,
+        "device": DEVICE,
+        "fallback_enabled": True
     }
 
 @app.get("/")
@@ -256,10 +279,10 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info("🚀 Starting Technically Fit AI Service...")
+    logger.info(f"🚀 Starting Technically Fit AI Service on port {PORT}...")
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
-        port=int(os.getenv("PORT", 8000)),
+        port=PORT,
         reload=False
     )
