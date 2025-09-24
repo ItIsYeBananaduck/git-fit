@@ -1,50 +1,65 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Technically Fit Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. User-Centric Design
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Prioritize user needs, from novice lifters to advanced athletes, ensuring intuitive workout tracking, nutrition logging, and recovery guidance. Deliver real-time adjustments based on wearable data (e.g., heart rate, SpO2) to optimize performance and safety. Support active recovery for injuries (e.g., band clamshells for stiff leg) with clear, safe recommendations (stop if pain > 3/10).
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Adaptability and Learning
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Adapt workouts to user preferences (e.g., prefer rack-pull over deadlift) via AI learning from logged feedback, targeting ~80% accuracy by week 3. Ensure no rep drops below 80% to maintain training intensity. Provide fallback rule-based tweaks if AI is unavailable.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Cost-Effectiveness
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Operate within $0-$10/month for 100-1,000 users, scaling to ~$200/month for 10,000. Achieve profitability with 10 pro users at $5/month. Use cost-efficient storage (e.g., Tigris at ~$0.01/month post-beta) and deployment (Fly.io free tier).
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Scalability and Performance
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+Support 100-1,000 users on 1GB RAM, shared CPU, with <200ms API response time and 100% uptime via fallbacks. Scale to 10,000 users with minimal cost increase. Optimize deployment for ~1-2GB image size (current: 3.3GB).
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Safety and Privacy
+
+Implement robust security: bcrypt, JWT, 2FA, GDPR compliance, Stripe PCI compliance. Ensure injury-aware coaching (e.g., stop if pain > 3/10, low-intensity recovery for stiff leg).
+
+### VI. Engagement and Gamification
+
+Provide a delightful, gamified experience with progress tracking and visual feedback. Include post-beta 3D-rendered avatars (Alice/Aiden) for a lively user interface.
+
+### VII. Data Ethics & Transparency
+
+Ensure transparent AI decision-making with user consent for data usage. Provide clear explanations for workout adjustments and maintain user control over personal data. Implement audit trails for AI recommendations and allow users to view/modify their data preferences.
+
+## Technical & Operational Constraints
+
+**Budget**: $0-$10/month for beta, leveraging Fly.io free tier and Tigris storage post-beta.
+**Timeline**: Beta-ready in 1-2 weeks with 10-50 lifters, focusing on wearable integration and recovery.
+**Technology**: Use existing tools: SvelteKit, Convex, FastAPI, distilgpt2 (~475MB), Python 3.10, Node.js 18+. Support wearables (Apple Watch, Fitbit, Whoop, Samsung/Android Watch) with mock data for beta.
+**Data Sources**: PubMed API (weekly), YouTube API (~40 videos, rss_knowledge.jsonl ~0.01MB).
+**Team**: Solo developer (Phil) with coding AI (GitHub Copilot), limited by syntax challenges.
+
+## User Experience & Business Model
+
+**Free Users**: Access basic tracking (workouts, nutrition, sleep) without AI.
+**Pro Users**: Receive AI-driven real-time tweaks, wearable integration, and preference learning.
+**Trainers**: Approve mesocycle shifts, create/sell programs in the marketplace.
+**Admins**: Moderate users, analyze usage, manage content.
+
+## Development Philosophy
+
+**Spec-Driven Development**: Specifications are executable, driving implementation via /specify, /plan, /tasks.
+**Iterative Refinement**: Clarify specs interactively, validate against checklists, avoid over-engineering.
+**User Feedback**: Log all tweaks to Convex for AI learning and beta testing.
+**Minimal Viable Product**: Focus on core features (tracking, AI tweaks, wearables, recovery) for beta.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+**Purpose**: Technically Fit is a fitness marketplace and AI-powered coaching platform that empowers users to achieve their fitness goals through personalized, real-time workout adjustments, nutrition tracking, and recovery support. It connects users with verified trainers via a program marketplace, offering a seamless, gamified experience for lifters, from beginners to advanced.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Vision**: To become the leading AI-driven fitness platform that adapts workouts in real time, supports injury recovery, and learns user preferences, making personalized training accessible and affordable for 100-1,000 users in beta, scaling to 10,000, with a delightful and safe user experience.
+
+**Success Metrics**: Beta (1-2 Weeks): 10-50 lifters onboarded, wearable integration tested, recovery prompts validated. Performance: API response <200ms, memory <1GB, 100% uptime. Cost: <$10/month for 100-1,000 users. User Satisfaction: Positive feedback on real-time tweaks and recovery suggestions. Profitability: Break-even with 10 pro users at $5/month.
+
+**Constitution Authority**: This constitution supersedes all other practices. All development decisions must align with these principles. Amendments require justification against success metrics and user impact.
+
+**Version**: 1.1.0 | **Ratified**: 2025-09-24 | **Last Amended**: 2025-09-24
