@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuration
-MODEL_REPO = "PhilmoLSC/philmoLSC"
+MODEL_REPO = "PhilmoLSC/philmoLSC"  # Use the user's Hugging Face model repo
 MODEL_NAME = "distilgpt2"
 HF_TOKEN = os.getenv("HF_TOKEN")
 MAX_LENGTH = 150
@@ -36,8 +36,24 @@ def load_model():
     try:
         logger.info(f"Loading model from {MODEL_REPO}...")
 
-        if not HF_TOKEN:
-            logger.warning("HF_TOKEN not set - using base model with memory optimization")
+        # Try to load the PhilmoLSC/philmoLSC model directly
+        try:
+            model = GPT2LMHeadModel.from_pretrained(
+                MODEL_REPO,
+                torch_dtype=MODEL_DTYPE,
+                low_cpu_mem_usage=LOW_CPU_MEM,
+                token=HF_TOKEN if HF_TOKEN else None
+            )
+            tokenizer = GPT2Tokenizer.from_pretrained(
+                MODEL_REPO,
+                token=HF_TOKEN if HF_TOKEN else None
+            )
+            tokenizer.pad_token = tokenizer.eos_token
+            logger.info("✅ PhilmoLSC/philmoLSC model loaded successfully!")
+
+        except Exception as e:
+            logger.warning(f"Could not load PhilmoLSC/philmoLSC model: {e}")
+            logger.info("🔄 Falling back to base DistilGPT-2 model (constitution compliant)...")
             model = GPT2LMHeadModel.from_pretrained(
                 MODEL_NAME,
                 torch_dtype=MODEL_DTYPE,
@@ -45,43 +61,8 @@ def load_model():
             )
             tokenizer = GPT2Tokenizer.from_pretrained(MODEL_NAME)
             tokenizer.pad_token = tokenizer.eos_token
-        else:
-            # Try to load fine-tuned model from private repo
-            try:
-                model_path = hf_hub_download(
-                    repo_id=MODEL_REPO,
-                    filename="pytorch_model.bin",
-                    token=HF_TOKEN,
-                    cache_dir="./model_cache"
-                )
-                config_path = hf_hub_download(
-                    repo_id=MODEL_REPO,
-                    filename="config.json",
-                    token=HF_TOKEN,
-                    cache_dir="./model_cache"
-                )
+            logger.info("✅ Base DistilGPT-2 model loaded successfully!")
 
-                logger.info("Loading fine-tuned model...")
-                model = GPT2LMHeadModel.from_pretrained(
-                    MODEL_NAME,
-                    state_dict=torch.load(model_path, map_location=DEVICE),
-                    torch_dtype=MODEL_DTYPE,
-                    low_cpu_mem_usage=LOW_CPU_MEM
-                )
-                tokenizer = GPT2Tokenizer.from_pretrained(MODEL_NAME)
-                tokenizer.pad_token = tokenizer.eos_token
-
-            except Exception as e:
-                logger.warning(f"Could not load fine-tuned model: {e}. Using base model.")
-                model = GPT2LMHeadModel.from_pretrained(
-                    MODEL_NAME,
-                    torch_dtype=MODEL_DTYPE,
-                    low_cpu_mem_usage=LOW_CPU_MEM
-                )
-                tokenizer = GPT2Tokenizer.from_pretrained(MODEL_NAME)
-                tokenizer.pad_token = tokenizer.eos_token
-
-        logger.info("✅ Model loaded successfully!")
         return model, tokenizer
 
     except Exception as e:
@@ -184,10 +165,6 @@ def generate_ai_tweak(event_type: str, user_data: Dict[str, Any], context: Dict[
             tweak = apply_safety_rules(tweak, user_data)
 
             return tweak
-        except ValueError as e:
-            logger.warning(f"No valid JSON found in response: {e}")
-            raise ValueError("No JSON found in response")
-
         except (json.JSONDecodeError, ValueError) as e:
             logger.warning(f"Invalid AI response, using fallback: {e}")
             return generate_fallback_tweak(event_type, context)

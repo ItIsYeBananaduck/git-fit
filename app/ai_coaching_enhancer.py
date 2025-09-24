@@ -39,7 +39,7 @@ class CoachingContext:
 class AICoachingEnhancer:
     """Enhances the existing coaching system with AI capabilities"""
 
-    def __init__(self, model_path: str = "PhilmoLSC/philmoLSC", fallback_model: str = "openai-community/gpt2"):
+    def __init__(self, model_path: str = "./fine_tuned_gpt2", fallback_model: str = "openai-community/gpt2"):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Using device: {self.device}")
 
