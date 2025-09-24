@@ -16,8 +16,9 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code and model files
 COPY app.py .
+COPY app/ ./app/
 
 # Create model cache directory
 RUN mkdir -p model_cache
