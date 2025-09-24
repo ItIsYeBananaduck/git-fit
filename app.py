@@ -100,19 +100,25 @@ def generate_ai_tweak(event_type: str, user_data: Dict[str, Any], context: Dict[
         fitness_level = user_data.get("fitness_level", "intermediate")
         goals = user_data.get("goals", [])
 
-        # Create context-aware prompt
+        # Create context-aware prompt with better JSON formatting instructions
         prompt_parts = [
+            "You are a fitness AI assistant. Generate a JSON workout tweak response.",
+            "",
             f"Event: {event_type}",
             f"User Fitness Level: {fitness_level}",
             f"Goals: {', '.join(goals) if goals else 'general fitness'}",
             f"Current Program: {json.dumps(current_program)}",
             f"Context: {json.dumps(context)}",
-            "Generate a JSON workout tweak following these rules:",
+            "",
+            "Rules:",
             "- No rep drops below 80% of planned reps",
             "- Maintain progressive overload principles",
             "- Consider user's fitness level and goals",
-            "- Return only valid JSON with 'action', 'reason', and 'modifications' fields",
-            "JSON Response:"
+            "",
+            "Return ONLY valid JSON with these exact fields:",
+            '{"action": "action_name", "reason": "explanation", "modifications": {"field": value}}',
+            "",
+            "JSON:"
         ]
 
         prompt = "\n".join(prompt_parts)
@@ -133,25 +139,54 @@ def generate_ai_tweak(event_type: str, user_data: Dict[str, Any], context: Dict[
 
         response_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-        # Extract JSON from response
+        # Extract JSON from response with better error handling
         try:
-            # Find JSON in response
+            # Clean the response text
+            response_text = response_text.strip()
+            
+            # Find the first complete JSON object
             json_start = response_text.find("{")
-            json_end = response_text.rfind("}") + 1
-            if json_start != -1 and json_end > json_start:
-                json_str = response_text[json_start:json_end]
-                tweak = json.loads(json_str)
+            if json_start == -1:
+                raise ValueError("No JSON object found in response")
+            
+            # Count braces to find complete JSON
+            brace_count = 0
+            json_end = json_start
+            for i, char in enumerate(response_text[json_start:], json_start):
+                if char == '{':
+                    brace_count += 1
+                elif char == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        json_end = i + 1
+                        break
+            
+            if brace_count != 0:
+                # Fallback: find the last closing brace
+                json_end = response_text.rfind("}") + 1
+            
+            if json_end <= json_start:
+                raise ValueError("Invalid JSON structure")
+            
+            json_str = response_text[json_start:json_end].strip()
+            
+            # Clean up common issues
+            json_str = json_str.replace('```json', '').replace('```', '')
+            json_str = json_str.strip()
+            
+            tweak = json.loads(json_str)
 
-                # Validate required fields
-                if not all(key in tweak for key in ["action", "reason", "modifications"]):
-                    raise ValueError("Missing required fields")
+            # Validate required fields
+            if not all(key in tweak for key in ["action", "reason", "modifications"]):
+                raise ValueError("Missing required fields")
 
-                # Apply safety rules
-                tweak = apply_safety_rules(tweak, user_data)
+            # Apply safety rules
+            tweak = apply_safety_rules(tweak, user_data)
 
-                return tweak
-            else:
-                raise ValueError("No JSON found in response")
+            return tweak
+        except ValueError as e:
+            logger.warning(f"No valid JSON found in response: {e}")
+            raise ValueError("No JSON found in response")
 
         except (json.JSONDecodeError, ValueError) as e:
             logger.warning(f"Invalid AI response, using fallback: {e}")

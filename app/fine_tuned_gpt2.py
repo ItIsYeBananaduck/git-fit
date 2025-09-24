@@ -1,20 +1,15 @@
-Fine-Tune GPT-2 for Technically Fit AI Coaching
-
-Fine-tunes GPT-2 on rss_knowledge.jsonl for RIR prediction and tempo tracking.
-"""
-
 import json
 import logging
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling
-from datasets import load_dataset
+from datasets import load_dataset as load_hf_dataset
 import torch
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def load_dataset(file_path: str = 'data/rss_knowledge.jsonl'):
+def load_dataset(file_path: str = '../data/rss_knowledge.jsonl'):
     """Load and tokenize the dataset."""
-    dataset = load_dataset('json', data_files=file_path, split='train')
+    dataset = load_hf_dataset('json', data_files={'train': file_path})['train']
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     tokenizer.pad_token = tokenizer.eos_token
 

@@ -8,6 +8,21 @@
 node_modules/
 node_modules/.svelte2tsx-language-server-files/
 
-# Large AI model files
-fine_tuned_gpt2/model.safetensors
-fine_tuned_gpt2/*.safetensors
+# Test environments and virtual environments
+final_test/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Large AI model files (tracked by Git LFS)
+# Note: Model files are tracked by LFS but ignored here to prevent accidental commits
+# Uncomment the lines below if you want to ignore model files entirely:
+# fine_tuned_gpt2/model.safetensors
+# fine_tuned_gpt2/*.safetensors
+# fine_tuned_gpt2/checkpoint-*/model.safetensors
+# fine_tuned_gpt2/checkpoint-*/optimizer.pt
