@@ -1,0 +1,171 @@
+@import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
+@import '@skeletonlabs/skeleton/styles/skeleton.css';
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Professional Typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Theme Variables */
+:root {
+  /* Light Theme Colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+  --color-electric: #60a5fa;
+  --color-royal: #2563eb;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
+.dark {
+  /* Dark Theme Colors */
+  --color-bg-primary: #111827;
+  --color-bg-secondary: #1f2937;
+  --color-bg-tertiary: #374151;
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-border: #4b5563;
+  --color-electric: #60a5fa;
+  --color-royal: #3b82f6;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+}
+
+/* Base Styles */
+html, body {
+  @apply h-full overflow-hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Professional Components */
+.card-professional {
+  @apply bg-surface-100-800-token border border-surface-300-600-token rounded-lg shadow-sm;
+}
+
+.btn-professional {
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition-colors;
+  @apply bg-primary-500 hover:bg-primary-600 text-white;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+}
+
+.btn-secondary {
+  @apply bg-surface-200-700-token hover:bg-surface-300-600-token text-surface-900-50-token;
+}
+
+.input-professional {
+  @apply block w-full px-3 py-2 border border-surface-300-600-token rounded-md shadow-sm;
+  @apply bg-surface-50-900-token text-surface-900-50-token;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+}
+
+/* Professional Typography */
+.text-display {
+  @apply text-4xl font-bold tracking-tight;
+}
+
+.text-heading {
+  @apply text-2xl font-semibold;
+}
+
+.text-subheading {
+  @apply text-lg font-medium;
+}
+
+.text-body {
+  @apply text-base;
+}
+
+.text-caption {
+  @apply text-sm text-surface-600-300-token;
+}
+
+.text-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Professional Wearable Styles */
+.wearable-container {
+  @apply h-screen w-full bg-surface-50-900-token flex flex-col;
+}
+
+.wearable-header {
+  @apply px-6 py-4 border-b border-surface-200-700-token;
+}
+
+.wearable-content {
+  @apply flex-1 px-6 py-8 overflow-auto;
+}
+
+.wearable-footer {
+  @apply px-6 py-4 border-t border-surface-200-700-token;
+}
+
+/* Status Indicators */
+.status-success {
+  @apply text-success-500 bg-success-500/10 border border-success-500/20;
+}
+
+.status-warning {
+  @apply text-warning-500 bg-warning-500/10 border border-warning-500/20;
+}
+
+.status-error {
+  @apply text-error-500 bg-error-500/10 border border-error-500/20;
+}
+
+.status-info {
+  @apply text-primary-500 bg-primary-500/10 border border-primary-500/20;
+}
+
+/* Progress Bars */
+.progress-professional {
+  @apply w-full bg-surface-200-700-token rounded-full h-2;
+}
+
+.progress-fill {
+  @apply h-2 bg-gradient-to-r from-electric-400 to-royal-500 rounded-full transition-all duration-300;
+}
+
+/* Animations */
+@keyframes pulse-professional {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-professional {
+  animation: pulse-professional 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom Scrollbars */
+.scrollbar-professional::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-professional::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+.scrollbar-professional::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+.scrollbar-professional::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}

@@ -1,0 +1,40 @@
+{
+    "users": {},
+    "example_user_preferences": {
+        "user_123": {
+            "blacklistedExercises": [],
+            "preferredExercises": [
+                "rack_pull",
+                "incline_press"
+            ],
+            "successRates": {
+                "bench_press": 0.75,
+                "deadlift": 0.45,
+                "squat": 0.80
+            },
+            "maxHeartRate": 180,
+            "calibrated": false,
+            "age": 30,
+            "workoutHistory": {
+                "lastWeights": {
+                    "bench_press": 185,
+                    "deadlift": 225,
+                    "squat": 200
+                },
+                "lastWorkouts": [
+                    {
+                        "date": "2025-09-20",
+                        "exercises": [
+                            "bench_press",
+                            "incline_press",
+                            "push_ups"
+                        ],
+                        "avgHeartRate": 145,
+                        "feedback": "moderate"
+                    }
+                ]
+            }
+        }
+    },
+    "description": "User-specific preferences, blacklists, success rates, and workout history for AI decision making"
+}

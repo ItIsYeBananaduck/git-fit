@@ -21,6 +21,9 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest-setup-client.ts'],
-    include: ['src/lib/training/__tests__/**/*.test.ts'] // Ensure tests in __tests__ directory are included
+    include: [
+      'src/lib/training/__tests__/**/*.test.ts',
+      'src/lib/services/__tests__/**/*.test.ts'
+    ] // Ensure tests in __tests__ directories are included
   }
 });

@@ -235,6 +235,7 @@ Key backend functions include:
 **Service URL**: https://technically-fit-ai.fly.dev/
 
 **Architecture Features**:
+
 - FastAPI web service optimized for production workloads
 - Memory-efficient DistilGPT-2 model loading with float16 precision
 - CPU-only PyTorch deployment for cost optimization (<$10/month)
@@ -244,11 +245,13 @@ Key backend functions include:
 - Robust error handling and health monitoring
 
 **API Endpoints**:
+
 - `GET /health` - Service health check with model availability status
 - `POST /event` - Workout event processing with AI-powered recommendations
 - `GET /` - Service information and available endpoints
 
 **Safety Features**:
+
 - 80% minimum rep rule enforcement (no drops below 80% of planned reps)
 - Progressive overload principles built into recommendations
 - Context-aware workout adjustments based on user fitness level and goals

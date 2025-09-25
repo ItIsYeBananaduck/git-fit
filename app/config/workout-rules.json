@@ -1,0 +1,83 @@
+{
+    "weightJumps": {
+        "allowed": [
+            2.5,
+            5,
+            10
+        ],
+        "defaultProgression": 2.5,
+        "skipThreshold": 0.6,
+        "description": "Weight progression rules: 2.5, 5, or 10 lbs ONLY. Skip to 5 if success rate >60%, revert to 2.5 if user adjusts down"
+    },
+    "exerciseSwaps": {
+        "blacklistThreshold": 3,
+        "muscleGroups": {
+            "chest": [
+                "bench_press",
+                "incline_press",
+                "dumbbell_press",
+                "push_ups",
+                "chest_fly"
+            ],
+            "back": [
+                "deadlift",
+                "rack_pull",
+                "bent_over_row",
+                "pull_ups",
+                "lat_pulldown"
+            ],
+            "legs": [
+                "squat",
+                "leg_press",
+                "lunges",
+                "leg_extension",
+                "leg_curl"
+            ],
+            "shoulders": [
+                "overhead_press",
+                "lateral_raise",
+                "rear_delt_fly",
+                "upright_row"
+            ],
+            "arms": [
+                "bicep_curl",
+                "tricep_extension",
+                "hammer_curl",
+                "dips"
+            ],
+            "core": [
+                "plank",
+                "crunches",
+                "russian_twist",
+                "leg_raise"
+            ]
+        },
+        "description": "Track swaps within same muscle group. Prompt to blacklist after 3+ swaps of same exercise"
+    },
+    "strainLimits": {
+        "maxHrPercent": 85,
+        "defaultMaxHr": "220 - age * 0.85",
+        "hrExceedDuration": 10,
+        "restIncrease": 30,
+        "maxRestTime": 90,
+        "calibrationPrompt": "Wanna calibrate your safe strain? Jump in place for fifteen seconds. We'll read your heart rate and set a real limit. Skip if you want-we'll guess based on age.",
+        "description": "Cap HR at 85% of user's max. If HR exceeds for 10s, increase rest by 30s (max 90s)"
+    },
+    "aiPromptTemplate": {
+        "template": "User prefers: {userPrefs}. Last workouts: {lastWorkouts}. HR>85% max? {hrExceeded}. SpO2<95? {spo2Low}. Rules: weight jumps {weightJumps}, blacklist: {blacklist}. Pick ONE: add set, add rep, increase volume, increase rest, or blacklist exercise. Same muscle group only. No generic advice.",
+        "constraints": [
+            "Weight jumps: 2.5, 5, or 10 lbs ONLY",
+            "Exercise swaps: Same muscle group only",
+            "Blacklisted exercises: NEVER suggest",
+            "Strain safety: Cap HR at 85% max",
+            "ONE suggestion only"
+        ]
+    },
+    "safetyNet": {
+        "maxWeightIncrease": 10,
+        "enforceBlacklist": true,
+        "maxRestTime": 90,
+        "minRestTime": 30,
+        "description": "Clamp AI suggestions to config rules. If AI says add 15 lbs, cap at 10. Reject blacklisted exercises"
+    }
+}

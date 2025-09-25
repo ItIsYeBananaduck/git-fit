@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { authStore } from '$lib/stores/auth';
+	import { theme } from '$lib/stores/theme';
 	import favicon from '$lib/assets/favicon.svg';
 	import Navigation from '$lib/components/Navigation.svelte';
 	import AccessibilityUtils from '$lib/components/AccessibilityUtils.svelte';
+	import '$lib/styles/globals.css';
 
 	let { children } = $props();
 
-	// Initialize authentication on app startup
+	// Initialize authentication and theme on app startup
 	onMount(async () => {
 		await authStore.initialize();
+		theme.init();
 	});
 </script>
 
@@ -32,9 +35,9 @@
 	Skip to main content
 </a>
 
-<div class="min-h-screen bg-gray-50">
+<div class="wearable-container">
 	<Navigation />
-	<main id="main-content" class="container mx-auto px-4 py-8" tabindex="-1">
+	<main id="main-content" class="wearable-content scrollbar-professional" tabindex="-1">
 		{@render children?.()}
 	</main>
 </div>

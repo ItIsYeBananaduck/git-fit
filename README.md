@@ -79,21 +79,42 @@ python app.py
 ### Fly.io Deployment
 
 ```bash
-# Install Fly CLI
-# Deploy
-fly deploy
+# 1. Download flyctl (Windows)
+# Go to: https://github.com/superfly/flyctl/releases/latest
+# Download: flyctl.exe
+# Save to project directory
+
+# 2. Authenticate
+flyctl.exe auth login
+
+# 3. Deploy
+flyctl.exe deploy
+
+# 4. Set Hugging Face token
+flyctl.exe secrets set HF_TOKEN=your_actual_huggingface_token_here
+
+# 5. Get app URL
+flyctl.exe status
+
+# 6. Test deployment
+python test_deployment.py https://your-app.fly.dev
 ```
 
-### Testing
+### Testing Endpoints
 
 ```bash
-# Run tests
-python test_app.py
+# Health check
+curl https://your-app.fly.dev/health
 
-# Manual testing
-curl -X POST http://localhost:8000/event \
+# Event endpoint
+curl -X POST https://your-app.fly.dev/event \
   -H "Content-Type: application/json" \
-  -d '{"event":"skip_set","user_id":"test","context":{},"user_data":{}}'
+  -d '{
+    "event": "skip_set",
+    "user_id": "test123",
+    "context": {"exercise": "bench_press"},
+    "user_data": {"fitness_level": "intermediate"}
+  }'
 ```
 
 ## Technical Stack
@@ -131,4 +152,4 @@ Designed for integration with fitness apps like Technically Fit mobile app. Supp
 
 ---
 
-_Powered by FastAPI, Transformers, and hosted on Fly.io_
+Powered by FastAPI, Transformers, and hosted on Fly.io

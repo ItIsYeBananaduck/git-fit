@@ -4,6 +4,7 @@
 	import { page } from '$app/stores';
 	import { user, isAuthenticated } from '$lib/stores/auth';
 	import { api } from '$lib/convex';
+	import YouTubeAdminPanel from '$lib/components/YouTubeAdminPanel.svelte';
 
 	// Redirect to login if not authenticated or not admin
 	$: if (!$isAuthenticated && $user === null) {
@@ -261,6 +262,11 @@
 				</div>
 			</div>
 		</div>
+	</div>
+
+	<!-- YouTube Integration Section -->
+	<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+		<YouTubeAdminPanel on:urlAdded={(e) => console.log('YouTube video added:', e.detail)} />
 	</div>
 
 	<!-- Program Import Section -->
