@@ -5,8 +5,8 @@
 	let token: string = '';
 
 	onMount(() => {
-		if (window.grecaptcha) {
-			widgetId = window.grecaptcha.render('recaptcha-container', {
+		if ((window as any).grecaptcha) {
+			widgetId = (window as any).grecaptcha.render('recaptcha-container', {
 				sitekey: siteKey,
 				callback: (t: string) => (token = t)
 			});

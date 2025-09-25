@@ -1,13 +1,14 @@
-<script>
+<script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import WearablePreSet from './WearablePreSet.svelte';
 	import WearableInSet from './WearableInSet.svelte';
 	import WearableFeedbackButtons from './WearableFeedbackButtons.svelte';
 	import WearablePostSet from './WearablePostSet.svelte';
 	import StrainMonitor from './StrainMonitor.svelte';
-	import { DailyStrainAssessmentService } from '../services/dailyStrainAssessmentService';
-	import { AIWorkoutIntegrationService } from '../services/aiWorkoutIntegration';
-	import { restManager, type RestSession } from '../services/restManager';
+	import { DailyStrainAssessmentService } from '../services/dailyStrainAssessmentService.js';
+	import { AIWorkoutIntegrationService } from '../services/aiWorkoutIntegration.js';
+	import { restManager } from '../services/restManager.js';
+	import type { RestSession } from '../services/restManager.js';
 
 	// Example: Replace with real baseline and readiness data from user profile or API
 	const baselineHR = 60;
@@ -24,15 +25,15 @@
 
 	// AI integration state
 	let currentUserId = 'demo_user'; // Would come from auth
-	let aiImplementation = null;
+	let aiImplementation: any = null;
 	let showCalibrationPrompt = false;
-	
-	// Rest management state
-	let currentRestSession = null;
-	let restStatus = { isActive: false, progress: 0, timeRemaining: 0 };
-	let aiAdjustedRestTime = null; // Tracks AI-recommended rest time
 
-	function updateStrainAfterSet(setData, feedback) {
+	// Rest management state
+	let currentRestSession: RestSession | null = null;
+	let restStatus = { isActive: false, progress: 0, timeRemaining: 0 };
+	let aiAdjustedRestTime: number | null = null; // Tracks AI-recommended rest time
+
+	function updateStrainAfterSet(setData: any, feedback: any) {
 		// Intensity: simple proxy (can be improved)
 		const intensityScore = (setData.reps * (setData.avgHeartRate - baselineHR)) / 10;
 		// Fatigue: can use rolling average of HRV or session RPE
@@ -78,7 +79,7 @@
 	let workoutStartTime = Date.now();
 
 	// Set completion data
-	let completedSets = [];
+	let completedSets: any[] = [];
 	let currentSetData = {
 		reps: 0,
 		duration: 0,
@@ -86,7 +87,7 @@
 		strainLevel: 'moderate'
 	};
 
-	function handleStartWorkout(event) {
+	function handleStartWorkout(event: any) {
 		const { exercise, targetReps, targetWeight, totalSets } = event.detail;
 		workout = { exercise, targetReps, targetWeight, totalSets };
 		currentScreen = 'in-set';
@@ -95,7 +96,7 @@
 		elapsedTime = 0;
 	}
 
-	function handleCompleteSet(event) {
+	function handleCompleteSet(event: any) {
 		const { reps, duration, heartRate, spo2 } = event.detail;
 
 		// Record set data
@@ -112,7 +113,7 @@
 		currentScreen = 'feedback';
 	}
 
-	function handleFeedback(event) {
+	async function handleFeedback(event: any) {
 		const { difficulty } = event.detail;
 
 		// Update strain with feedback
@@ -136,7 +137,7 @@
 	/**
 	 * Get AI implementation after set completion - automatically applies changes
 	 */
-	async function getAIImplementationAfterSet(difficulty) {
+	async function getAIImplementationAfterSet(difficulty: any) {
 		try {
 			const context = {
 				userId: currentUserId,
@@ -159,6 +160,7 @@
 					successRates: {
 						[workout.exercise]: difficulty === 'easy' ? 0.8 : difficulty === 'hard' ? 0.3 : 0.6
 					},
+					exerciseSwapCounts: {},
 					maxHeartRate: 180, // Would be calibrated
 					calibrated: false,
 					age: 30
@@ -189,7 +191,7 @@
 			currentScreen = 'pre-set';
 			currentRep = 0;
 			elapsedTime = 0;
-			
+
 			// Start rest with AI integration for next set
 			await startRestPeriod();
 		} else {
@@ -200,11 +202,13 @@
 	/**
 	 * Apply AI implementation to workout parameters (already applied automatically during feedback)
 	 */
-	function applyAIImplementation(implementation) {
+	function applyAIImplementation(implementation: any) {
 		switch (implementation.type) {
 			case 'weight_increase':
 				// Weight already applied during implementation
-				console.log(`Weight automatically increased by ${implementation.appliedValue}lb: ${implementation.reason}`);
+				console.log(
+					`Weight automatically increased by ${implementation.appliedValue}lb: ${implementation.reason}`
+				);
 				break;
 			case 'add_set':
 				workout.totalSets += implementation.appliedValue || 1;
@@ -217,8 +221,10 @@
 			case 'increase_rest':
 				// AI determined rest needs to be increased for strain protection
 				aiAdjustedRestTime = implementation.appliedValue;
-				console.log(`🤖 AI Rest Adjustment: ${implementation.appliedValue}s - ${implementation.reason}`);
-				
+				console.log(
+					`🤖 AI Rest Adjustment: ${implementation.appliedValue}s - ${implementation.reason}`
+				);
+
 				// If we're currently in rest, update the active session
 				if (currentRestSession) {
 					updateActiveRestSession(implementation.appliedValue, implementation.reason);
@@ -239,7 +245,8 @@
 
 		// Apply weight changes immediately if they were implemented
 		if (implementation.type === 'weight_increase' && implementation.applied) {
-			workout.targetWeight = Math.max(0, workout.targetWeight - implementation.value) + implementation.appliedValue;
+			workout.targetWeight =
+				Math.max(0, workout.targetWeight - implementation.value) + implementation.appliedValue;
 		}
 
 		aiImplementation = null; // Clear implementation after applying
@@ -248,20 +255,20 @@
 	/**
 	 * Update active rest session with AI-recommended rest time
 	 */
-	function updateActiveRestSession(newRestTime, reason) {
+	function updateActiveRestSession(newRestTime: any, reason: any) {
 		if (currentRestSession) {
 			// Extend the current rest session with AI recommendation
 			const currentStatus = restManager.getRestStatus();
 			const extension = Math.max(0, newRestTime - currentStatus.timeRemaining);
-			
+
 			if (extension > 0) {
 				// Calculate new target duration
 				const elapsed = Date.now() - currentRestSession.startTime;
 				const newTargetDuration = Math.round(elapsed / 1000) + newRestTime;
-				
+
 				// Update the session (this is a simplified approach)
 				currentRestSession.targetRestDuration = newTargetDuration;
-				
+
 				console.log(`🤖 Rest extended by ${extension}s due to AI recommendation: ${reason}`);
 			}
 		}
@@ -273,11 +280,11 @@
 	async function startRestPeriod() {
 		try {
 			const restTime = aiAdjustedRestTime || 90; // Use AI-recommended time or default
-			
+
 			// Configure rest manager with current HR/strain monitors
 			restManager.setHRMonitor(async () => liveMetrics.heartRate);
 			restManager.setStrainMonitor(async () => currentStrain);
-			
+
 			// Set up event handlers for rest progress
 			restManager.setEventHandlers({
 				onRestStart: (session) => {
@@ -287,7 +294,7 @@
 				onRestProgress: (session, progress) => {
 					const status = restManager.getRestStatus();
 					restStatus = status;
-					
+
 					// Check if AI recommends further adjustment during rest
 					if (progress < 1 && liveMetrics.heartRate > 0) {
 						checkForDynamicRestAdjustment();
@@ -298,31 +305,29 @@
 					restStatus = { isActive: false, progress: 0, timeRemaining: 0 };
 					aiAdjustedRestTime = null; // Reset AI adjustment
 					console.log('Rest completed');
-					
+
 					// Move to next set
 					handleNextSet();
 				}
 			});
-			
+
 			// Start the rest session
-			const session = await restManager.startRest(
-				workout.exercise,
-				currentSet,
-				{
-					restTime: restTime,
-					perceivedEffort: getPerceivedEffortFromFeedback(),
-					exerciseIntensity: getExerciseIntensity(),
-					userFitnessLevel: 'intermediate' // Could be from user profile
-				}
-			);
-			
+			const session = await restManager.startRest(workout.exercise, currentSet, {
+				perceivedEffort: getPerceivedEffortFromFeedback(),
+				exerciseIntensity: getExerciseIntensity(),
+				userFitnessLevel: 'intermediate' // Could be from user profile
+			});
+
 			currentRestSession = session;
 		} catch (error) {
 			console.error('Failed to start rest period:', error);
 			// Fallback to simple timer
-			setTimeout(() => {
-				handleNextSet();
-			}, (aiAdjustedRestTime || 90) * 1000);
+			setTimeout(
+				() => {
+					handleNextSet();
+				},
+				(aiAdjustedRestTime || 90) * 1000
+			);
 		}
 	}
 
@@ -331,7 +336,7 @@
 	 */
 	async function checkForDynamicRestAdjustment() {
 		if (!currentRestSession || !liveMetrics.heartRate) return;
-		
+
 		const context = {
 			userId: currentUserId,
 			currentExercise: workout.exercise,
@@ -350,15 +355,15 @@
 				exerciseSwapCounts: {}
 			}
 		};
-		
+
 		// Get AI recommendation for current strain levels
 		try {
 			const implementation = await aiService.getAIImplementation(context);
-			
+
 			// Only process rest adjustments during active rest
 			if (implementation.type === 'increase_rest' && implementation.applied) {
 				updateActiveRestSession(implementation.appliedValue, implementation.reason);
-				
+
 				// Update UI to show AI adjustment
 				aiImplementation = implementation;
 			}
@@ -373,10 +378,14 @@
 	function getPerceivedEffortFromFeedback() {
 		// Convert feedback to RPE scale (1-10)
 		switch (lastFeedback) {
-			case -2: return 4; // 'easy'
-			case 0: return 7;  // 'moderate'  
-			case 2: return 9;  // 'hard'
-			default: return 7; // default moderate
+			case -2:
+				return 4; // 'easy'
+			case 0:
+				return 7; // 'moderate'
+			case 2:
+				return 9; // 'hard'
+			default:
+				return 7; // default moderate
 		}
 	}
 
@@ -385,15 +394,15 @@
 	 */
 	function getExerciseIntensity() {
 		// Simple heuristic based on workout parameters
-		if (workout.targetReps <= 5) return 'high';      // Heavy/strength
-		if (workout.targetReps <= 8) return 'moderate';  // Hypertrophy
+		if (workout.targetReps <= 5) return 'high'; // Heavy/strength
+		if (workout.targetReps <= 8) return 'moderate'; // Hypertrophy
 		return 'low'; // Endurance
 	}
 
 	/**
 	 * Show exercise blacklist confirmation
 	 */
-	function showBlacklistPrompt(exercise) {
+	function showBlacklistPrompt(exercise: any) {
 		const confirmed = confirm(`Blacklist ${exercise}? You've been struggling with this exercise.`);
 		if (confirmed) {
 			// Would update user preferences
@@ -414,7 +423,7 @@
 	/**
 	 * Handle 15-second jump test calibration
 	 */
-	async function handleJumpTestCalibration(maxHR) {
+	async function handleJumpTestCalibration(maxHR: any) {
 		await aiService.calibrateMaxHeartRate(currentUserId, maxHR);
 		showCalibrationPrompt = false;
 		console.log(`Heart rate calibrated to ${maxHR * 0.85} BPM`);
@@ -451,7 +460,7 @@
 	}
 
 	// Handle wearable-specific gestures
-	function handleGesture(event) {
+	function handleGesture(event: any) {
 		const { type } = event.detail;
 
 		switch (type) {
@@ -477,7 +486,7 @@
 </script>
 
 <div class="wearable-workout-container">
-	<StrainMonitor {targetStrain} onStrainReached={handleEndWorkout} bind:currentStrain />
+	<StrainMonitor {targetStrain} onStrainReached={handleEndWorkout} />
 
 	<!-- Strain Calibration Prompt -->
 	{#if showCalibrationPrompt}
@@ -572,29 +581,28 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="wearable-content flex flex-col items-center justify-center space-y-8">
 				<!-- Timer Display -->
 				<div class="text-center">
 					<div class="text-display text-mono text-primary-500">
-						{Math.floor(restStatus.timeRemaining / 60):02d}:{(restStatus.timeRemaining % 60):02d}
+						{Math.floor(restStatus.timeRemaining / 60)
+							.toString()
+							.padStart(2, '0')}:{(restStatus.timeRemaining % 60).toString().padStart(2, '0')}
 					</div>
 					<div class="text-caption mt-2">Time Remaining</div>
 				</div>
-				
+
 				<!-- Progress Bar -->
 				<div class="w-full max-w-sm">
 					<div class="progress-professional">
-						<div 
-							class="progress-fill" 
-							style="width: {restStatus.progress * 100}%"
-						></div>
+						<div class="progress-fill" style="width: {restStatus.progress * 100}%"></div>
 					</div>
 					<div class="text-caption text-center mt-2">
 						{Math.round(restStatus.progress * 100)}% Complete
 					</div>
 				</div>
-				
+
 				<!-- AI Adjustment Notification -->
 				{#if aiAdjustedRestTime}
 					<div class="status-info rounded-lg px-4 py-3 max-w-sm">
@@ -607,7 +615,7 @@
 						</div>
 					</div>
 				{/if}
-				
+
 				<!-- Heart Rate Recovery -->
 				{#if liveMetrics.heartRate > 0}
 					<div class="card-professional p-4 max-w-sm w-full">
@@ -622,19 +630,15 @@
 						</div>
 						<div class="mt-2">
 							{#if liveMetrics.heartRate > 120}
-								<div class="status-warning rounded px-2 py-1 text-xs">
-									Still elevated
-								</div>
+								<div class="status-warning rounded px-2 py-1 text-xs">Still elevated</div>
 							{:else}
-								<div class="status-success rounded px-2 py-1 text-xs">
-									Well recovered
-								</div>
+								<div class="status-success rounded px-2 py-1 text-xs">Well recovered</div>
 							{/if}
 						</div>
 					</div>
 				{/if}
 			</div>
-			
+
 			<!-- Next Set Info -->
 			<div class="wearable-footer">
 				<div class="card-professional p-4">

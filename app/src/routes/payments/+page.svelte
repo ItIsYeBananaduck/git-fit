@@ -4,7 +4,7 @@
 	let platform: 'ios' | 'web' | 'pwa' = 'web';
 	let loading = false;
 	let recaptchaToken = '';
-	let recaptchaRef;
+	let recaptchaRef: any;
 
 	onMount(() => {
 		if ((window.navigator as Navigator & { standalone?: boolean }).standalone) {

@@ -1,11 +1,15 @@
-@import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
-@import '@skeletonlabs/skeleton/styles/skeleton.css';
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+/* Google Fonts Import - Must be first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Modern CSS Reset */
+@import './modern.css';
+@import './skeleton.css';
+
+/* Tailwind CSS v4 */
+@import "tailwindcss/preflight";
+@import "tailwindcss/utilities";
 
 /* Professional Typography */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* Theme Variables */
 :root {
@@ -40,7 +44,8 @@
 
 /* Base Styles */
 html, body {
-  @apply h-full overflow-hidden;
+  height: 100%;
+  overflow: hidden;
   font-family: 'Inter', system-ui, sans-serif;
 }
 
@@ -51,44 +56,87 @@ body {
 
 /* Professional Components */
 .card-professional {
-  @apply bg-surface-100-800-token border border-surface-300-600-token rounded-lg shadow-sm;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .btn-professional {
-  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition-colors;
-  @apply bg-primary-500 hover:bg-primary-600 text-white;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+  background-color: var(--color-royal);
+  color: white;
+}
+
+.btn-professional:hover {
+  background-color: var(--color-royal);
+  filter: brightness(1.1);
+}
+
+.btn-professional:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-royal);
 }
 
 .btn-secondary {
-  @apply bg-surface-200-700-token hover:bg-surface-300-600-token text-surface-900-50-token;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-border);
 }
 
 .input-professional {
-  @apply block w-full px-3 py-2 border border-surface-300-600-token rounded-md shadow-sm;
-  @apply bg-surface-50-900-token text-surface-900-50-token;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.input-professional:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-royal);
+  border-color: var(--color-royal);
 }
 
 /* Professional Typography */
 .text-display {
-  @apply text-4xl font-bold tracking-tight;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 .text-heading {
-  @apply text-2xl font-semibold;
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .text-subheading {
-  @apply text-lg font-medium;
+  font-size: 1.125rem;
+  font-weight: 500;
 }
 
 .text-body {
-  @apply text-base;
+  font-size: 1rem;
 }
 
 .text-caption {
-  @apply text-sm text-surface-600-300-token;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
 }
 
 .text-mono {
@@ -97,45 +145,69 @@ body {
 
 /* Professional Wearable Styles */
 .wearable-container {
-  @apply h-screen w-full bg-surface-50-900-token flex flex-col;
+  height: 100vh;
+  width: 100%;
+  background-color: var(--color-bg-primary);
+  display: flex;
+  flex-direction: column;
 }
 
 .wearable-header {
-  @apply px-6 py-4 border-b border-surface-200-700-token;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .wearable-content {
-  @apply flex-1 px-6 py-8 overflow-auto;
+  flex: 1;
+  padding: 2rem 1.5rem;
+  overflow: auto;
 }
 
 .wearable-footer {
-  @apply px-6 py-4 border-t border-surface-200-700-token;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--color-border);
 }
 
 /* Status Indicators */
 .status-success {
-  @apply text-success-500 bg-success-500/10 border border-success-500/20;
+  color: var(--color-success);
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .status-warning {
-  @apply text-warning-500 bg-warning-500/10 border border-warning-500/20;
+  color: var(--color-warning);
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .status-error {
-  @apply text-error-500 bg-error-500/10 border border-error-500/20;
+  color: var(--color-error);
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .status-info {
-  @apply text-primary-500 bg-primary-500/10 border border-primary-500/20;
+  color: var(--color-royal);
+  background-color: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 /* Progress Bars */
 .progress-professional {
-  @apply w-full bg-surface-200-700-token rounded-full h-2;
+  width: 100%;
+  background-color: var(--color-bg-tertiary);
+  border-radius: 9999px;
+  height: 0.5rem;
 }
 
 .progress-fill {
-  @apply h-2 bg-gradient-to-r from-electric-400 to-royal-500 rounded-full transition-all duration-300;
+  height: 0.5rem;
+  background: linear-gradient(to right, var(--color-electric), var(--color-royal));
+  border-radius: 9999px;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }
 
 /* Animations */

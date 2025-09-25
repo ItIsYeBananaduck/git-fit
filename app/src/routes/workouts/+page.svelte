@@ -21,9 +21,9 @@
 	let volume = 1;
 
 	// Assume sessionId is available (mock for now)
-	let sessionId = null; // Replace with real sessionId from active session
+	let sessionId: string | null = null; // Replace with real sessionId from active session
 
-	async function saveMusicState(state) {
+	async function saveMusicState(state: any) {
 		if (!sessionId) return;
 		await api.workouts.updateMusicState({
 			sessionId,
@@ -31,7 +31,7 @@
 		});
 	}
 
-	function handleMusicState(event) {
+	function handleMusicState(event: any) {
 		saveMusicState(event.detail);
 	}
 

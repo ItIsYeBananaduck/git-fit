@@ -1,6 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { useConvexClient, useQuery } from 'convex-svelte';
+	import { api } from '$lib/convex';
 
 	/**
 	 * @typedef {Object} RecommendationAction
@@ -31,85 +33,31 @@
 	/** @type {AdaptiveRecommendation[]} */
 	let recommendations = [];
 	let loading = true;
-	let error = null;
+	let error = '';
+
+	const client = useConvexClient();
 
 	// Load top recommendations
 	async function loadRecommendations() {
 		try {
 			loading = true;
-			error = null;
+			error = '';
 
-			// Load top recommendations (mock data for now)
-			const topRecs = await getTopRecommendations(userId, limit);
-			recommendations = topRecs;
-		} catch (/** @type {any} */ err) {
-			error = err.message || 'Failed to load recommendations';
+			// Load recommendations from Convex
+			const recs = await client.query(
+				api.functions.adaptiveRecommendationsSimple.getAdaptiveRecommendations,
+				{
+					userId,
+					limit
+				}
+			);
+			recommendations = recs || [];
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load recommendations';
 			console.error('Error loading recommendations:', err);
 		} finally {
 			loading = false;
 		}
-	}
-
-	// Mock function to get top recommendations
-	async function getTopRecommendations(userId, limit) {
-		// Simulate API delay
-		await new Promise((resolve) => setTimeout(resolve, 300));
-
-		const mockRecommendations = [
-			{
-				id: 'urgent_1',
-				type: 'recovery',
-				title: 'Prioritize Recovery',
-				description: 'Your recent workouts have been intense. Consider adding rest days.',
-				reasoning: 'High-intensity sessions detected. Recovery is crucial.',
-				actions: [
-					{
-						type: 'rest_day',
-						description: 'Take 1-2 rest days this week',
-						parameters: { rest_days: '1-2' }
-					}
-				],
-				priority: 'urgent',
-				confidence: 92,
-				createdAt: Date.now() - 6 * 60 * 60 * 1000
-			},
-			{
-				id: 'high_1',
-				type: 'workout',
-				title: 'Increase Training Frequency',
-				description: 'Add more workout days to accelerate progress.',
-				reasoning: 'Your consistency is good but frequency could be higher.',
-				actions: [
-					{
-						type: 'adjust_workout',
-						description: 'Add 1-2 more workout days per week',
-						parameters: { target_frequency: '4-5' }
-					}
-				],
-				priority: 'high',
-				confidence: 85,
-				createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000
-			},
-			{
-				id: 'high_2',
-				type: 'nutrition',
-				title: 'Optimize Protein Intake',
-				description: 'Distribute protein more evenly throughout the day.',
-				reasoning: 'Protein timing could be improved for better muscle synthesis.',
-				actions: [
-					{
-						type: 'modify_nutrition',
-						description: 'Aim for 20-40g protein per meal',
-						parameters: { protein_per_meal: '20-40g' }
-					}
-				],
-				priority: 'high',
-				confidence: 78,
-				createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000
-			}
-		];
-
-		return mockRecommendations.slice(0, limit);
 	}
 
 	$: typeIcons = {
@@ -136,9 +84,19 @@
 		window.location.href = '/recommendations';
 	}
 
-	function handleApplyRecommendation(recommendation) {
+	function handleApplyRecommendation(/** @type {AdaptiveRecommendation} */ recommendation) {
 		console.log('Applying recommendation:', recommendation.title);
 		// Handle applying the recommendation
+	}
+
+	function handleRecommendationKeydown(
+		/** @type {KeyboardEvent} */ event,
+		/** @type {AdaptiveRecommendation} */ recommendation
+	) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			handleApplyRecommendation(recommendation);
+		}
 	}
 </script>
 
@@ -178,8 +136,12 @@
 			<div class="space-y-4">
 				{#each recommendations as recommendation (recommendation.id)}
 					<div
-						class="border rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+						class="border rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+						role="button"
+						tabindex="0"
+						aria-label="Apply recommendation: {recommendation.title}"
 						on:click={() => handleApplyRecommendation(recommendation)}
+						on:keydown={(event) => handleRecommendationKeydown(event, recommendation)}
 						in:fade={{ duration: 300, delay: Math.random() * 200 }}
 					>
 						<!-- Recommendation Header -->

@@ -2,14 +2,15 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { user, isAuthenticated } from '$lib/stores/auth';
+	import { browser } from '$app/environment';
+	import { user, isAuthenticated } from '$lib/stores/auth.js';
 	import FitnessStats from '$lib/components/FitnessStats.svelte';
 	import QuickActions from '$lib/components/QuickActions.svelte';
 	import RecentWorkouts from '$lib/components/RecentWorkouts.svelte';
 	import ProgressChart from '$lib/components/ProgressChart.svelte';
 
-	// Redirect to login if not authenticated
-	$: if (!$isAuthenticated && $user === null) {
+	// Redirect to login if not authenticated (only in browser)
+	$: if (browser && !$isAuthenticated && $user === null) {
 		goto(`/auth/login?redirect=${encodeURIComponent($page.url.pathname)}`);
 	}
 

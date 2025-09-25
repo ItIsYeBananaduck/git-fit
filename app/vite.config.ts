@@ -9,7 +9,14 @@ export default defineConfig({
                 host: '0.0.0.0',
                 port: 3000,
                 strictPort: true,
-                allowedHosts: true
+                allowedHosts: true,
+                fs: {
+                        allow: [
+                                '/workspaces/git-fit/app/convex',
+                                '/workspaces/git-fit/convex',
+                                '.'
+                        ]
+                }
         },
         resolve: {
                 alias: {
