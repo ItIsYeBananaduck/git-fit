@@ -572,42 +572,42 @@
 		/>
 	{:else if restStatus.isActive}
 		<!-- Professional Dynamic Rest Display -->
-		<div class="wearable-container">
-			<div class="wearable-header">
+		<div class="card">
+			<div class="card-header">
 				<div class="flex items-center justify-between">
-					<h2 class="text-heading">Rest Period</h2>
-					<div class="text-caption">
+					<h2 class="text-lg font-semibold text-foreground">Rest Period</h2>
+					<div class="text-muted text-sm">
 						Set {currentSet} of {workout.totalSets}
 					</div>
 				</div>
 			</div>
 
-			<div class="wearable-content flex flex-col items-center justify-center space-y-8">
+			<div class="card-content flex flex-col items-center justify-center space-y-8">
 				<!-- Timer Display -->
 				<div class="text-center">
-					<div class="text-display text-mono text-primary-500">
+					<div class="text-6xl font-mono text-primary">
 						{Math.floor(restStatus.timeRemaining / 60)
 							.toString()
 							.padStart(2, '0')}:{(restStatus.timeRemaining % 60).toString().padStart(2, '0')}
 					</div>
-					<div class="text-caption mt-2">Time Remaining</div>
+					<div class="text-muted text-sm mt-2">Time Remaining</div>
 				</div>
 
 				<!-- Progress Bar -->
 				<div class="w-full max-w-sm">
-					<div class="progress-professional">
+					<div class="progress-bar">
 						<div class="progress-fill" style="width: {restStatus.progress * 100}%"></div>
 					</div>
-					<div class="text-caption text-center mt-2">
+					<div class="text-muted text-center text-sm mt-2">
 						{Math.round(restStatus.progress * 100)}% Complete
 					</div>
 				</div>
 
 				<!-- AI Adjustment Notification -->
 				{#if aiAdjustedRestTime}
-					<div class="status-info rounded-lg px-4 py-3 max-w-sm">
-						<div class="text-sm font-medium">AI Rest Adjustment</div>
-						<div class="text-caption mt-1">
+					<div class="card p-4 max-w-sm border-accent">
+						<div class="text-sm font-medium text-foreground">AI Rest Adjustment</div>
+						<div class="text-muted text-sm mt-1">
 							Extended to {aiAdjustedRestTime}s
 							{#if aiImplementation?.reason}
 								<div class="mt-1">{aiImplementation.reason}</div>

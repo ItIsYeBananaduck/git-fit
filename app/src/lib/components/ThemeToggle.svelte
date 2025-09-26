@@ -6,7 +6,7 @@
 </script>
 
 <button
-	class="btn-professional btn-secondary p-2"
+	class="btn-icon"
 	on:click={theme.toggle}
 	aria-label="Toggle theme"
 	title="Toggle between light and dark theme"

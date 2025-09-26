@@ -5,7 +5,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import Navigation from '$lib/components/Navigation.svelte';
 	import AccessibilityUtils from '$lib/components/AccessibilityUtils.svelte';
-	import '$lib/styles/globals.css';
+	import '../app.css';
 
 	let { children } = $props();
 
