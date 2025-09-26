@@ -3,6 +3,14 @@
 	import MusicControls from '$lib/components/MusicControls.svelte';
 	import { api } from '$lib/convex/_generated/api';
 	import { onMount } from 'svelte';
+	import {
+		mondayWorkoutService,
+		needsMondayProcessing,
+		logWorkoutForMonday,
+		type MondayWorkoutData
+	} from '$lib/stores/mondayWorkoutData';
+	// Using available icons - let's check what exists
+	// import { Activity, Clock, Target, Zap } from 'lucide-svelte';
 
 	// Platform detection (basic)
 	let platform: 'ios' | 'android' | 'web' = 'web';
@@ -12,49 +20,94 @@
 		else if (/android/.test(ua)) platform = 'android';
 	}
 
-	// Music state (mock for now)
+	// Music state
 	let playing = false;
 	let trackName = 'Sample Track';
 	let artistName = 'Sample Artist';
 	let position = 0;
 	let duration = 0;
 	let volume = 1;
+	let sessionId: string | null = null;
 
-	// Assume sessionId is available (mock for now)
-	let sessionId: string | null = null; // Replace with real sessionId from active session
+	// Monday data processing variables
+	let showMondayNotification = false;
+	let lastWeekSummary = '';
+
+	// Workout completion tracking
+	let currentWorkout: {
+		exerciseId: string;
+		reps: number;
+		sets: number;
+		volume: number;
+		startTime: Date;
+		userFeedback?: MondayWorkoutData['userFeedback'];
+	} | null = null;
 
 	async function saveMusicState(state: any) {
 		if (!sessionId) return;
-		await api.workouts.updateMusicState({
-			sessionId,
-			musicState: state
-		});
+		// TODO: Implement actual API call when available
+		console.log('Saving music state:', state);
 	}
 
 	function handleMusicState(event: any) {
 		saveMusicState(event.detail);
 	}
 
+	// Handle workout completion with Monday data logging
+	function completeWorkout(
+		exerciseId: string,
+		completedReps: number,
+		completedSets: number,
+		weight: number,
+		feedback?: MondayWorkoutData['userFeedback']
+	) {
+		if (!currentWorkout) return;
+
+		const workoutTime = Math.round((Date.now() - currentWorkout.startTime.getTime()) / 60000); // minutes
+
+		// Log for Monday processing
+		logWorkoutForMonday(exerciseId, completedReps, completedSets, weight, workoutTime, feedback, {
+			// Mock health data - in real app this would come from HealthKit/Health Connect
+			heartRate: { avg: 145, max: 165, variance: 12 },
+			spo2: { avgSpO2: 97, drift: 1.5 },
+			sleepScore: 15 // 0-20 range
+		});
+
+		// Reset current workout
+		currentWorkout = null;
+
+		// Show completion message
+		alert(`Workout completed! Data logged for Monday intensity analysis.`);
+	}
+
+	// Start a workout session
+	function startWorkout(
+		exerciseId: string,
+		targetReps: number,
+		targetSets: number,
+		weight: number
+	) {
+		currentWorkout = {
+			exerciseId,
+			reps: targetReps,
+			sets: targetSets,
+			volume: weight,
+			startTime: new Date()
+		};
+	}
+
+	// Handle user feedback for intensity scoring
+	function handleUserFeedback(feedback: MondayWorkoutData['userFeedback']) {
+		if (currentWorkout) {
+			currentWorkout.userFeedback = feedback;
+		}
+	}
+
 	onMount(async () => {
-		if (!sessionId) return;
-		// Try to fetch the session and restore music state if available
-		try {
-			const session = await api.workouts.getUserWorkoutSessions({
-				userId: 'CURRENT_USER_ID',
-				limit: 1
-			});
-			// Replace 'CURRENT_USER_ID' with actual user id logic as needed
-			if (session && session.length > 0 && session[0].id === sessionId && session[0].musicState) {
-				const ms = session[0].musicState;
-				playing = ms.isPlaying ?? false;
-				trackName = ms.track ?? '';
-				artistName = ms.artist ?? '';
-				position = ms.position ?? 0;
-				duration = ms.duration ?? 0;
-				volume = ms.volume ?? 1;
-			}
-		} catch (e) {
-			console.error('Failed to restore music state:', e);
+		// Check if Monday processing is needed
+		if ($needsMondayProcessing) {
+			showMondayNotification = true;
+			lastWeekSummary = 'Last week you averaged 75% intensity. Ready for new challenges!';
 		}
 	});
 
@@ -70,201 +123,135 @@
 	function onVolumeDown() {
 		/* TODO: Integrate with plugin */
 	}
-
-	// Mock workout data
-	let activePrograms = [
-		{
-			id: 1,
-			name: 'Full Body Transformation',
-			currentWeek: 3,
-			totalWeeks: 12,
-			progress: 25,
-			nextWorkout: {
-				id: 101,
-				name: 'Upper Body Strength',
-				estimatedDuration: 45,
-				exercises: 8
-			}
-		},
-		{
-			id: 2,
-			name: 'HIIT Fat Burner',
-			currentWeek: 2,
-			totalWeeks: 6,
-			progress: 33,
-			nextWorkout: {
-				id: 102,
-				name: 'Cardio Blast',
-				estimatedDuration: 30,
-				exercises: 6
-			}
-		}
-	];
-
-	let quickWorkouts = [
-		{
-			id: 201,
-			name: '15-Min Morning Boost',
-			duration: 15,
-			difficulty: 'beginner',
-			type: 'cardio',
-			exercises: 5
-		},
-		{
-			id: 202,
-			name: 'Core Crusher',
-			duration: 20,
-			difficulty: 'intermediate',
-			type: 'strength',
-			exercises: 6
-		},
-		{
-			id: 203,
-			name: 'Full Body HIIT',
-			duration: 25,
-			difficulty: 'advanced',
-			type: 'cardio',
-			exercises: 8
-		}
-	];
-
-	let recentWorkouts = [
-		{
-			id: 301,
-			name: 'Lower Body Power',
-			program: 'Full Body Transformation',
-			completedAt: '2025-02-01T14:30:00',
-			duration: 48,
-			caloriesBurned: 340
-		},
-		{
-			id: 302,
-			name: 'HIIT Cardio Blast',
-			program: 'Fat Loss Program',
-			completedAt: '2025-01-30T09:15:00',
-			duration: 32,
-			caloriesBurned: 290
-		}
-	];
 </script>
 
 <svelte:head>
 	<title>Workouts - Technically Fit</title>
 </svelte:head>
 
-<div class="space-y-6">
-	<!-- Music Controls (In-Workout) -->
-	<div class="my-6">
-		<MusicControls
-			{playing}
-			{trackName}
-			{artistName}
-			{onPlayPause}
-			{onSkip}
-			{onVolumeUp}
-			{onVolumeDown}
-			on:musicstate={handleMusicState}
-		/>
-		<div class="text-xs text-gray-500 mt-2">Platform detected: {platform}</div>
+<!-- Monday Processing Notification -->
+{#if showMondayNotification}
+	<div class="alert alert-info mb-4">
+		<div class="icon-sm">📊</div>
+		<div>
+			<h4>Weekly Intensity Analysis Ready</h4>
+			<p>{lastWeekSummary}</p>
+			<button class="btn btn-sm btn-primary" on:click={() => (showMondayNotification = false)}>
+				View Analysis
+			</button>
+		</div>
 	</div>
-	<!-- Header -->
-	<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-		<h1 class="text-2xl font-bold text-gray-900 mb-2">Your Workouts</h1>
-		<p class="text-gray-600">Track your progress and stay consistent with your fitness journey</p>
-	</div>
+{/if}
 
-	<!-- Active Programs -->
-	{#if activePrograms.length > 0}
-		<div class="space-y-4">
-			<h2 class="text-xl font-semibold text-gray-900">Active Programs</h2>
-			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				{#each activePrograms as program}
-					<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-						<div class="flex items-center justify-between mb-4">
-							<h3 class="text-lg font-semibold text-gray-900">{program.name}</h3>
-							<span class="text-sm text-gray-500">
-								Week {program.currentWeek} of {program.totalWeeks}
-							</span>
-						</div>
+<div class="container py-4">
+	<h1 class="text-2xl font-bold mb-6">Workouts</h1>
 
-						<!-- Progress Bar -->
-						<div class="mb-4">
-							<div class="flex justify-between text-sm mb-2">
-								<span class="text-gray-600">Progress</span>
-								<span class="font-medium">{program.progress}%</span>
-							</div>
-							<div class="w-full bg-gray-200 rounded-full h-2">
-								<div
-									class="bg-secondary h-2 rounded-full transition-all duration-500"
-									style="width: {program.progress}%"
-								></div>
-							</div>
-						</div>
-
-						<!-- Next Workout -->
-						<div class="bg-gray-50 rounded-lg p-4">
-							<div class="flex items-center justify-between mb-2">
-								<span class="text-sm text-gray-600">Next Workout</span>
-								<span class="text-xs text-gray-500">{program.nextWorkout.exercises} exercises</span>
-							</div>
-							<h4 class="font-medium text-gray-900 mb-2">{program.nextWorkout.name}</h4>
-							<div class="flex items-center justify-between">
-								<span class="text-sm text-gray-600"
-									>{program.nextWorkout.estimatedDuration} min</span
-								>
-								<button
-									class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-								>
-									Start Workout
-								</button>
-							</div>
-						</div>
+	<!-- Current Workout Status -->
+	{#if currentWorkout}
+		<div class="card mb-6">
+			<div class="card-body">
+				<h3 class="card-title">Active Workout</h3>
+				<div class="flex items-center gap-4 mb-4">
+					<div class="flex items-center gap-2">
+						<div class="icon-sm text-primary">🎯</div>
+						<span class="text-sm">{currentWorkout.sets} sets × {currentWorkout.reps} reps</span>
 					</div>
-				{/each}
+					<div class="flex items-center gap-2">
+						<div class="icon-sm text-success">💪</div>
+						<span class="text-sm">{currentWorkout.volume} lbs</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<div class="icon-sm text-warning">⏱️</div>
+						<span class="text-sm">
+							{Math.round((Date.now() - currentWorkout.startTime.getTime()) / 60000)} min
+						</span>
+					</div>
+				</div>
+
+				<!-- User Feedback Buttons -->
+				<div class="flex gap-2 mb-4">
+					<button class="btn btn-sm btn-success" on:click={() => handleUserFeedback('easy killer')}>
+						Easy Killer
+					</button>
+					<button class="btn btn-sm btn-warning" on:click={() => handleUserFeedback('good pump')}>
+						Good Pump
+					</button>
+					<button class="btn btn-sm btn-error" on:click={() => handleUserFeedback('struggle city')}>
+						Struggle City
+					</button>
+				</div>
+
+				<button
+					class="btn btn-primary"
+					on:click={() =>
+						completeWorkout(
+							currentWorkout!.exerciseId,
+							currentWorkout!.reps,
+							currentWorkout!.sets,
+							currentWorkout!.volume,
+							currentWorkout!.userFeedback
+						)}
+				>
+					Complete Workout
+				</button>
 			</div>
 		</div>
 	{/if}
 
-	<!-- Quick Workouts -->
-	<div class="space-y-4">
-		<h2 class="text-xl font-semibold text-gray-900">Quick Workouts</h2>
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-			{#each quickWorkouts as workout}
-				<WorkoutCard {workout} />
-			{/each}
+	<!-- Workout Cards Grid -->
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+		<!-- Mock workout cards -->
+		<div class="card">
+			<div class="card-body">
+				<h3 class="card-title">Push Day</h3>
+				<p class="text-sm">Bench, Shoulder Press, Triceps</p>
+				<p class="text-sm">45 min • Intermediate</p>
+				<button class="btn btn-primary mt-4" on:click={() => startWorkout('push-day', 8, 3, 100)}>
+					Start Workout
+				</button>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="card-body">
+				<h3 class="card-title">Pull Day</h3>
+				<p class="text-sm">Deadlifts, Rows, Bicep Curls</p>
+				<p class="text-sm">50 min • Advanced</p>
+				<button class="btn btn-primary mt-4" on:click={() => startWorkout('pull-day', 5, 5, 135)}>
+					Start Workout
+				</button>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="card-body">
+				<h3 class="card-title">Leg Day</h3>
+				<p class="text-sm">Squats, Lunges, Calf Raises</p>
+				<p class="text-sm">60 min • Intermediate</p>
+				<button class="btn btn-primary mt-4" on:click={() => startWorkout('leg-day', 10, 4, 185)}>
+					Start Workout
+				</button>
+			</div>
 		</div>
 	</div>
 
-	<!-- Recent Workouts -->
-	<div class="space-y-4">
-		<h2 class="text-xl font-semibold text-gray-900">Recent Activity</h2>
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200">
-			{#each recentWorkouts as workout, index}
-				<div class="p-6 {index !== recentWorkouts.length - 1 ? 'border-b border-gray-200' : ''}">
-					<div class="flex items-center justify-between">
-						<div class="flex-1">
-							<h3 class="font-medium text-gray-900">{workout.name}</h3>
-							<p class="text-sm text-gray-600 mt-1">{workout.program}</p>
-							<div class="flex items-center mt-2 space-x-4 text-xs text-gray-500">
-								<span>{new Date(workout.completedAt).toLocaleDateString()}</span>
-								<span>{workout.duration} min</span>
-								<span>{workout.caloriesBurned} cal</span>
-							</div>
-						</div>
-						<div class="flex items-center">
-							<div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-								<svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-									<path
-										fill-rule="evenodd"
-										d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-										clip-rule="evenodd"
-									/>
-								</svg>
-							</div>
-						</div>
-					</div>
-				</div>
-			{/each}
+	<!-- Music Controls -->
+	<div class="card">
+		<div class="card-body">
+			<h3 class="card-title mb-4">Music Controls</h3>
+			<MusicControls
+				{playing}
+				{trackName}
+				{artistName}
+				{position}
+				{duration}
+				{volume}
+				{onPlayPause}
+				{onSkip}
+				{onVolumeUp}
+				{onVolumeDown}
+				on:musicStateChange={handleMusicState}
+			/>
 		</div>
 	</div>
 </div>

@@ -1,0 +1,359 @@
+openapi: 3.0.3
+info:
+  title: Monday Workout Intensity Analysis API
+  version: 1.0.0
+  description: API contracts for Monday workout intensity analysis feature
+
+paths:
+  /workouts/sessions:
+    post:
+      summary: Create workout session
+      description: Create a new workout session with performance data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, exerciseId, reps, sets, weight, completionTime, estimatedCalories]
+              properties:
+                userId:
+                  type: string
+                  description: ID of the user performing the workout
+                exerciseId:
+                  type: string
+                  description: ID of the exercise being performed
+                reps:
+                  type: number
+                  minimum: 0
+                  description: Number of repetitions completed
+                sets:
+                  type: number
+                  minimum: 1
+                  description: Number of sets performed
+                weight:
+                  type: number
+                  minimum: 0
+                  description: Weight used in workout
+                completionTime:
+                  type: number
+                  minimum: 0
+                  description: Duration of workout in milliseconds
+                estimatedCalories:
+                  type: number
+                  minimum: 0
+                  description: Estimated calorie expenditure
+                completed:
+                  type: boolean
+                  description: Whether workout was fully completed
+      responses:
+        201:
+          description: Workout session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique identifier for the workout session
+                  rawDataHash:
+                    type: string
+                    pattern: '^[a-f0-9]{64}$'
+                    description: SHA-256 hash of the workout data
+        400:
+          description: Invalid workout data
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /health/metrics:
+    post:
+      summary: Submit health metrics
+      description: Submit health data from wearables for intensity analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, date, dataSource]
+              properties:
+                userId:
+                  type: string
+                  description: ID of the user
+                date:
+                  type: string
+                  format: date
+                  description: Date of the health data collection
+                heartRateAvg:
+                  type: number
+                  minimum: 40
+                  maximum: 220
+                  description: Average heart rate during workout (BPM)
+                heartRateMax:
+                  type: number
+                  minimum: 40
+                  maximum: 220
+                  description: Maximum heart rate during workout (BPM)
+                spO2Avg:
+                  type: number
+                  minimum: 70
+                  maximum: 100
+                  description: Average blood oxygen saturation (%)
+                sleepScore:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+                  description: Previous night's sleep quality score
+                strainScore:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+                  description: Overall strain score from wearable
+                dataSource:
+                  type: string
+                  enum: [HealthKit, "Health Connect", manual]
+                  description: Source of the health data
+      responses:
+        201:
+          description: Health metrics submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique identifier for the health metrics
+        400:
+          description: Invalid health data
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /feedback:
+    post:
+      summary: Submit workout feedback
+      description: Submit user's subjective feedback on workout difficulty
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workoutSessionId, userId, difficultyRating]
+              properties:
+                workoutSessionId:
+                  type: string
+                  description: ID of the workout session being rated
+                userId:
+                  type: string
+                  description: ID of the user providing feedback
+                difficultyRating:
+                  type: string
+                  enum: ["keep going", "neutral", "challenge", "easy killer", "flag"]
+                  description: Standardized difficulty rating
+                notes:
+                  type: string
+                  maxLength: 500
+                  description: Optional user notes
+      responses:
+        201:
+          description: Feedback submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique identifier for the feedback
+        400:
+          description: Invalid feedback data
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /intensity/weekly/{userId}:
+    get:
+      summary: Get weekly intensity scores
+      description: Retrieve intensity scores and volume adjustments for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user
+        - name: weekStart
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Monday date of the week (defaults to current week)
+      responses:
+        200:
+          description: Weekly intensity data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  intensityScore:
+                    type: object
+                    properties:
+                      totalIntensity:
+                        type: number
+                        description: Final calculated intensity score (0-100+%)
+                      baseScore:
+                        type: number
+                        description: Base intensity score (50%)
+                      heartRateComponent:
+                        type: number
+                        description: HR variance contribution
+                      spO2Component:
+                        type: number
+                        description: SpO2 drift contribution
+                      sleepComponent:
+                        type: number
+                        description: Sleep quality contribution
+                      feedbackComponent:
+                        type: number
+                        description: User feedback contribution
+                      dataQuality:
+                        type: string
+                        enum: [complete, partial, minimal, insufficient]
+                        description: Quality assessment of input data
+                  volumeAdjustments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        exerciseId:
+                          type: string
+                          description: Exercise being adjusted
+                        currentWeight:
+                          type: number
+                          description: Current workout weight
+                        adjustmentPercentage:
+                          type: number
+                          description: Percentage change recommendation
+                        newWeight:
+                          type: number
+                          description: New weight recommendation
+                        reason:
+                          type: string
+                          description: Explanation for the adjustment
+                        triggerRule:
+                          type: string
+                          description: Rule that triggered the adjustment
+        404:
+          description: No intensity data found for user/week
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /monday-processing/trigger:
+    post:
+      summary: Trigger Monday processing
+      description: Manually trigger Monday processing for testing (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [weekStartDate]
+              properties:
+                weekStartDate:
+                  type: string
+                  format: date
+                  description: Monday date of the week to process
+                userId:
+                  type: string
+                  description: Process specific user only (optional)
+      responses:
+        202:
+          description: Processing started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  processingId:
+                    type: string
+                    description: ID of the processing job
+        400:
+          description: Invalid processing request
+        401:
+          description: Unauthorized
+        403:
+          description: Forbidden (admin access required)
+        500:
+          description: Server error
+
+  /monday-processing/status/{processingId}:
+    get:
+      summary: Get processing status
+      description: Check the status of a Monday processing job
+      parameters:
+        - name: processingId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the processing job
+      responses:
+        200:
+          description: Processing status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Processing job ID
+                  status:
+                    type: string
+                    enum: [running, completed, failed, partial]
+                    description: Current processing status
+                  usersProcessed:
+                    type: number
+                    description: Number of users processed
+                  intensityScoresGenerated:
+                    type: number
+                    description: Number of intensity scores created
+                  adjustmentsGenerated:
+                    type: number
+                    description: Number of volume adjustments created
+                  processingTimeMs:
+                    type: number
+                    description: Time taken for processing
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                    description: Any processing errors encountered
+        404:
+          description: Processing job not found
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

@@ -29,6 +29,7 @@
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
+		<string>healthkit</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -45,5 +46,19 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	
+	<!-- HealthKit permissions and usage description -->
+	<key>NSHealthShareUsageDescription</key>
+	<string>This app uses HealthKit to track your fitness data and provide personalized workout recommendations based on your heart rate, sleep, and other health metrics.</string>
+	
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>This app may update your health data to provide accurate fitness tracking and workout analysis.</string>
+	
+	<!-- Required device capabilities for HealthKit -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+		<string>healthkit</string>
+	</array>
 </dict>
 </plist>

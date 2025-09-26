@@ -51,6 +51,7 @@ Ensure transparent AI decision-making with user consent for data usage. Provide 
 **Iterative Refinement**: Clarify specs interactively, validate against checklists, avoid over-engineering.
 **User Feedback**: Log all tweaks to Convex for AI learning and beta testing.
 **Minimal Viable Product**: Focus on core features (tracking, AI tweaks, wearables, recovery) for beta.
+**Existing Code Analysis**: ALWAYS audit existing codebase before any new implementation to identify conflicts, leverage existing functionality, and prevent duplication. All features must extend or integrate with existing systems rather than create parallel implementations.
 
 ## Governance
 
@@ -62,4 +63,4 @@ Ensure transparent AI decision-making with user consent for data usage. Provide 
 
 **Constitution Authority**: This constitution supersedes all other practices. All development decisions must align with these principles. Amendments require justification against success metrics and user impact.
 
-**Version**: 1.1.1 | **Ratified**: 2025-09-24 | **Last Amended**: 2025-09-24
+**Version**: 1.2.0 | **Ratified**: 2025-09-24 | **Last Amended**: 2025-09-26

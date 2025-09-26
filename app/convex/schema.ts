@@ -890,4 +890,96 @@ export default defineSchema({
   }).index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "date"])
     .index("by_goal", ["goalId"]),
+
+  // Monday Workout Intensity Data - weekly aggregation with hashing
+  mondayWorkoutData: defineTable({
+    userId: v.id("users"),
+    weekOfYear: v.string(), // YYYY-WW format (e.g., "2025-39")
+    workoutHash: v.string(), // SHA-256 hash of workout data
+    intensityScore: v.number(), // 0-100 calculated intensity score
+    intensityBreakdown: v.object({
+      baseScore: v.number(),
+      hrVarianceScore: v.number(),
+      spo2DriftScore: v.number(),
+      sleepScore: v.number(),
+      feedbackScore: v.number(),
+    }),
+    actions: v.object({
+      adjustVolume: v.boolean(),
+      adjustment: v.number(), // percentage change (-10 to +10)
+      flagForReview: v.boolean(),
+    }),
+    exerciseId: v.string(),
+    workoutMetrics: v.object({
+      reps: v.number(),
+      sets: v.number(),
+      volume: v.number(), // weight in lbs
+      workoutTime: v.number(), // minutes
+      estimatedCalories: v.number(),
+    }),
+    healthData: v.optional(v.object({
+      heartRate: v.optional(v.object({
+        avgHR: v.number(),
+        maxHR: v.number(),
+        variance: v.number(),
+      })),
+      spo2: v.optional(v.object({
+        avgSpO2: v.number(),
+        drift: v.number(),
+      })),
+      sleepScore: v.optional(v.number()), // 0-20 range
+    })),
+    userFeedback: v.optional(v.union(
+      v.literal("keep_going"),
+      v.literal("neutral"),
+      v.literal("finally_challenge"),
+      v.literal("easy_killer"),
+      v.literal("flag_review")
+    )),
+    processed: v.boolean(),
+    processedAt: v.string(),
+    createdAt: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_user_and_week", ["userId", "weekOfYear"])
+    .index("by_exercise_and_week", ["exerciseId", "weekOfYear"])
+    .index("by_processed", ["processed"])
+    .index("by_workout_hash", ["workoutHash"]),
+
+  // Volume Adjustments - tracking exercise rule modifications from Monday analysis
+  volumeAdjustments: defineTable({
+    userId: v.id("users"),
+    exerciseId: v.string(),
+    adjustmentType: v.union(v.literal("automatic"), v.literal("manual"), v.literal("review_flagged")),
+    previousVolume: v.number(),
+    newVolume: v.number(),
+    adjustmentPercentage: v.number(), // -10 to +10 typically
+    reason: v.string(), // description of why adjustment was made
+    intensityScore: v.number(), // Monday intensity that triggered adjustment
+    mondayDataId: v.id("mondayWorkoutData"), // reference to triggering Monday data
+    appliedAt: v.string(),
+    effectiveDate: v.string(), // when this adjustment takes effect
+    reviewStatus: v.optional(v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected"))),
+    reviewedBy: v.optional(v.id("users")), // trainer or user who reviewed
+    reviewNotes: v.optional(v.string()),
+    createdAt: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_exercise", ["exerciseId"])
+    .index("by_user_and_exercise", ["userId", "exerciseId"])
+    .index("by_monday_data", ["mondayDataId"])
+    .index("by_review_status", ["reviewStatus"])
+    .index("by_effective_date", ["effectiveDate"]),
+
+  // Monday Processing Triggers - server-side triggers for client processing
+  mondayProcessingTriggers: defineTable({
+    userId: v.id("users"),
+    weekOfYear: v.string(), // YYYY-WW format
+    triggered: v.boolean(),
+    processed: v.boolean(), // set to true when client processes the data
+    processedAt: v.optional(v.string()),
+    createdAt: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_user_and_week", ["userId", "weekOfYear"])
+    .index("by_triggered", ["triggered"])
+    .index("by_processed", ["processed"])
+    .index("by_created", ["createdAt"]),
 });

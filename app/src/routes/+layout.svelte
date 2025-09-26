@@ -35,9 +35,9 @@
 	Skip to main content
 </a>
 
-<div class="wearable-container">
+<div class="min-h-screen bg-background">
 	<Navigation />
-	<main id="main-content" class="wearable-content scrollbar-professional" tabindex="-1">
+	<main id="main-content" class="container mx-auto px-safe py-6" tabindex="-1">
 		{@render children?.()}
 	</main>
 </div>
