@@ -982,4 +982,110 @@ export default defineSchema({
     .index("by_triggered", ["triggered"])
     .index("by_processed", ["processed"])
     .index("by_created", ["createdAt"]),
+
+  // Intensity Score (Live) Feature Tables
+  intensityScores: defineTable({
+    userId: v.id("users"),
+    workoutSessionId: v.id("workoutSessions"),
+    setId: v.string(), // reference to workout set
+    tempoScore: v.number(),           // 0-100
+    motionSmoothnessScore: v.number(), // 0-100
+    repConsistencyScore: v.number(),   // 0-100
+    userFeedbackScore: v.number(),     // -15 to +20
+    strainModifier: v.number(),        // 0.85, 0.95, or 1.0
+    totalScore: v.number(),            // Calculated final score
+    isEstimated: v.boolean(),          // True if no wearable data
+    createdAt: v.number(),             // Unix timestamp
+  })
+    .index("by_user", ["userId"])
+    .index("by_workout_session", ["workoutSessionId"])
+    .index("by_user_created", ["userId", "createdAt"]),
+
+  aiCoachingContext: defineTable({
+    userId: v.id("users"),
+    coachPersonality: v.union(v.literal("alice"), v.literal("aiden")),
+    currentStrainStatus: v.union(
+      v.literal("green"), 
+      v.literal("yellow"), 
+      v.literal("red")
+    ),
+    calibrationPhase: v.union(
+      v.literal("week1"),
+      v.literal("active"), 
+      v.literal("complete")
+    ),
+    voiceEnabled: v.boolean(),
+    hasEarbuds: v.boolean(),
+    voiceIntensity: v.number(),        // 0-100
+    isZenMode: v.boolean(),
+    lastCoachingMessage: v.string(),
+    updatedAt: v.number(),             // Unix timestamp
+  })
+    .index("by_user", ["userId"]),
+
+  supplementStacks: defineTable({
+    userId: v.id("users"),
+    scanDate: v.number(),              // Unix timestamp
+    lockUntilDate: v.number(),         // scanDate + 28 days
+    isLocked: v.boolean(),
+    performanceBaseline: v.optional(v.object({
+      avgIntensityScore: v.number(),
+      avgRecoveryTime: v.number(),
+      workoutFrequency: v.number(),
+    })),
+    lastModification: v.number(),
+    isShared: v.boolean(),
+    autoWipeDate: v.number(),          // scanDate + 52 weeks
+  })
+    .index("by_user", ["userId"])
+    .index("by_auto_wipe", ["autoWipeDate"]),
+
+  supplementItems: defineTable({
+    stackId: v.id("supplementStacks"),
+    barcode: v.string(),
+    name: v.string(),                  // From OpenFoodFacts
+    dosage: v.string(),
+    timing: v.string(),
+    isRxCompound: v.boolean(),
+    publicHash: v.optional(v.string()), // Only if not Rx
+    categoryType: v.string(),
+  })
+    .index("by_stack", ["stackId"])
+    .index("by_barcode", ["barcode"]),
+
+  socialShares: defineTable({
+    userId: v.id("users"),
+    contentType: v.union(
+      v.literal("workout"),
+      v.literal("supplement_stack"),
+      v.literal("exercise_demo")
+    ),
+    contentId: v.string(),             // ID of shared content
+    isPublic: v.boolean(),
+    likesCount: v.number(),
+    clusteredBy: v.array(v.string()), // Clustering criteria
+    ghostMode: v.boolean(),           // Anonymous sharing
+    sharedAt: v.number(),             // Unix timestamp
+    lastInteraction: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_content", ["contentType", "contentId"])
+    .index("by_clustering", ["clusteredBy"]),
+
+  // Individual workout sets within a session
+  workoutSets: defineTable({
+    workoutSessionId: v.id("workoutSessions"),
+    exerciseId: v.id("exercises"),
+    setNumber: v.number(),             // 1, 2, 3, etc.
+    plannedReps: v.number(),
+    actualReps: v.number(),
+    plannedWeight: v.number(),         // kg
+    actualWeight: v.number(),          // kg
+    restTime: v.optional(v.number()),  // seconds
+    completedAt: v.string(),
+    notes: v.optional(v.string()),
+  })
+    .index("by_workout_session", ["workoutSessionId"])
+    .index("by_exercise", ["exerciseId"])
+    .index("by_session_and_set", ["workoutSessionId", "setNumber"]),
 });

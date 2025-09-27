@@ -32,6 +32,8 @@
 		"@tailwindcss/forms": "^0.5.10",
 		"@tailwindcss/postcss": "^4.1.13",
 		"@tailwindcss/typography": "^0.5.19",
+		"@testing-library/jest-dom": "^6.8.0",
+		"@testing-library/svelte": "^5.2.8",
 		"bcryptjs": "^2.4.3",
 		"convex": "^1.27.0",
 		"convex-svelte": "^0.0.11",
