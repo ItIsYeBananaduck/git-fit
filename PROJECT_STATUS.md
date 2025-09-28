@@ -1,4 +1,4 @@
-# Project Status Summary – Technically Fit
+# Project Status Summary – Adaptive fIt
 
 - Trainer certification upload and admin review (secure file storage, admin approval, verification flag) – completed 2025-09-16
 - File upload endpoint and import flow (CSV/Excel, frontend parsing, Convex storage) – completed 2025-09-16

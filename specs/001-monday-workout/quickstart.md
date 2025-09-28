@@ -29,7 +29,7 @@ npm install @capacitor-community/health
 ```xml
 <!-- ios/App/App/Info.plist -->
 <key>NSHealthShareUsageDescription</key>
-<string>Technically Fit needs access to your health data to calculate workout intensity and provide personalized recommendations.</string>
+<string>Adaptive fIt needs access to your health data to calculate workout intensity and provide personalized recommendations.</string>
 ```
 
 **Android (Health Connect)**:

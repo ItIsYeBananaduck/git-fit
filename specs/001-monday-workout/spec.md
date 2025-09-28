@@ -3,7 +3,7 @@
 **Feature Branch**: `001-monday-workout`  
 **Created**: 2025-09-26  
 **Status**: Clarified  
-**Input**: User description: "Develop Monday workout intensity analysis as part of Technically Fit platform. Hash raw workout data (reps, sets, volume, time, est_calories, intensity) with SHA-256. Calculate intensity score (0-100%) from HR variance, SpO2 drift, sleep score, and user feedback. Adjust next week's volumes: reduce 5-10% if intensity >100% or 'easy killer' + strain >95%. Integrate with existing wearable data via HealthKit/Health Connect. Display Monday updates to users."
+**Input**: User description: "Develop Monday workout intensity analysis as part of Adaptive fIt platform. Hash raw workout data (reps, sets, volume, time, est_calories, intensity) with SHA-256. Calculate intensity score (0-100%) from HR variance, SpO2 drift, sleep score, and user feedback. Adjust next week's volumes: reduce 5-10% if intensity >100% or 'easy killer' + strain >95%. Integrate with existing wearable data via HealthKit/Health Connect. Display Monday updates to users."
 
 ## Execution Flow (main)
 ```
@@ -15,7 +15,7 @@
    → Data: reps, sets, weight, HR, SpO2, sleep, user feedback
    → Constraints: weekly processing, secure hashing, automated adjustments
 3. For each unclear aspect: ✓
-   → All requirements clarified based on Technically Fit platform context
+   → All requirements clarified based on Adaptive fIt platform context
 4. Fill User Scenarios & Testing section ✓
    → Clear user flow for workout completion and weekly analysis
 5. Generate Functional Requirements ✓
@@ -39,7 +39,7 @@
 ## User Scenarios & Testing *(mandatory)*
 
 ### Primary User Story
-A Technically Fit user (free, pro, or trainer) completes workout sessions throughout the week. Every Monday, the system processes their workout data, calculates intensity scores from wearable data and user feedback, and automatically adjusts next week's training volumes. Pro users receive AI-driven recommendations, while free users get rule-based adjustments. The system prioritizes user feedback over wearable data and provides fallbacks when data is missing.
+An Adaptive fIt user (free, pro, or trainer) completes workout sessions throughout the week. Every Monday, the system processes their workout data, calculates intensity scores from wearable data and user feedback, and automatically adjusts next week's training volumes. Pro users receive AI-driven recommendations, while free users get rule-based adjustments. The system prioritizes user feedback over wearable data and provides fallbacks when data is missing.
 
 ### Acceptance Scenarios
 1. **Given** a pro user completes a workout with 5 reps at 100 lbs, heart rate averaging 145 bpm, and rates it "easy killer", **When** Monday processing occurs, **Then** the system hashes data, calculates 47% intensity, and displays "+2.5 lbs" adjustment

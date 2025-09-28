@@ -89,7 +89,7 @@
 </script>
 
 <svelte:head>
-	<title>Fitness Data - Technically Fit</title>
+	<title>Fitness Data - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">

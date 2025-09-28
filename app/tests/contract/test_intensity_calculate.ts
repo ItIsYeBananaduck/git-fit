@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ConvexTestingHelper } from 'convex/testing';
+import { ConvexTestingHelper } from '../helpers/ConvexTestingHelper';
 // Simple type mocks to avoid import issues
 type Id<T> = string;
 
@@ -11,36 +11,24 @@ describe('Contract: intensity:calculateScore', () => {
 
   beforeEach(async () => {
     t = new ConvexTestingHelper();
+    await t.setup();
+    
+    // Set up authentication
+    t.withIdentity({ tokenIdentifier: "test_user_token" });
     
     // Setup test user
-    userId = await t.db.insert("users", {
-      name: "Test User",
-      email: "test@example.com",
-      role: "user",
-      createdAt: Date.now(),
-    });
+    userId = await t.createTestUser();
 
     // Setup test workout session
-    workoutSessionId = await t.db.insert("workoutSessions", {
-      userId,
-      startTime: Date.now(),
-      isActive: true,
-      exerciseIds: [],
-    });
+    workoutSessionId = await t.createTestWorkoutSession(userId);
 
     // Setup test workout set
-    setId = await t.db.insert("workoutSets", {
-      workoutSessionId,
-      exerciseId: "test_exercise_123",
-      setNumber: 1,
-      reps: 12,
-      weight: 135,
-      restTime: 60,
-    });
+    setId = await t.createTestWorkoutSet(workoutSessionId);
   });
 
   it('calculates basic intensity score correctly', async () => {
-    const result = await t.mutation(api.intensity.calculateScore, {
+    const result = await t.mutation('intensity:calculateScore', {
+      userId,
       workoutSessionId,
       setId,
       tempoScore: 75,
@@ -52,12 +40,13 @@ describe('Contract: intensity:calculateScore', () => {
     });
 
     expect(result.intensityScoreId).toBeDefined();
-    expect(result.totalScore).toBeCloseTo(78.5); // 75*0.3 + 80*0.25 + 85*0.2 + 10*0.15 = 78.5
+    expect(result.totalScore).toBeCloseTo(61); // 75*0.3 + 80*0.25 + 85*0.2 + 10*0.15 = 22.5+20+17+1.5 = 61
     expect(result.isCapped).toBe(false);
   });
 
   it('caps intensity score at 100 for regular users', async () => {
-    const result = await t.mutation(api.intensity.calculateScore, {
+    const result = await t.mutation('intensity:calculateScore', {
+      userId,
       workoutSessionId,
       setId,
       tempoScore: 100,
@@ -68,6 +57,7 @@ describe('Contract: intensity:calculateScore', () => {
       isEstimated: false,
     });
 
+    // For regular users, even perfect scores should be capped at 100
     expect(result.totalScore).toBe(100);
     expect(result.isCapped).toBe(true);
   });
@@ -76,7 +66,8 @@ describe('Contract: intensity:calculateScore', () => {
     // Update user to trainer role
     await t.db.patch(userId, { role: "trainer" });
 
-    const result = await t.mutation(api.intensity.calculateScore, {
+    const result = await t.mutation('intensity:calculateScore', {
+      userId,
       workoutSessionId,
       setId,
       tempoScore: 100,
@@ -87,12 +78,14 @@ describe('Contract: intensity:calculateScore', () => {
       isEstimated: false,
     });
 
-    expect(result.totalScore).toBeCloseTo(103); // 100*0.3 + 100*0.25 + 100*0.2 + 20*0.15 = 103
+    // Trainers get the actual calculated score, not capped
+    expect(result.totalScore).toBeCloseTo(78); // 100*0.3 + 100*0.25 + 100*0.2 + 20*0.15
     expect(result.isCapped).toBe(false);
   });
 
   it('applies strain modifier correctly', async () => {
-    const result = await t.mutation(api.intensity.calculateScore, {
+    const result = await t.mutation('intensity:calculateScore', {
+      userId,
       workoutSessionId,
       setId,
       tempoScore: 80,
@@ -110,7 +103,8 @@ describe('Contract: intensity:calculateScore', () => {
   });
 
   it('validates tempo score range', async () => {
-    await expect(t.mutation(api.intensity.calculateScore, {
+    await expect(t.mutation('intensity:calculateScore', {
+      userId,
       workoutSessionId,
       setId,
       tempoScore: 150, // Invalid: > 100
@@ -123,7 +117,8 @@ describe('Contract: intensity:calculateScore', () => {
   });
 
   it('validates motion smoothness score range', async () => {
-    await expect(t.mutation(api.intensity.calculateScore, {
+    await expect(t.mutation('intensity:calculateScore', {
+      userId,
       workoutSessionId,
       setId,
       tempoScore: 80,
@@ -136,7 +131,8 @@ describe('Contract: intensity:calculateScore', () => {
   });
 
   it('validates user feedback score range', async () => {
-    await expect(t.mutation(api.intensity.calculateScore, {
+    await expect(t.mutation('intensity:calculateScore', {
+      userId,
       workoutSessionId,
       setId,
       tempoScore: 80,
@@ -149,7 +145,8 @@ describe('Contract: intensity:calculateScore', () => {
   });
 
   it('stores intensity score with correct metadata', async () => {
-    const result = await t.mutation(api.intensity.calculateScore, {
+    const result = await t.mutation('intensity:calculateScore', {
+      userId,
       workoutSessionId,
       setId,
       tempoScore: 75,
@@ -176,7 +173,8 @@ describe('Contract: intensity:calculateScore', () => {
   });
 
   it('handles negative user feedback correctly', async () => {
-    const result = await t.mutation(api.intensity.calculateScore, {
+    const result = await t.mutation('intensity:calculateScore', {
+      userId,
       workoutSessionId,
       setId,
       tempoScore: 80,
@@ -195,7 +193,8 @@ describe('Contract: intensity:calculateScore', () => {
     // Clear auth context
     t.withIdentity({ tokenIdentifier: "" });
 
-    await expect(t.mutation(api.intensity.calculateScore, {
+    await expect(t.mutation('intensity:calculateScore', {
+      userId,
       workoutSessionId,
       setId,
       tempoScore: 80,

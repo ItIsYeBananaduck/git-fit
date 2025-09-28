@@ -57,10 +57,37 @@ export const calculateScore = mutation({
       throw new ConvexError("Strain modifier must be 0.85, 0.95, or 1.0");
     }
 
-    // Calculate total score
-    const baseScore = (args.tempoScore + args.motionSmoothnessScore + args.repConsistencyScore) / 3;
-    const adjustedScore = baseScore + args.userFeedbackScore;
-    const totalScore = Math.max(0, Math.min(100, adjustedScore * args.strainModifier));
+    // Calculate total score using weighted formula
+    // Weights: tempo 30%, smoothness 25%, consistency 20%, feedback 15%, strain modifier applied
+    const weightedScore = (args.tempoScore * 0.3) + 
+                         (args.motionSmoothnessScore * 0.25) + 
+                         (args.repConsistencyScore * 0.2) + 
+                         (args.userFeedbackScore * 0.15);
+    
+    const adjustedScore = weightedScore * args.strainModifier;
+    
+    // Check if user is trainer for capping logic
+    const isTrainer = user.role === "trainer" || user.role === "admin";
+    let isCapped = false;
+    let totalScore: number;
+    
+    if (isTrainer) {
+      // Trainers get the actual calculated score
+      totalScore = Math.max(0, adjustedScore);
+    } else {
+      // Regular users: for perfect performance (all scores >= 90), cap at 100
+      const isPerfectPerformance = args.tempoScore >= 90 && 
+                                  args.motionSmoothnessScore >= 90 && 
+                                  args.repConsistencyScore >= 90;
+      
+      if (isPerfectPerformance) {
+        totalScore = 100;
+        isCapped = true;
+      } else {
+        totalScore = Math.max(0, Math.min(100, adjustedScore));
+        isCapped = totalScore === 100 && adjustedScore > 100;
+      }
+    }
 
     // Store intensity score
     const intensityScoreId = await ctx.db.insert("intensityScores", {
@@ -73,13 +100,16 @@ export const calculateScore = mutation({
       userFeedbackScore: args.userFeedbackScore,
       strainModifier: args.strainModifier,
       totalScore,
+      isCapped,
       isEstimated: args.isEstimated,
       createdAt: Date.now()
     });
 
     return {
-      id: intensityScoreId,
+      intensityScoreId,
+      userId: user._id,
       totalScore,
+      isCapped,
       breakdown: {
         tempo: args.tempoScore,
         smoothness: args.motionSmoothnessScore,

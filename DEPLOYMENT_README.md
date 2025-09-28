@@ -1,4 +1,4 @@
-# 🚀 Technically Fit AI Service Deployment
+# 🚀 Adaptive fIt AI Service Deployment
 
 ## Prerequisites
 - Fly.io account (free tier available)

@@ -110,7 +110,7 @@
 </script>
 
 <svelte:head>
-	<title>Admin - Exercise Import - Technically Fit</title>
+	<title>Admin - Exercise Import - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">

@@ -60,7 +60,7 @@
 	<div class="login-container">
 		<div class="login-header">
 			<h1>Admin Login</h1>
-			<p>Technically Fit Platform Administration</p>
+			<p>Adaptive fIt Platform Administration</p>
 		</div>
 
 		{#if loginSuccess}
@@ -76,7 +76,7 @@
 						type="email"
 						bind:value={credentials.email}
 						on:keypress={handleKeyPress}
-						placeholder="admin@technicallyfit.com"
+						placeholder="admin@adaptivefit.com"
 						required
 						disabled={loading}
 					/>

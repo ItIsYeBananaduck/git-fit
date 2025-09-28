@@ -121,7 +121,7 @@
 </script>
 
 <svelte:head>
-	<title>Adaptive Training - Technically Fit</title>
+	<title>Adaptive Training - Adaptive fIt</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50">

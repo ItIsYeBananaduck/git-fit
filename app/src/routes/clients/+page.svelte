@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<title>My Clients - Technically Fit</title>
+	<title>My Clients - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">

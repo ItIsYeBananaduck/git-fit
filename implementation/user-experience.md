@@ -54,7 +54,7 @@ This document outlines the implementation details for enhancing the user experie
 
 ---
 
-### Technically Fit — App Specs
+### Adaptive fIt — App Specs
 
 #### 1. Deload Weeks (mandatory, per goal)
 

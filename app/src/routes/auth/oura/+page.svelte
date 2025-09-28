@@ -21,7 +21,7 @@
 </script>
 
 <svelte:head>
-	<title>Connecting Oura Ring - Technically Fit</title>
+	<title>Connecting Oura Ring - Adaptive fIt</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50">

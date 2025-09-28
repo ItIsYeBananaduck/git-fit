@@ -22,7 +22,7 @@
 </script>
 
 <svelte:head>
-	<title>Dashboard - Technically Fit</title>
+	<title>Dashboard - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -205,7 +205,7 @@
 	{:else}
 		<!-- Not authenticated fallback -->
 		<div class="card text-center">
-			<h1 class="text-2xl font-bold mb-4">Welcome to Technically Fit</h1>
+			<h1 class="text-2xl font-bold mb-4">Welcome to Adaptive fIt</h1>
 			<p class="text-muted mb-6">Sign in to access your personalized fitness dashboard</p>
 			<div class="space-x-2">
 				<a href="/auth/login" class="btn-primary">Sign In</a>

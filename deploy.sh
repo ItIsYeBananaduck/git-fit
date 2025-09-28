@@ -1,7 +1,7 @@
 #!/bin/bash
-# Technically Fit AI Service Deployment Script
+# Adaptive fIt AI Service Deployment Script
 
-echo "🚀 DEPLOYING TECHNICALLY FIT AI SERVICE TO FLY.IO"
+echo "🚀 DEPLOYING ADAPTIVE FIT AI SERVICE TO FLY.IO"
 echo "=================================================="
 
 # Add flyctl to PATH

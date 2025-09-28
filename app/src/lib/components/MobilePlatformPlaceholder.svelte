@@ -80,9 +80,7 @@
 		<div class="action-section">
 			{#if comingSoon}
 				<div class="roadmap-info">
-					<p>
-						We're working on bringing this integration to Technically Fit. Stay tuned for updates!
-					</p>
+					<p>We're working on bringing this integration to Adaptive fIt. Stay tuned for updates!</p>
 				</div>
 			{:else}
 				<div class="app-links">

@@ -65,7 +65,7 @@
 </script>
 
 <svelte:head>
-	<title>Polar Authentication - Technically Fit</title>
+	<title>Polar Authentication - Adaptive fIt</title>
 </svelte:head>
 
 <div class="callback-container">

@@ -21,7 +21,7 @@
 </script>
 
 <svelte:head>
-	<title>Connecting Fitbit - Technically Fit</title>
+	<title>Connecting Fitbit - Adaptive fIt</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50">

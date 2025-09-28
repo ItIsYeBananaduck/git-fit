@@ -1,4 +1,4 @@
-# Technically Fit Constitution
+# Adaptive fIt Constitution
 
 ## Core Principles
 
@@ -55,7 +55,7 @@ Ensure transparent AI decision-making with user consent for data usage. Provide 
 
 ## Governance
 
-**Purpose**: Technically Fit is a fitness marketplace and AI-powered coaching platform that empowers users to achieve their fitness goals through personalized, real-time workout adjustments, nutrition tracking, and recovery support. It connects users with verified trainers via a program marketplace, offering a seamless, gamified experience for lifters, from beginners to advanced.
+**Purpose**: Adaptive fIt is a fitness marketplace and AI-powered coaching platform that empowers users to achieve their fitness goals through personalized, real-time workout adjustments, nutrition tracking, and recovery support. It connects users with verified trainers via a program marketplace, offering a seamless, gamified experience for lifters, from beginners to advanced.
 
 **Vision**: To become the leading AI-driven fitness platform that adapts workouts in real time, supports injury recovery, and learns user preferences, making personalized training accessible and affordable for 100-1,000 users in beta, scaling to 10,000, with a delightful and safe user experience.
 

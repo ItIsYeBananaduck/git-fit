@@ -8,7 +8,7 @@
 </script>
 
 <svelte:head>
-	<title>Adaptive Recommendations - Technically Fit</title>
+	<title>Adaptive Recommendations - Adaptive fIt</title>
 	<meta name="description" content="Personalized fitness recommendations based on your progress" />
 </svelte:head>
 

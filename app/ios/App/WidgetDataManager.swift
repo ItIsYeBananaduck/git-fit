@@ -9,7 +9,7 @@ import Foundation
 
 class WidgetDataManager {
     static let shared = WidgetDataManager()
-    private let appGroupIdentifier = "group.com.example.technicallyfit"
+    private let appGroupIdentifier = "group.com.example.adaptivefit"
     private let strainDataKey = "strainWidgetData"
 
     private var sharedDefaults: UserDefaults? {

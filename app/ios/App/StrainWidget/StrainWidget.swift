@@ -95,7 +95,7 @@ struct Provider: IntentTimelineProvider {
 
     private func loadStrainData() -> StrainWidgetData? {
         // Load data from shared UserDefaults or app group
-        let sharedDefaults = UserDefaults(suiteName: "group.com.example.technicallyfit")
+        let sharedDefaults = UserDefaults(suiteName: "group.com.example.adaptivefit")
         guard let data = sharedDefaults?.data(forKey: "strainWidgetData") else {
             return nil
         }

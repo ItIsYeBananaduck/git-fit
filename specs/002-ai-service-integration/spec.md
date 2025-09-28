@@ -3,7 +3,7 @@
 **Feature Branch**: `002-ai-service-integration`  
 **Created**: September 24, 2025  
 **Status**: Draft  
-**Input**: User description: "Integrate the deployed AI service (https://technically-fit-ai.fly.dev/) with the main Technically Fit app to provide real-time workout adjustments, user preference learning, and intelligent fallback mechanisms during workouts"
+**Input**: User description: "Integrate the deployed AI service (https://adaptive-fit-ai.fly.dev/) with the main Adaptive fIt app to provide real-time workout adjustments, user preference learning, and intelligent fallback mechanisms during workouts"
 
 ## Execution Flow (main)
 ```

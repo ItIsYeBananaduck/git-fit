@@ -52,7 +52,7 @@
 </script>
 
 <svelte:head>
-	<title>Gym Equipment Database - Technically Fit</title>
+	<title>Gym Equipment Database - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">

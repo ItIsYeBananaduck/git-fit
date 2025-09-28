@@ -105,7 +105,7 @@
 </script>
 
 <svelte:head>
-	<title>Training Programs - Technically Fit</title>
+	<title>Training Programs - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">

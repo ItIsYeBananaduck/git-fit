@@ -34,7 +34,7 @@ export class EmailService {
 
     return await this.sendEmail({
       to: email,
-      subject: 'Reset your Technically Fit password',
+      subject: 'Reset your Adaptive fIt password',
       html,
       text
     });
@@ -49,7 +49,7 @@ export class EmailService {
 
     return await this.sendEmail({
       to: email,
-      subject: 'Welcome to Technically Fit!',
+      subject: 'Welcome to Adaptive fIt!',
       html,
       text
     });
@@ -66,7 +66,7 @@ export class EmailService {
 
     return await this.sendEmail({
       to: email,
-      subject: 'Verify your Technically Fit email address',
+      subject: 'Verify your Adaptive fIt email address',
       html,
       text
     });
@@ -101,7 +101,7 @@ export class EmailService {
       /*
       const resend = new Resend(process.env.RESEND_API_KEY);
       const result = await resend.emails.send({
-        from: 'Technically Fit <noreply@technicallyfit.com>',
+        from: 'Adaptive fIt <noreply@adaptivefit.com>',
         to: options.to,
         subject: options.subject,
         html: options.html,
@@ -158,7 +158,7 @@ export class EmailService {
     
     <p>Hi${userName ? ` ${userName}` : ''},</p>
     
-    <p>We received a request to reset your password for your Technically Fit account. Click the button below to create a new password:</p>
+    <p>We received a request to reset your password for your Adaptive fIt account. Click the button below to create a new password:</p>
     
     <p style="text-align: center; margin: 30px 0;">
       <a href="${resetUrl}" class="button">Reset Password</a>

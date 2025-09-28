@@ -10,7 +10,7 @@
 </script>
 
 <svelte:head>
-	<title>Privacy Policy | Technically Fit</title>
+	<title>Privacy Policy | Adaptive fIt</title>
 </svelte:head>
 
 <main>

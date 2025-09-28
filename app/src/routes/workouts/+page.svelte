@@ -126,7 +126,7 @@
 </script>
 
 <svelte:head>
-	<title>Workouts - Technically Fit</title>
+	<title>Workouts - Adaptive fIt</title>
 </svelte:head>
 
 <!-- Monday Processing Notification -->

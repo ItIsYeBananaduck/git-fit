@@ -13,6 +13,8 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as convex__generated_api from "../convex/_generated/api.js";
+import type * as convex__generated_server from "../convex/_generated/server.js";
 import type * as functions_adaptiveRecommendationsSimple from "../functions/adaptiveRecommendationsSimple.js";
 import type * as functions_admin_analytics from "../functions/admin/analytics.js";
 import type * as functions_admin_audit from "../functions/admin/audit.js";
@@ -26,6 +28,7 @@ import type * as functions_admin_support from "../functions/admin/support.js";
 import type * as functions_admin_users from "../functions/admin/users.js";
 import type * as functions_aiService from "../functions/aiService.js";
 import type * as functions_coaching from "../functions/coaching.js";
+import type * as functions_exercises from "../functions/exercises.js";
 import type * as functions_intensity from "../functions/intensity.js";
 import type * as functions_recommendation from "../functions/recommendation.js";
 import type * as functions_smartAgent from "../functions/smartAgent.js";
@@ -39,6 +42,7 @@ import type * as functions_wearable from "../functions/wearable.js";
 import type * as functions_whoop from "../functions/whoop.js";
 import type * as functions_workoutAgent from "../functions/workoutAgent.js";
 import type * as index from "../index.js";
+import type * as nutrition from "../nutrition.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -49,6 +53,8 @@ import type * as index from "../index.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "convex/_generated/api": typeof convex__generated_api;
+  "convex/_generated/server": typeof convex__generated_server;
   "functions/adaptiveRecommendationsSimple": typeof functions_adaptiveRecommendationsSimple;
   "functions/admin/analytics": typeof functions_admin_analytics;
   "functions/admin/audit": typeof functions_admin_audit;
@@ -62,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   "functions/admin/users": typeof functions_admin_users;
   "functions/aiService": typeof functions_aiService;
   "functions/coaching": typeof functions_coaching;
+  "functions/exercises": typeof functions_exercises;
   "functions/intensity": typeof functions_intensity;
   "functions/recommendation": typeof functions_recommendation;
   "functions/smartAgent": typeof functions_smartAgent;
@@ -75,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   "functions/whoop": typeof functions_whoop;
   "functions/workoutAgent": typeof functions_workoutAgent;
   index: typeof index;
+  nutrition: typeof nutrition;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

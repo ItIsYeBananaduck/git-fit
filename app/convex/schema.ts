@@ -994,6 +994,7 @@ export default defineSchema({
     userFeedbackScore: v.number(),     // -15 to +20
     strainModifier: v.number(),        // 0.85, 0.95, or 1.0
     totalScore: v.number(),            // Calculated final score
+    isCapped: v.boolean(),             // Whether score was capped at 100
     isEstimated: v.boolean(),          // True if no wearable data
     createdAt: v.number(),             // Unix timestamp
   })

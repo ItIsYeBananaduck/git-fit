@@ -1,4 +1,4 @@
-# Test Strategy for Technically Fit
+# Test Strategy for Adaptive fIt
 
 ## Framework
 

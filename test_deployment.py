@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test the deployed Technically Fit AI service"""
+"""Test the deployed Adaptive fIt AI service"""
 
 import requests
 import json

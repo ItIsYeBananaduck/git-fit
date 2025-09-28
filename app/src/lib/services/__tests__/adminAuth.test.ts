@@ -504,14 +504,14 @@ describe('AdminAuthService', () => {
       const speakeasy = await import('speakeasy');
       vi.mocked(speakeasy.generateSecret).mockReturnValue({
         base32: 'JBSWY3DPEHPK3PXP',
-        otpauth_url: 'otpauth://totp/TechnicallyFit%20Admin%20(admin@test.com)?secret=JBSWY3DPEHPK3PXP&issuer=TechnicallyFit'
+        otpauth_url: 'otpauth://totp/AdaptiveFit%20Admin%20(admin@test.com)?secret=JBSWY3DPEHPK3PXP&issuer=AdaptiveFit'
       } as any);
 
       const result = await adminAuthService.setupMFA(mockAdmin._id);
 
       expect(result).toEqual({
         secret: 'JBSWY3DPEHPK3PXP',
-        qrCode: 'otpauth://totp/TechnicallyFit%20Admin%20(admin@test.com)?secret=JBSWY3DPEHPK3PXP&issuer=TechnicallyFit'
+        qrCode: 'otpauth://totp/AdaptiveFit%20Admin%20(admin@test.com)?secret=JBSWY3DPEHPK3PXP&issuer=AdaptiveFit'
       });
     });
 

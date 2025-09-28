@@ -88,7 +88,7 @@
 </script>
 
 <svelte:head>
-	<title>Technically Fit Marketplace - Training Programs & Personal Trainers</title>
+	<title>Adaptive fIt Marketplace - Training Programs & Personal Trainers</title>
 	<meta
 		name="description"
 		content="Discover training programs and connect with certified personal trainers. Browse hundreds of fitness programs or book custom coaching services."

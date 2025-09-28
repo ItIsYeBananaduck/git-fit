@@ -1,4 +1,4 @@
-package com.example.technicallyfit.wearos
+package com.example.adaptivefit.wearos
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

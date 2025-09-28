@@ -8,7 +8,7 @@
 </script>
 
 <svelte:head>
-	<title>Achievements - Technically Fit</title>
+	<title>Achievements - Adaptive fIt</title>
 	<meta name="description" content="Track your fitness achievements and progress" />
 </svelte:head>
 

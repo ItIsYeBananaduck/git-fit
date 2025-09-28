@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<title>Create Program - Technically Fit</title>
+	<title>Create Program - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">

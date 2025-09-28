@@ -240,7 +240,7 @@ def generate_fallback_tweak(event_type: str, context: Dict[str, Any]) -> Dict[st
     })
 
 # Initialize FastAPI app
-app = FastAPI(title="Technically Fit AI Service", version="1.0.0")
+app = FastAPI(title="Adaptive fIt AI Service", version="1.0.0")
 
 # Load model and tokenizer
 try:
@@ -311,7 +311,7 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info(f"🚀 Starting Technically Fit AI Service on port {PORT}...")
+    logger.info(f"🚀 Starting Adaptive fIt AI Service on port {PORT}...")
     uvicorn.run(
         "app:app",
         host="0.0.0.0",

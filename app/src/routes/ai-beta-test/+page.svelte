@@ -190,7 +190,7 @@
 </script>
 
 <svelte:head>
-	<title>AI Beta Test - Technically Fit</title>
+	<title>AI Beta Test - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">

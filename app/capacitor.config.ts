@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.example.technicallyfit',
-  appName: 'Technically Fit',
+  appId: 'com.example.adaptivefit',
+  appName: 'Adaptive fIt',
   webDir: 'dist',
   plugins: {
     HealthData: {

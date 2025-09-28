@@ -1,4 +1,4 @@
-# 🏋️ Technically Fit - AI Fitness Coach API
+# 🏋️ Adaptive fIt - AI Fitness Coach API
 
 A FastAPI-based AI fitness service that provides personalized workout tweaks and training recommendations using fine-tuned language models.
 
@@ -148,7 +148,7 @@ curl -X POST https://your-app.fly.dev/event \
 
 ## Integration
 
-Designed for integration with fitness apps like Technically Fit mobile app. Supports real-time workout adjustments and personalized coaching through event-driven architecture.
+Designed for integration with fitness apps like Adaptive fIt mobile app. Supports real-time workout adjustments and personalized coaching through event-driven architecture.
 
 ---
 

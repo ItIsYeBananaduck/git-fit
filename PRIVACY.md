@@ -1,10 +1,10 @@
-# Privacy Policy for Technically Fit
+# Privacy Policy for Adaptive fIt
 
 _Last updated: 2025-09-16_
 
 ## Introduction
 
-Technically Fit is committed to protecting your privacy. This Privacy Policy explains what data we collect, how we use it, how it is stored, and your rights regarding your information. This policy applies to all platforms: web, iOS, and Android.
+Adaptive fIt is committed to protecting your privacy. This Privacy Policy explains what data we collect, how we use it, how it is stored, and your rights regarding your information. This policy applies to all platforms: web, iOS, and Android.
 
 ## Data We Collect
 
@@ -76,7 +76,7 @@ We do **not** collect or store personally identifiable information (PII) such as
 
 ## Contact
 
-For questions or requests regarding your data or this policy, contact us at: support@technicallyfit.app
+For questions or requests regarding your data or this policy, contact us at: support@adaptivefit.app
 
 ---
 

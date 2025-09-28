@@ -1,5 +1,5 @@
 @echo off
-echo 🚀 Technically Fit AI Deployment Script
+echo 🚀 Adaptive fIt AI Deployment Script
 echo ========================================
 
 echo Step 1: Download flyctl.exe

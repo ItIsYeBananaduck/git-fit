@@ -212,7 +212,7 @@
 	<div class="container mx-auto px-4 py-8 max-w-6xl">
 		<!-- Header -->
 		<div class="text-center mb-8">
-			<h1 class="text-4xl font-bold text-gray-900 mb-4">Welcome to Technically Fit</h1>
+			<h1 class="text-4xl font-bold text-gray-900 mb-4">Welcome to Adaptive fIt</h1>
 			<p class="text-xl text-gray-600 max-w-2xl mx-auto">
 				Let's personalize your fitness journey with our AI-powered training system
 			</p>

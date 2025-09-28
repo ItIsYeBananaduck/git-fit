@@ -1,4 +1,4 @@
-are there any remainin# Data Model: Intensity Score (Live)
+# Data Model: Intensity Score (Live)
 
 ## Overview
 Data model for real-time workout intensity scoring system with strain monitoring, AI coaching, and social features.

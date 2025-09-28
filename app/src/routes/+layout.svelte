@@ -21,10 +21,10 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<meta
 		name="description"
-		content="Technically Fit - AI-powered fitness platform for personalized training and nutrition"
+		content="Adaptive fIt - AI-powered fitness platform for personalized training and nutrition"
 	/>
 	<meta name="theme-color" content="#3B82F6" />
-	<title>Technically Fit - AI-Powered Fitness</title>
+	<title>Adaptive fIt - AI-Powered Fitness</title>
 </svelte:head>
 
 <!-- Skip to main content link -->

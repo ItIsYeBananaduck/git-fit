@@ -173,7 +173,7 @@ npm run admin:setup
 import { adminSetupService } from './src/lib/services/adminSetup';
 
 const result = await adminSetupService.createAdminUser({
-  email: 'moderator@technicallyfit.com',
+  email: 'moderator@adaptivefit.com',
   name: 'Content Moderator',
   role: 'content_moderator',
   password: 'secure_password_123',
@@ -188,7 +188,7 @@ const result = await adminSetupService.createAdminUser({
 ```typescript
 // Login
 const session = await adminAuthService.authenticateAdmin({
-  email: 'admin@technicallyfit.com',
+  email: 'admin@adaptivefit.com',
   password: 'password123',
   mfaToken: '123456'
 }, ipAddress, userAgent);

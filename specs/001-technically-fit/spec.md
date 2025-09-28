@@ -1,9 +1,9 @@
-# Feature Specification: Technically Fit
+# Feature Specification: Adaptive fIt
 
 **Feature Branch**: `001-technically-fit`
 **Created**: September 24, 2025
 **Status**: Clarified
-**Input**: User description: "Develop Technically Fit, a fitness marketplace and AI-powered coaching platform for lifters. It tracks workouts, nutrition, and sleep, integrates with wearables (Apple Watch, Fitbit, Whoop, Samsung/Android Watch) for real-time tweaks (e.g., extend rest if heart rate > 150, reduce intensity if SpO2 < 95), and learns preferences (e.g., rack-pull over deadlift). It offers three tiers: free (no AI), pro ($15/month via Stripe/Apple), and trainer ($20/month via Stripe/Apple). Trainers approve mesocycle shifts and sell programs in a marketplace. The app provides gamified progress tracking and a delightful UI with post-beta 3D avatars (Alice/Aiden). Target beta in 1-2 weeks with 10-50 users, scaling to 100-1,000 at $0-$10/month, profitable with 1-2 pro users or 1 trainer. Use PubMed and YouTube (~40 videos, rss_knowledge.jsonl) for AI training. Ensure <200ms response, 100% uptime, and GDPR/Stripe PCI compliance."
+**Input**: **Input**: User description: "Develop Adaptive fIt, a fitness marketplace and AI-powered coaching platform for lifters. It tracks workouts, nutrition, and sleep, integrates with wearables (Apple Watch, Fitbit, Whoop, Samsung/Android Watch) for real-time tweaks (e.g., extend rest if heart rate > 150, reduce intensity if SpO2 < 95), and learns preferences (e.g., rack-pull over deadlift). It offers three tiers: free (no AI), pro ($15/month via Stripe/Apple), and trainer ($20/month via Stripe/Apple). Trainers approve mesocycle shifts and sell progr...
 
 ## Execution Flow (main)
 
@@ -70,7 +70,7 @@ When creating this spec from a user prompt:
 
 ### Primary User Story
 
-A lifter uses Technically Fit to track workouts, nutrition, and sleep, receiving real-time workout tweaks based on wearable data (e.g., heart rate, SpO2). Pro users ($15/month) access AI-driven personalization, such as preferring rack-pull over deadlift, while trainers ($20/month) approve mesocycle shifts and sell programs in a marketplace. The app provides a gamified experience with progress tracking and a delightful UI, targeting a beta in 1-2 weeks with 10-50 users.
+A lifter uses Adaptive fIt to track workouts, nutrition, and sleep, receiving real-time workout tweaks based on wearable data (e.g., heart rate, SpO2). Pro users ($15/month) access AI-driven personalization, such as preferring rack-pull over deadlift, while trainers ($20/month) approve mesocycle shifts and sell programs in a marketplace. The app provides a gamified experience with progress tracking and a delightful UI, targeting a beta in 1-2 weeks with 10-50 users.
 
 ### Acceptance Scenarios
 

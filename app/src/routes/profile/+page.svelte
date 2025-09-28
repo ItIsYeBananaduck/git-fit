@@ -63,7 +63,7 @@
 </script>
 
 <svelte:head>
-	<title>Profile - Technically Fit</title>
+	<title>Profile - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -121,11 +121,13 @@
 						/>
 					</div>
 					<div>
-						<label for="dateOfBirth" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+						<label for="dateOfBirth" class="block text-sm font-medium text-gray-700 mb-1"
+							>Date of Birth</label
+						>
 						<input
 							id="dateOfBirth"
 							type="date"
-							bind:value={(editedUser.profile as ClientProfile).dateOfBirth}
+							bind:value={editedUser.profile as ClientProfile).dateOfBirth}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						/>
 					</div>
@@ -169,29 +171,35 @@
 				<div class="space-y-4">
 					<div class="grid grid-cols-2 gap-4">
 						<div>
-							<label for="height" class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
+							<label for="height" class="block text-sm font-medium text-gray-700 mb-1"
+								>Height (cm)</label
+							>
 							<input
 								id="height"
 								type="number"
-								bind:value={(editedUser.profile as ClientProfile).height}
+								bind:value={editedUser.profile as ClientProfile).height}
 								class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 							/>
 						</div>
 						<div>
-							<label for="weight" class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
+							<label for="weight" class="block text-sm font-medium text-gray-700 mb-1"
+								>Weight (kg)</label
+							>
 							<input
 								id="weight"
 								type="number"
-								bind:value={(editedUser.profile as ClientProfile).weight}
+								bind:value={editedUser.profile as ClientProfile).weight}
 								class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 							/>
 						</div>
 					</div>
 					<div>
-						<label for="fitnessLevel" class="block text-sm font-medium text-gray-700 mb-1">Fitness Level</label>
+						<label for="fitnessLevel" class="block text-sm font-medium text-gray-700 mb-1"
+							>Fitness Level</label
+						>
 						<select
 							id="fitnessLevel"
-							bind:value={(editedUser.profile as ClientProfile).fitnessLevel}
+							bind:value={editedUser.profile as ClientProfile).fitnessLevel}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						>
 							{#each fitnessLevels as level}

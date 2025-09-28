@@ -66,7 +66,7 @@
 </script>
 
 <svelte:head>
-	<title>Exercise Equipment Demo - Technically Fit</title>
+	<title>Exercise Equipment Demo - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">

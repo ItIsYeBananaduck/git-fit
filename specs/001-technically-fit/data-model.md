@@ -1,4 +1,4 @@
-# Data Model: Technically Fit
+# Data Model: Adaptive fIt
 
 **Date**: September 24, 2025
 **Version**: 1.0
@@ -6,7 +6,7 @@
 
 ## Overview
 
-Technically Fit requires a flexible, real-time data model supporting user management, workout tracking, AI-driven personalization, marketplace functionality, and administrative oversight. The model prioritizes performance, type safety, and scalability while maintaining GDPR compliance.
+Adaptive fIt requires a flexible, real-time data model supporting user management, workout tracking, AI-driven personalization, marketplace functionality, and administrative oversight. The model prioritizes performance, type safety, and scalability while maintaining GDPR compliance.
 
 ## Core Entities
 
@@ -417,4 +417,4 @@ YouTubeContent → User (admin curation)
 
 ## Conclusion
 
-This data model provides a solid foundation for Technically Fit, supporting all required features while maintaining performance, scalability, and compliance. The real-time nature of Convex enables live workout adjustments, while the structured relationships support complex marketplace and AI personalization features.
+This data model provides a solid foundation for Adaptive fIt, supporting all required features while maintaining performance, scalability, and compliance. The real-time nature of Convex enables live workout adjustments, while the structured relationships support complex marketplace and AI personalization features.

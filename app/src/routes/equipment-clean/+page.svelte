@@ -35,7 +35,7 @@
 </script>
 
 <svelte:head>
-	<title>Equipment Database - Technically Fit</title>
+	<title>Equipment Database - Adaptive fIt</title>
 </svelte:head>
 
 <div class="space-y-6">

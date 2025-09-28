@@ -241,7 +241,7 @@
 </script>
 
 <svelte:head>
-	<title>Register - Technically Fit</title>
+	<title>Register - Adaptive fIt</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -485,7 +485,8 @@
 											class="p-3 border-2 rounded-lg text-center {fitnessLevel === level
 												? 'border-blue-500 bg-blue-50'
 												: 'border-gray-200 hover:border-gray-300'}"
-											on:click={() => (fitnessLevel = level as 'beginner' | 'intermediate' | 'advanced')}
+											on:click={() =>
+												(fitnessLevel = level as 'beginner' | 'intermediate' | 'advanced')}
 										>
 											<div class="font-medium capitalize">{level}</div>
 										</button>
@@ -608,7 +609,9 @@
 									{#each availableCertifications as certification}
 										<button
 											type="button"
-											class="p-2 text-sm border-2 rounded-lg text-left {certifications.includes(certification)
+											class="p-2 text-sm border-2 rounded-lg text-left {certifications.includes(
+												certification
+											)
 												? 'border-blue-500 bg-blue-50 text-blue-700'
 												: 'border-gray-200 hover:border-gray-300'}"
 											on:click={() => toggleCertification(certification)}
@@ -671,7 +674,7 @@
 					</div>
 					<h3 class="text-lg font-medium text-gray-900">Ready to get started!</h3>
 					<p class="text-gray-600">
-						You're all set to join Technically Fit as a {role}.
+						You're all set to join Adaptive fIt as a {role}.
 						{#if role === 'client'}
 							Start exploring programs and connecting with trainers.
 						{:else}

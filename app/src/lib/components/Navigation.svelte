@@ -270,7 +270,7 @@
 		<div class="flex justify-between items-center h-16">
 			<!-- Logo & Brand -->
 			<div class="flex items-center space-x-3">
-				<a href="/" aria-label="Technically Fit - Home" class="flex items-center space-x-3">
+				<a href="/" aria-label="Adaptive fIt - Home" class="flex items-center space-x-3">
 					<div
 						class="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-sm"
 					>
@@ -280,7 +280,7 @@
 						<div
 							class="text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent"
 						>
-							Technically Fit
+							Adaptive fIt
 						</div>
 						<div class="text-xs text-muted -mt-1">AI-Powered Fitness</div>
 					</div>

@@ -230,8 +230,8 @@ export class AdminAuthService {
       let mfaSecret: string | undefined;
       if (adminData.mfaEnabled) {
         mfaSecret = speakeasy.generateSecret({
-          name: `TechnicallyFit Admin (${adminData.email})`,
-          issuer: "TechnicallyFit"
+          name: `AdaptiveFit Admin (${adminData.email})`,
+          issuer: "AdaptiveFit"
         }).base32;
       }
 
@@ -419,8 +419,8 @@ export class AdminAuthService {
       }
 
       const secret = speakeasy.generateSecret({
-        name: `TechnicallyFit Admin (${adminUser.email})`,
-        issuer: "TechnicallyFit"
+        name: `AdaptiveFit Admin (${adminUser.email})`,
+        issuer: "AdaptiveFit"
       });
 
       // Store the secret (temporarily, until verified)

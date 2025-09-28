@@ -1,4 +1,4 @@
-# Copilot Rules for Technically Fit
+# Copilot Rules for Adaptive fIt
 
 These are the persistent rules and workflow guidelines for Copilot and all contributors. Follow these for every feature, bugfix, and accessibility update:
 

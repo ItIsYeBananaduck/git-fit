@@ -60,7 +60,7 @@ This document outlines the implementation details for the AI and adaptive engine
 
 ---
 
-### Technically Fit — App Specs
+### Adaptive fIt — App Specs
 
 #### 1. Deload Weeks (mandatory, per goal)
 
