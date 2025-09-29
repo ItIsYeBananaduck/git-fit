@@ -5,7 +5,7 @@ import torch
 import os
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from pydantic import BaseModel
 
 # Set up logging
@@ -30,6 +30,25 @@ class EventRequest(BaseModel):
     user_id: str
     context: Dict[str, Any] = {}
     user_data: Dict[str, Any] = {}
+
+# Enhanced Nutrition AI Models
+class NutritionRecommendationRequest(BaseModel):
+    user_id: str
+    health_data: Dict[str, Any]  # medical conditions, allergies, etc.
+    recovery_data: Dict[str, Any]  # HRV, sleep, stress data
+    current_intake: Dict[str, float]  # today's nutrition intake
+    goals: Dict[str, float]  # nutrition goals
+
+class NutritionFeedbackRequest(BaseModel):
+    user_id: str
+    recommendation_id: str
+    feedback: Dict[str, Any]  # accepted, implemented, feedback text, etc.
+
+class HydrationRequest(BaseModel):
+    user_id: str
+    recovery_data: Dict[str, Any]
+    current_intake: float  # liters consumed today
+    target_intake: float  # target liters per day
 
 def load_model():
     """Load the PhilmoLSC/philmoLSC model or fallback options"""
@@ -289,6 +308,216 @@ async def handle_event(request: EventRequest):
             "note": "Used fallback due to error"
         }
 
+# Enhanced Nutrition AI Endpoints
+
+@app.post("/nutrition/recommendations")
+async def get_nutrition_recommendations_endpoint(request: NutritionRecommendationRequest):
+    """Generate personalized nutrition recommendations with recovery awareness and safety monitoring"""
+    try:
+        # Import nutrition AI functions (dynamic import to handle potential issues)
+        try:
+            from app.enhanced_nutrition_ai import get_nutrition_recommendations
+            
+            result = get_nutrition_recommendations(
+                user_id=request.user_id,
+                health_data=request.health_data,
+                recovery_data=request.recovery_data,
+                current_intake=request.current_intake,
+                goals=request.goals
+            )
+            return result
+            
+        except ImportError as ie:
+            logger.warning(f"Nutrition AI module not available: {ie}")
+            # Return fallback nutrition recommendations
+            return {
+                'success': True,
+                'recommendations': [
+                    {
+                        'recommendation_type': 'general_nutrition',
+                        'title': 'Stay Hydrated',
+                        'description': 'Drink plenty of water throughout the day',
+                        'priority': 'medium',
+                        'confidence': 0.8,
+                        'fallback': True
+                    }
+                ],
+                'adjusted_goals': request.goals,
+                'adjustments_made': ['Using fallback recommendations'],
+                'safety_alerts': [],
+                'ai_model_version': 'fallback-v1.0'
+            }
+        
+    except Exception as e:
+        logger.error(f"Error in nutrition recommendations endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@app.post("/nutrition/feedback")
+async def process_nutrition_feedback_endpoint(request: NutritionFeedbackRequest):
+    """Process user feedback on nutrition recommendations for learning"""
+    try:
+        try:
+            from app.enhanced_nutrition_ai import process_nutrition_feedback
+            
+            result = process_nutrition_feedback(
+                user_id=request.user_id,
+                recommendation_id=request.recommendation_id,
+                feedback_data=request.feedback
+            )
+            return result
+            
+        except ImportError:
+            # Fallback feedback processing
+            return {
+                'success': True,
+                'feedback_recorded': True,
+                'learning_updated': False,
+                'message': 'Feedback recorded (fallback mode)',
+                'fallback': True
+            }
+        
+    except Exception as e:
+        logger.error(f"Error in nutrition feedback endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@app.get("/nutrition/insights/{user_id}")
+async def get_nutrition_insights_endpoint(user_id: str, days: int = 7):
+    """Get nutrition insights and analytics for user"""
+    try:
+        try:
+            from app.enhanced_nutrition_ai import get_nutrition_insights
+            
+            result = get_nutrition_insights(user_id=user_id, days=days)
+            return result
+            
+        except ImportError:
+            # Fallback insights
+            return {
+                'user_id': user_id,
+                'period_days': days,
+                'insights': {
+                    'recommendation_acceptance_rate': 0.75,
+                    'most_accepted_type': 'hydration',
+                    'improvement_areas': ['protein_consistency'],
+                    'safety_alerts_count': 0,
+                    'recovery_nutrition_effectiveness': 0.8
+                },
+                'trends': {
+                    'protein_adherence': [0.8] * 7,
+                    'hydration_adherence': [0.75] * 7,
+                    'recovery_scores': [70] * 7
+                },
+                'fallback': True
+            }
+        
+    except Exception as e:
+        logger.error(f"Error in nutrition insights endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@app.post("/nutrition/hydration")
+async def get_hydration_recommendations_endpoint(request: HydrationRequest):
+    """Generate personalized hydration recommendations based on recovery data"""
+    try:
+        try:
+            from app.enhanced_nutrition_ai import get_hydration_recommendations
+            
+            result = get_hydration_recommendations(
+                user_id=request.user_id,
+                recovery_data=request.recovery_data,
+                current_intake=request.current_intake,
+                target_intake=request.target_intake
+            )
+            return result
+            
+        except ImportError:
+            # Fallback hydration recommendations
+            remaining = request.target_intake - request.current_intake
+            return {
+                'success': True,
+                'hydration_recommendations': [
+                    {
+                        'time': 'now',
+                        'amount': min(0.5, remaining),
+                        'reason': 'general_hydration',
+                        'priority': 'medium',
+                        'completed': False
+                    }
+                ],
+                'total_remaining': remaining,
+                'recovery_boost_needed': False,
+                'fallback': True
+            }
+        
+    except Exception as e:
+        logger.error(f"Error in hydration recommendations endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@app.get("/nutrition/safety-check/{user_id}")
+async def nutrition_safety_check_endpoint(user_id: str, 
+                                        body_weight_kg: float = 70,
+                                        medical_conditions: str = ""):
+    """Quick nutrition safety check for daily intake"""
+    try:
+        # Parse medical conditions from query parameter
+        conditions = medical_conditions.split(",") if medical_conditions else []
+        
+        # Mock current intake for demonstration
+        mock_current_intake = {
+            'calories': 1800,
+            'protein': 100,
+            'carbs': 200,
+            'fat': 80,
+            'sodium': 2000,
+            'sugar': 45
+        }
+        
+        # Basic safety checks (fallback logic)
+        safety_alerts = []
+        
+        # Basic calorie check
+        calories_per_kg = mock_current_intake['calories'] / body_weight_kg
+        if calories_per_kg < 15:
+            safety_alerts.append({
+                'type': 'low_calories',
+                'severity': 'warning',
+                'message': f'Low calorie intake: {calories_per_kg:.1f} cal/kg',
+                'action_required': True
+            })
+        
+        # Basic protein check
+        protein_per_kg = mock_current_intake['protein'] / body_weight_kg
+        if protein_per_kg < 0.8:
+            safety_alerts.append({
+                'type': 'low_protein',
+                'severity': 'warning',
+                'message': f'Low protein intake: {protein_per_kg:.1f}g/kg',
+                'action_required': True
+            })
+        
+        # Medical condition checks
+        if 'diabetes' in conditions and mock_current_intake['sugar'] > 50:
+            safety_alerts.append({
+                'type': 'high_sugar_diabetes',
+                'severity': 'critical',
+                'message': 'High sugar intake detected with diabetes condition',
+                'action_required': True
+            })
+        
+        return {
+            'success': True,
+            'user_id': user_id,
+            'safety_alerts': safety_alerts,
+            'overall_safety': 'safe' if not safety_alerts else 'warning',
+            'checked_intake': mock_current_intake,
+            'body_weight_kg': body_weight_kg,
+            'medical_conditions': conditions,
+            'fallback_mode': True
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in nutrition safety check endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
@@ -304,9 +533,24 @@ async def health_check():
 async def root():
     """Root endpoint"""
     return {
-        "message": "Technically Fit AI Service",
-        "version": "1.0.0",
-        "endpoints": ["/event", "/health"]
+        "message": "Technically Fit AI Service - Enhanced with Nutrition AI",
+        "version": "2.0.0",
+        "endpoints": [
+            "/event", 
+            "/health",
+            "/nutrition/recommendations",
+            "/nutrition/feedback", 
+            "/nutrition/insights/{user_id}",
+            "/nutrition/hydration",
+            "/nutrition/safety-check/{user_id}"
+        ],
+        "features": [
+            "Workout AI recommendations",
+            "Recovery-aware nutrition adjustments", 
+            "Safety monitoring for medical conditions",
+            "Personalized hydration recommendations",
+            "Nutrition insights and analytics"
+        ]
     }
 
 if __name__ == "__main__":

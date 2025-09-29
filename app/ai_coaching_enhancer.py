@@ -1,40 +1,92 @@
 """
-AI Enhancement Service for Git-Fit Coaching System
-
-This service integrates advanced AI capabilities with the existing TypeScript coaching system.
-Instead of replacing the existing architecture, it enhances it with:
-- Advanced text generation for dynamic coaching responses
-- Sentiment analysis for user feedback processing
-- Enhanced pronunciation generation for complex fitness terms
-- Smart content generation for personalized coaching
-
-Integration Points:
-1. Enhances existing aiCoaching.ts service with dynamic response generation
-2. Improves ttsEngine.ts with better pronunciation handling
-3. Augments persona narration scripts with AI-generated variations
-4. Provides fallback content when manual scripts are insufficient
+Enhanced AI Coaching Module for Adaptive fIt
+Implements advanced user preference learning, real-time adjustments, and personalized coaching
+This service integrates with the existing TypeScript coaching system while adding:
+- User preference learning from workout history
+- Real-time workout adjustments based on AI recommendations  
+- Comprehensive feedback processing and pattern recognition
+- Safety-first approach with fallback mechanisms
+- Performance optimization for CPU inference
 """
 
 import json
 import os
 import random
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass
+import logging
+import numpy as np
+from typing import Dict, List, Optional, Any, Tuple
+from dataclasses import dataclass, asdict
+from datetime import datetime, timedelta
+import pickle
+from collections import defaultdict, deque
 from transformers import pipeline, GPT2LMHeadModel, GPT2Tokenizer
 import torch
 
+logger = logging.getLogger(__name__)
+
 @dataclass
-class CoachingContext:
-    """Context information for generating coaching responses"""
-    coach_persona: str  # 'alice' or 'aiden'
-    workout_phase: str  # 'set_start', 'set_end', 'rest', 'transition'
-    exercise_name: str
-    set_number: int
-    rep_count: int
-    has_pr: bool
-    heart_rate: Optional[int] = None
-    rest_time: Optional[int] = None
-    user_sentiment: Optional[str] = None
+class UserPreferenceProfile:
+    """Comprehensive user preference profile learned from interactions"""
+    user_id: str
+    
+    # Workout Preferences (0-1 scales)
+    preferred_intensity: float = 0.7
+    volume_tolerance: float = 0.8
+    rest_time_preference: float = 90.0  # seconds
+    exercise_variety: float = 0.6
+    progression_rate: float = 0.5
+    form_focus: float = 0.8
+    time_constraints: float = 60.0  # minutes
+    
+    # Feedback Learning
+    acceptance_rate: float = 0.5
+    modification_frequency: float = 0.3
+    skip_rate: float = 0.1
+    common_rejection_reasons: List[str] = None
+    
+    # Confidence Scores (0-1)
+    workout_confidence: float = 0.5
+    exercise_confidence: float = 0.5
+    intensity_confidence: float = 0.5
+    
+    # Learning Metadata
+    total_interactions: int = 0
+    last_updated: float = 0.0
+    learning_rate: float = 0.1
+    
+    def __post_init__(self):
+        if self.common_rejection_reasons is None:
+            self.common_rejection_reasons = []
+
+@dataclass
+class WorkoutContext:
+    """Context information for AI decision making"""
+    time_of_day: str
+    day_of_week: int
+    user_energy: Optional[float] = None
+    user_motivation: Optional[float] = None
+    available_time: Optional[float] = None
+    equipment_availability: Optional[Dict[str, bool]] = None
+    gym_crowding: Optional[str] = None
+    previous_performance: Optional[Dict[str, Any]] = None
+    wearable_data: Optional[Dict[str, Any]] = None
+    
+@dataclass
+class AIRecommendation:
+    """AI recommendation with detailed reasoning"""
+    type: str  # 'weight_adjustment', 'rep_modification', 'rest_change', etc.
+    original_value: Any
+    suggested_value: Any
+    confidence: float
+    reasoning: str
+    factors: List[str]
+    expected_outcome: str
+    risk_assessment: str
+    alternative_options: List[Dict[str, Any]] = None
+    
+    def __post_init__(self):
+        if self.alternative_options is None:
+            self.alternative_options = []
 
 class AICoachingEnhancer:
     """Enhances the existing coaching system with AI capabilities"""

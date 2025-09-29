@@ -1041,4 +1041,783 @@ export default defineSchema({
     .index("by_estimated_completion", ["timing.estimatedCompletion"])
     .index("by_user_created_desc", ["userId", "createdAt"])
     .index("by_status_priority", ["status", "priority"]),
+
+  // OAuth Security Audit & Monitoring Tables
+
+  securityAuditLog: defineTable({
+    userId: v.optional(v.id("users")),
+    eventType: v.string(), // 'login_attempt' | 'token_refresh' | 'suspicious_activity' | etc.
+    riskLevel: v.number(), // 1-4 (low, medium, high, critical)
+    description: v.string(),
+    metadata: v.object({}), // { ip, userAgent, provider, endpoint, errorCode, additional }
+    timestamp: v.number(),
+    resolved: v.boolean(),
+    expiresAt: v.number(), // Data retention (2 years)
+  })
+    .index("by_userId_timestamp", ["userId", "timestamp"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_event_type", ["eventType"])
+    .index("by_risk_level", ["riskLevel"])
+    .index("by_resolved", ["resolved"])
+    .index("by_expires_at", ["expiresAt"])
+    .index("by_user_risk", ["userId", "riskLevel"])
+    .index("by_type_timestamp", ["eventType", "timestamp"]),
+
+  securityAlerts: defineTable({
+    eventId: v.id("securityAuditLog"),
+    alertLevel: v.string(), // 'high' | 'critical'
+    description: v.string(),
+    timestamp: v.number(),
+    acknowledged: v.boolean(),
+    acknowledgedBy: v.optional(v.string()),
+    acknowledgedAt: v.optional(v.number()),
+    resolvedAt: v.optional(v.number()),
+    resolution: v.optional(v.string()),
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_alert_level", ["alertLevel"])
+    .index("by_acknowledged", ["acknowledged"])
+    .index("by_event_id", ["eventId"])
+    .index("by_level_acknowledged", ["alertLevel", "acknowledged"]),
+
+  // Provider-Specific Features Tables
+
+  providerFeatures: defineTable({
+    providerId: v.string(), // References OAuthProvider.id
+    featureType: v.string(), // 'spotify_connect' | 'apple_music_radio' | 'youtube_premium'
+    featureName: v.string(),
+    description: v.string(),
+    isEnabled: v.boolean(),
+    isPremiumOnly: v.boolean(),
+    configuration: v.object({}), // Feature-specific configuration
+    capabilities: v.array(v.string()), // What the feature can do
+    requirements: v.object({
+      minAppVersion: v.optional(v.string()),
+      platformSupport: v.array(v.string()),
+      permissions: v.array(v.string()),
+      premiumRequired: v.boolean(),
+    }),
+    usageStats: v.object({
+      totalUsers: v.number(),
+      activeUsers: v.number(),
+      usageCount: v.number(),
+      lastUsedAt: v.optional(v.number()),
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_provider_id", ["providerId"])
+    .index("by_feature_type", ["featureType"])
+    .index("by_enabled", ["isEnabled"])
+    .index("by_provider_enabled", ["providerId", "isEnabled"])
+    .index("by_premium_only", ["isPremiumOnly"]),
+
+  userProviderFeatures: defineTable({
+    userId: v.id("users"),
+    providerId: v.string(),
+    featureId: v.id("providerFeatures"),
+    isEnabled: v.boolean(),
+    configuration: v.object({}), // User-specific feature settings
+    usageCount: v.number(),
+    lastUsedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_provider", ["userId", "providerId"])
+    .index("by_user_feature", ["userId", "featureId"])
+    .index("by_feature_id", ["featureId"])
+    .index("by_enabled", ["isEnabled"])
+    .index("by_last_used", ["lastUsedAt"]),
+
+  // Music Discovery Tables
+
+  musicDiscovery: defineTable({
+    userId: v.id("users"),
+    discoveryType: v.string(), // 'trending' | 'personalized' | 'genre_exploration' | 'workout_focused'
+    category: v.string(), // 'tracks' | 'artists' | 'albums' | 'playlists'
+    items: v.array(v.object({
+      id: v.string(),
+      name: v.string(),
+      artist: v.optional(v.string()),
+      imageUrl: v.optional(v.string()),
+      previewUrl: v.optional(v.string()),
+      externalUrls: v.object({}),
+      score: v.number(), // Relevance/popularity score
+      reason: v.string(), // Why this was recommended
+      source: v.string(), // Which provider/algorithm
+    })),
+    metadata: v.object({
+      algorithm: v.string(),
+      version: v.string(),
+      confidence: v.number(), // 0-1
+      freshness: v.number(), // How recent the discovery is
+      diversity: v.number(), // How diverse the recommendations are
+    }),
+    userContext: v.object({
+      workoutType: v.optional(v.string()),
+      mood: v.optional(v.string()),
+      timeOfDay: v.optional(v.number()),
+      location: v.optional(v.string()),
+    }),
+    engagement: v.object({
+      views: v.number(),
+      clicks: v.number(),
+      saves: v.number(),
+      shares: v.number(),
+      plays: v.number(),
+      completionRate: v.number(), // 0-1
+    }),
+    feedback: v.object({
+      likes: v.number(),
+      dislikes: v.number(),
+      rating: v.optional(v.number()), // 1-5
+      comments: v.array(v.string()),
+    }),
+    status: v.string(), // 'active' | 'expired' | 'archived'
+    expiresAt: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_type", ["userId", "discoveryType"])
+    .index("by_user_category", ["userId", "category"])
+    .index("by_expires_at", ["expiresAt"])
+    .index("by_status", ["status"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_user_created", ["userId", "createdAt"]),
+
+  // OAuth Analytics Tables
+
+  oauthAnalytics: defineTable({
+    userId: v.optional(v.id("users")),
+    providerId: v.string(),
+    eventType: v.string(), // 'connection' | 'disconnection' | 'token_refresh' | 'api_call' | 'sync'
+    action: v.string(), // Specific action taken
+    metadata: v.object({
+      platform: v.optional(v.string()),
+      userAgent: v.optional(v.string()),
+      ipAddress: v.optional(v.string()),
+      duration: v.optional(v.number()),
+      success: v.boolean(),
+      errorCode: v.optional(v.string()),
+      errorMessage: v.optional(v.string()),
+      dataSize: v.optional(v.number()),
+      responseTime: v.optional(v.number()),
+    }),
+    dimensions: v.object({
+      hour: v.number(), // 0-23
+      dayOfWeek: v.number(), // 0-6
+      month: v.number(), // 1-12
+      year: v.number(),
+    }),
+    metrics: v.object({
+      count: v.number(),
+      duration: v.optional(v.number()),
+      bytes: v.optional(v.number()),
+      errorRate: v.optional(v.number()),
+    }),
+    timestamp: v.number(),
+  })
+    .index("by_provider_timestamp", ["providerId", "timestamp"])
+    .index("by_user_provider", ["userId", "providerId"])
+    .index("by_event_type", ["eventType"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_success", ["metadata.success"])
+    .index("by_provider_event", ["providerId", "eventType"])
+    .index("by_hour", ["dimensions.hour"])
+    .index("by_day", ["dimensions.dayOfWeek"]),
+
+  providerPerformance: defineTable({
+    providerId: v.string(),
+    timeWindow: v.string(), // '1h' | '24h' | '7d' | '30d'
+    metrics: v.object({
+      totalRequests: v.number(),
+      successfulRequests: v.number(),
+      failedRequests: v.number(),
+      averageResponseTime: v.number(), // milliseconds
+      p95ResponseTime: v.number(),
+      p99ResponseTime: v.number(),
+      errorRate: v.number(), // 0-1
+      uptime: v.number(), // 0-1
+      throughput: v.number(), // requests per second
+    }),
+    errors: v.object({
+      authentication: v.number(),
+      rateLimit: v.number(),
+      serverError: v.number(),
+      network: v.number(),
+      timeout: v.number(),
+      other: v.number(),
+    }),
+    health: v.object({
+      status: v.string(), // 'healthy' | 'degraded' | 'down'
+      lastIncident: v.optional(v.number()),
+      mttr: v.optional(v.number()), // Mean time to recovery in minutes
+      availability: v.number(), // 0-1
+    }),
+    timestamp: v.number(),
+    windowStart: v.number(),
+    windowEnd: v.number(),
+  })
+    .index("by_provider_window", ["providerId", "timeWindow"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_provider_timestamp", ["providerId", "timestamp"])
+    .index("by_health_status", ["health.status"]),
+
+  // AI & Machine Learning Tables
+
+  aiUserPreferences: defineTable({
+    userId: v.string(),
+    // Workout Preferences Learned from History
+    workoutPreferences: v.object({
+      preferredIntensity: v.number(), // 0-1 scale
+      volumeTolerance: v.number(), // sets per session
+      restTimePreference: v.number(), // seconds
+      exerciseVariety: v.number(), // 0-1, how much user likes variety
+      progressionRate: v.number(), // 0-1, how aggressive progression should be
+      formFocus: v.number(), // 0-1, emphasis on form vs intensity
+      timeConstraints: v.number(), // preferred session duration in minutes
+    }),
+    // Feedback Patterns
+    feedbackPatterns: v.object({
+      acceptanceRate: v.number(), // % of AI suggestions accepted
+      modificationFrequency: v.number(), // how often user modifies suggestions
+      skipRate: v.number(), // % of suggested exercises skipped
+      intensityAdjustments: v.array(v.number()), // history of intensity changes
+      commonRejectionReasons: v.array(v.string()),
+    }),
+    // Learning Confidence Scores
+    confidenceScores: v.object({
+      workoutRecommendations: v.number(), // 0-1
+      exerciseSelection: v.number(),
+      intensityAdjustment: v.number(),
+      restTimeOptimization: v.number(),
+      progressionTiming: v.number(),
+    }),
+    // Personal Goals & Context
+    contextualFactors: v.object({
+      fitnessLevel: v.string(), // 'beginner' | 'intermediate' | 'advanced'
+      primaryGoals: v.array(v.string()),
+      injuryHistory: v.array(v.string()),
+      equipmentAccess: v.array(v.string()),
+      timeAvailability: v.object({
+        weekdays: v.number(), // minutes available
+        weekends: v.number(),
+        preferredTimes: v.array(v.string()), // 'morning' | 'afternoon' | 'evening'
+      }),
+    }),
+    // Model Performance Tracking
+    modelPerformance: v.object({
+      totalInteractions: v.number(),
+      successfulPredictions: v.number(),
+      averageConfidence: v.number(),
+      lastModelUpdate: v.number(),
+      learningRate: v.number(), // how quickly to adapt to new patterns
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    lastInteractionAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_confidence", ["confidenceScores.workoutRecommendations"])
+    .index("by_last_interaction", ["lastInteractionAt"])
+    .index("by_fitness_level", ["contextualFactors.fitnessLevel"]),
+
+  aiWorkoutTweaks: defineTable({
+    userId: v.string(),
+    workoutId: v.optional(v.string()),
+    sessionId: v.string(), // unique identifier for workout session
+    // AI Recommendation Details
+    recommendation: v.object({
+      type: v.string(), // 'weight_adjustment' | 'rep_modification' | 'rest_change' | 'exercise_substitution'
+      originalValue: v.any(), // what was originally planned
+      suggestedValue: v.any(), // what AI recommended
+      confidence: v.number(), // 0-1
+      reasoning: v.string(),
+      factors: v.array(v.string()), // factors that influenced the decision
+    }),
+    // Context Information
+    context: v.object({
+      exerciseName: v.optional(v.string()),
+      setNumber: v.optional(v.number()),
+      previousPerformance: v.optional(v.object({
+        completedSets: v.number(),
+        completedReps: v.array(v.number()),
+        rpe: v.optional(v.number()), // rate of perceived exertion
+      })),
+      userState: v.optional(v.object({
+        fatigueLevel: v.number(), // 0-10
+        motivation: v.number(), // 0-10
+        timeConstraints: v.optional(v.number()), // remaining time in minutes
+      })),
+      environmentalFactors: v.optional(v.object({
+        gymCrowding: v.optional(v.string()),
+        equipmentAvailability: v.optional(v.boolean()),
+        timeOfDay: v.string(),
+      })),
+    }),
+    // User Response
+    userResponse: v.object({
+      action: v.string(), // 'accepted' | 'modified' | 'rejected' | 'ignored'
+      actualValue: v.optional(v.any()), // what user actually did
+      feedback: v.optional(v.string()), // user's textual feedback
+      rating: v.optional(v.number()), // 1-5 stars
+      modificationReason: v.optional(v.string()),
+      responseTime: v.optional(v.number()), // seconds to respond
+    }),
+    // Outcome Tracking
+    outcome: v.object({
+      completed: v.boolean(),
+      performanceRating: v.optional(v.number()), // 1-10
+      injuries: v.optional(v.array(v.string())),
+      nextSessionImpact: v.optional(v.string()), // how it affected next workout
+      longTermEffect: v.optional(v.string()), // weekly/monthly impact
+    }),
+    // AI Model Information
+    modelInfo: v.object({
+      modelVersion: v.string(),
+      algorithm: v.string(), // 'distilgpt2' | 'fallback'
+      processingTime: v.number(), // milliseconds
+      inputTokens: v.optional(v.number()),
+      outputTokens: v.optional(v.number()),
+    }),
+    timestamp: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_userId_session", ["userId", "sessionId"])
+    .index("by_userId_timestamp", ["userId", "timestamp"])
+    .index("by_recommendation_type", ["recommendation.type"])
+    .index("by_user_response", ["userResponse.action"])
+    .index("by_confidence", ["recommendation.confidence"])
+    .index("by_model_version", ["modelInfo.modelVersion"])
+    .index("by_outcome_success", ["outcome.completed"]),
+
+  aiLearningEvents: defineTable({
+    userId: v.string(),
+    eventType: v.string(), // 'preference_update' | 'model_retrain' | 'confidence_adjustment' | 'pattern_discovery'
+    // Event Data
+    eventData: v.object({
+      trigger: v.string(), // what triggered this learning event
+      previousState: v.any(), // state before the change
+      newState: v.any(), // state after the change
+      changeVector: v.optional(v.array(v.number())), // numerical representation of change
+      impactScore: v.number(), // 0-1, how significant this change is
+    }),
+    // Learning Context
+    context: v.object({
+      totalInteractions: v.number(), // how many interactions led to this
+      timeSpan: v.number(), // days over which learning occurred
+      dataQuality: v.number(), // 0-1, quality of underlying data
+      conflictingSignals: v.optional(v.array(v.string())), // any contradictory patterns
+    }),
+    // Performance Impact
+    performance: v.object({
+      beforeAccuracy: v.number(), // accuracy before this learning
+      afterAccuracy: v.number(), // predicted accuracy after
+      confidenceImprovement: v.number(), // -1 to 1
+      expectedUserSatisfaction: v.number(), // 0-1
+    }),
+    // Meta-Learning
+    metaData: v.object({
+      learningSpeed: v.string(), // 'slow' | 'moderate' | 'fast'
+      stabilityScore: v.number(), // 0-1, how stable this learning is
+      generalizability: v.number(), // 0-1, how well this applies to other users
+      novelty: v.number(), // 0-1, how unique this pattern is
+    }),
+    timestamp: v.number(),
+    processingTime: v.number(), // milliseconds to process this learning
+  })
+    .index("by_userId_type", ["userId", "eventType"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_impact_score", ["eventData.impactScore"])
+    .index("by_learning_speed", ["metaData.learningSpeed"])
+    .index("by_stability", ["metaData.stabilityScore"]),
+
+  aiModelVersions: defineTable({
+    version: v.string(),
+    modelType: v.string(), // 'distilgpt2' | 'custom' | 'fallback'
+    // Model Configuration
+    configuration: v.object({
+      baseModel: v.string(), // 'distilgpt2' | 'gpt2' | 'custom'
+      maxTokens: v.number(),
+      temperature: v.number(),
+      topP: v.optional(v.number()),
+      repetitionPenalty: v.optional(v.number()),
+      customParameters: v.optional(v.object({})),
+    }),
+    // Performance Metrics
+    performance: v.object({
+      averageResponseTime: v.number(), // milliseconds
+      averageAccuracy: v.number(), // 0-1
+      userSatisfactionScore: v.number(), // 0-1
+      tokensPerSecond: v.number(),
+      cpuUtilization: v.number(), // 0-1
+      memoryUsage: v.number(), // MB
+    }),
+    // Usage Statistics
+    usage: v.object({
+      totalRequests: v.number(),
+      successfulRequests: v.number(),
+      failedRequests: v.number(),
+      averageRequestsPerDay: v.number(),
+      peakRequestsPerMinute: v.number(),
+    }),
+    // Deployment Information
+    deployment: v.object({
+      status: v.string(), // 'active' | 'deprecated' | 'testing' | 'failed'
+      deployedAt: v.number(),
+      rolloutPercentage: v.number(), // 0-100
+      canaryGroup: v.optional(v.array(v.string())), // user IDs for canary testing
+      rollbackTriggered: v.boolean(),
+      healthCheckStatus: v.string(), // 'healthy' | 'degraded' | 'unhealthy'
+    }),
+    // Quality Assurance
+    qualityMetrics: v.object({
+      testCoverage: v.number(), // 0-1
+      regressionTestsPassed: v.number(),
+      regressionTestsTotal: v.number(),
+      userAcceptanceTestScore: v.number(), // 0-1
+      safetyScore: v.number(), // 0-1, safety rail effectiveness
+    }),
+    // Change Log
+    changes: v.array(v.object({
+      type: v.string(), // 'feature' | 'bugfix' | 'performance' | 'safety'
+      description: v.string(),
+      impact: v.string(), // 'major' | 'minor' | 'patch'
+      riskLevel: v.string(), // 'low' | 'medium' | 'high'
+    })),
+    createdAt: v.number(),
+    createdBy: v.string(), // who deployed this version
+    notes: v.optional(v.string()),
+  })
+    .index("by_version", ["version"])
+    .index("by_status", ["deployment.status"])
+    .index("by_performance", ["performance.averageAccuracy"])
+    .index("by_created", ["createdAt"])
+    .index("by_rollout", ["deployment.rolloutPercentage"]),
+
+  // Enhanced Workout Tables for AI Integration
+
+  workoutSessions: defineTable({
+    userId: v.string(),
+    programId: v.optional(v.string()),
+    sessionId: v.string(), // unique identifier for this session
+    // Session Metadata
+    metadata: v.object({
+      name: v.string(),
+      startTime: v.number(),
+      endTime: v.optional(v.number()),
+      duration: v.optional(v.number()), // minutes
+      status: v.string(), // 'planned' | 'in_progress' | 'completed' | 'abandoned'
+      location: v.optional(v.string()),
+      weather: v.optional(v.string()),
+    }),
+    // Planned vs Actual Performance
+    exercises: v.array(v.object({
+      exerciseId: v.string(),
+      exerciseName: v.string(),
+      order: v.number(),
+      // Planned Parameters
+      planned: v.object({
+        sets: v.number(),
+        reps: v.array(v.number()), // per set
+        weight: v.optional(v.array(v.number())), // per set
+        restTime: v.optional(v.number()), // seconds
+        rpe: v.optional(v.number()), // target RPE
+      }),
+      // Actual Performance
+      actual: v.optional(v.object({
+        sets: v.number(),
+        reps: v.array(v.number()),
+        weight: v.optional(v.array(v.number())),
+        restTime: v.optional(v.array(v.number())), // actual rest between sets
+        rpe: v.optional(v.array(v.number())), // per set
+        notes: v.optional(v.string()),
+      })),
+      // AI Interventions
+      aiTweaks: v.optional(v.array(v.string())), // tweak IDs from aiWorkoutTweaks
+      userModifications: v.optional(v.array(v.string())), // user's manual changes
+    })),
+    // User State & Feedback
+    userState: v.object({
+      preworkoutEnergy: v.optional(v.number()), // 1-10
+      postworkoutEnergy: v.optional(v.number()),
+      preworkoutMotivation: v.optional(v.number()),
+      postworkoutSatisfaction: v.optional(v.number()),
+      perceivedDifficulty: v.optional(v.number()), // 1-10
+      enjoymentRating: v.optional(v.number()), // 1-10
+    }),
+    // Environmental Context
+    context: v.object({
+      timeOfDay: v.string(),
+      dayOfWeek: v.number(),
+      gymCrowding: v.optional(v.string()), // 'low' | 'medium' | 'high'
+      equipmentAvailability: v.optional(v.number()), // 0-1
+      socialContext: v.optional(v.string()), // 'alone' | 'trainer' | 'partner' | 'group'
+      musicPlaying: v.optional(v.boolean()),
+    }),
+    // Performance Analytics
+    analytics: v.object({
+      totalVolume: v.number(), // sets × reps × weight
+      averageIntensity: v.number(), // average RPE
+      completionRate: v.number(), // 0-1
+      progressionScore: v.number(), // compared to previous sessions
+      formQuality: v.optional(v.number()), // 1-10 if assessed
+      timeEfficiency: v.number(), // planned vs actual duration
+    }),
+    // AI Insights
+    aiInsights: v.optional(v.object({
+      performancePrediction: v.object({
+        expectedCompletion: v.number(), // 0-1
+        riskFactors: v.array(v.string()),
+        recommendations: v.array(v.string()),
+      }),
+      learningOpportunities: v.array(v.string()),
+      patternRecognition: v.optional(v.string()),
+      nextSessionPreparation: v.optional(v.string()),
+    })),
+    // Integration with Other Systems
+    integrations: v.object({
+      wearableData: v.optional(v.string()), // reference to wearable data
+      musicPlaylist: v.optional(v.string()),
+      nutritionContext: v.optional(v.object({
+        preWorkoutMeal: v.optional(v.string()),
+        hydrationLevel: v.optional(v.number()),
+        supplementation: v.optional(v.array(v.string())),
+      })),
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId_session", ["userId", "sessionId"])
+    .index("by_userId_timestamp", ["userId", "createdAt"])
+    .index("by_status", ["metadata.status"])
+    .index("by_program", ["programId"])
+    .index("by_completion_rate", ["analytics.completionRate"])
+    .index("by_progression_score", ["analytics.progressionScore"]),
+
+  // Enhanced Nutrition AI Tables
+
+  // User Health Profiles with medical conditions and safety flags
+  userHealthProfiles: defineTable({
+    userId: v.string(),
+    medicalConditions: v.array(v.string()), // diabetes, heart_condition, hypertension, etc.
+    allergies: v.array(v.string()), // food allergies and intolerances
+    medications: v.array(v.object({
+      name: v.string(),
+      dosage: v.optional(v.string()),
+      nutritionInteractions: v.optional(v.array(v.string())), // nutrients affected
+      timingRestrictions: v.optional(v.string()),
+    })),
+    safetyFlags: v.object({
+      diabetesFlag: v.boolean(),
+      heartConditionFlag: v.boolean(),
+      kidneyIssueFlag: v.boolean(),
+      digestiveIssueFlag: v.boolean(),
+      eatingDisorderHistory: v.boolean(),
+    }),
+    metabolicData: v.object({
+      basalMetabolicRate: v.optional(v.number()),
+      totalDailyEnergyExpenditure: v.optional(v.number()),
+      metabolicFlexibility: v.optional(v.number()), // 0-1 score
+      insulinSensitivity: v.optional(v.number()), // 0-1 score
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_diabetes_flag", ["safetyFlags.diabetesFlag"])
+    .index("by_heart_condition", ["safetyFlags.heartConditionFlag"]),
+
+  // Recovery and HRV Data for nutrition adjustments
+  recoveryMetrics: defineTable({
+    userId: v.string(),
+    date: v.string(), // YYYY-MM-DD format
+    hrvScore: v.optional(v.number()), // 0-100 HRV readiness score
+    restingHeartRate: v.optional(v.number()),
+    sleepQuality: v.optional(v.number()), // 0-10 scale
+    sleepDuration: v.optional(v.number()), // hours
+    stressLevel: v.optional(v.number()), // 0-10 scale
+    hydrationStatus: v.optional(v.number()), // 0-100 percentage
+    recoveryScore: v.number(), // composite 0-100 recovery score
+    source: v.string(), // whoop, oura, apple_watch, manual, etc.
+    rawData: v.optional(v.object({})), // store raw device data
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId_date", ["userId", "date"])
+    .index("by_userId_timestamp", ["userId", "createdAt"])
+    .index("by_recovery_score", ["recoveryScore"])
+    .index("by_source", ["source"]),
+
+  // Enhanced nutrition goals with recovery-aware adjustments
+  adaptiveNutritionGoals: defineTable({
+    userId: v.string(),
+    baseGoals: v.object({
+      calories: v.number(),
+      protein: v.number(),
+      carbs: v.number(),
+      fat: v.number(),
+      fiber: v.optional(v.number()),
+      sugar: v.optional(v.number()),
+      sodium: v.optional(v.number()),
+    }),
+    recoveryAdjustments: v.object({
+      lowRecoveryMultiplier: v.number(), // e.g., 1.05 for 5% increase
+      highRecoveryMultiplier: v.number(), // e.g., 0.98 for 2% decrease
+      hydrationBoostThreshold: v.number(), // recovery score below which to boost hydration
+      proteinBoostThreshold: v.number(), // recovery score below which to boost protein
+    }),
+    currentAdjustedGoals: v.object({
+      calories: v.number(),
+      protein: v.number(),
+      carbs: v.number(),
+      fat: v.number(),
+      hydration: v.number(), // liters per day
+      adjustmentReason: v.string(),
+      lastAdjustedAt: v.number(),
+    }),
+    weeklyTargets: v.object({
+      proteinMakeupDeficit: v.number(), // grams to makeup from previous days
+      calorieMakeupDeficit: v.number(), // calories to makeup
+      maxMakeupDays: v.number(), // how many days to spread makeup over
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_last_adjusted", ["currentAdjustedGoals.lastAdjustedAt"]),
+
+  // Hydration tracking and recommendations
+  hydrationTracking: defineTable({
+    userId: v.string(),
+    date: v.string(), // YYYY-MM-DD format
+    targetHydration: v.number(), // liters per day
+    currentIntake: v.number(), // liters consumed so far
+    recommendations: v.array(v.object({
+      time: v.string(), // HH:MM format
+      amount: v.number(), // liters
+      reason: v.string(), // workout, recovery, temperature, etc.
+      priority: v.string(), // high, medium, low
+      completed: v.boolean(),
+    })),
+    recoveryBasedAdjustment: v.optional(v.number()), // additional liters based on recovery
+    environmentFactors: v.optional(v.object({
+      temperature: v.optional(v.number()), // celsius
+      humidity: v.optional(v.number()), // percentage
+      altitude: v.optional(v.number()), // meters
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId_date", ["userId", "date"])
+    .index("by_userId_timestamp", ["userId", "createdAt"]),
+
+  // Nutrition AI recommendations and learning
+  nutritionAIRecommendations: defineTable({
+    userId: v.string(),
+    recommendationType: v.string(), // meal_timing, macro_adjustment, hydration, supplement
+    recommendation: v.object({
+      title: v.string(),
+      description: v.string(),
+      action: v.string(), // increase_protein, adjust_timing, add_hydration, etc.
+      targetValue: v.optional(v.number()),
+      targetUnit: v.optional(v.string()),
+      priority: v.string(), // high, medium, low
+      safetyChecked: v.boolean(),
+    }),
+    reasoning: v.object({
+      recoveryScore: v.optional(v.number()),
+      hrvTrend: v.optional(v.string()),
+      deficitDays: v.optional(v.number()),
+      workoutIntensity: v.optional(v.string()),
+      medicalConsiderations: v.optional(v.array(v.string())),
+    }),
+    userResponse: v.optional(v.object({
+      accepted: v.boolean(),
+      implemented: v.boolean(),
+      feedback: v.optional(v.string()),
+      modifiedValue: v.optional(v.number()),
+      responseAt: v.number(),
+    })),
+    aiModelVersion: v.string(),
+    confidence: v.number(), // 0-1 confidence score
+    createdAt: v.number(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index("by_userId_type", ["userId", "recommendationType"])
+    .index("by_userId_timestamp", ["userId", "createdAt"])
+    .index("by_priority", ["recommendation.priority"])
+    .index("by_confidence", ["confidence"])
+    .index("by_expires", ["expiresAt"]),
+
+  // Nutrition safety monitoring and alerts
+  nutritionSafetyAlerts: defineTable({
+    userId: v.string(),
+    alertType: v.string(), // excessive_deficit, dangerous_surplus, interaction_warning, etc.
+    severity: v.string(), // critical, warning, info
+    message: v.string(),
+    nutritionData: v.object({
+      currentIntake: v.object({}),
+      recommendedRange: v.object({}),
+      violatedThreshold: v.string(),
+    }),
+    medicalRelevance: v.optional(v.array(v.string())), // relevant medical conditions
+    actionRequired: v.boolean(),
+    acknowledged: v.boolean(),
+    resolvedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_userId_severity", ["userId", "severity"])
+    .index("by_userId_timestamp", ["userId", "createdAt"])
+    .index("by_acknowledged", ["acknowledged"])
+    .index("by_action_required", ["actionRequired"]),
+
+  // Meal planning with recovery-aware suggestions
+  mealPlans: defineTable({
+    userId: v.string(),
+    date: v.string(), // YYYY-MM-DD format
+    planType: v.string(), // ai_generated, manual, template
+    meals: v.array(v.object({
+      mealType: v.string(), // breakfast, lunch, dinner, snack
+      foods: v.array(v.object({
+        foodId: v.string(),
+        name: v.string(),
+        quantity: v.number(),
+        unit: v.string(),
+        nutrition: v.object({
+          calories: v.number(),
+          protein: v.number(),
+          carbs: v.number(),
+          fat: v.number(),
+        }),
+      })),
+      timing: v.optional(v.string()), // HH:MM format
+      recoveryOptimized: v.boolean(),
+      workoutRelated: v.boolean(),
+    })),
+    totalNutrition: v.object({
+      calories: v.number(),
+      protein: v.number(),
+      carbs: v.number(),
+      fat: v.number(),
+      hydration: v.number(),
+    }),
+    recoveryConsiderations: v.optional(v.object({
+      recoveryScore: v.number(),
+      recommendedAdjustments: v.array(v.string()),
+      appliedAdjustments: v.array(v.string()),
+    })),
+    adherence: v.optional(v.object({
+      mealsCompleted: v.number(),
+      totalMeals: v.number(),
+      macroAccuracy: v.number(), // 0-1 score
+      updatedAt: v.number(),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId_date", ["userId", "date"])
+    .index("by_userId_timestamp", ["userId", "createdAt"])
+    .index("by_plan_type", ["planType"])
+    .index("by_recovery_optimized", ["recoveryConsiderations.recoveryScore"]),
 });
