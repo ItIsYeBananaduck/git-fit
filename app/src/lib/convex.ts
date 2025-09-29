@@ -576,7 +576,7 @@ export const api = {
   admin: mockAdminFunctions
 };
 
-// Mock convex client with proper typing
+// Mock convex client with proper typing - includes admin functions
 export const convex = {
   query: async (fn: unknown, ...args: unknown[]) => {
     // Mock query implementation - just call the function directly
@@ -594,4 +594,6 @@ export const convex = {
     // If it's a FunctionReference, try to call it as a function
     return await (fn as (...args: unknown[]) => Promise<unknown>)(...args);
   },
+  admin: mockAdminFunctions,
+  functions: mockApi.functions
 };
