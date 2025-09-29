@@ -1,0 +1,517 @@
+openapi: 3.0.3
+info:
+  title: AI Coaching API
+  description: API for AI-driven coaching with GPT-2 and ElevenLabs TTS integration
+  version: 1.0.0
+  contact:
+    name: AdaptiveFit Development Team
+    url: https://github.com/ItIsYeBananaduck/git-fit
+
+servers:
+  - url: https://api.adaptivefit.com/v1
+    description: Production server
+  - url: https://staging-api.adaptivefit.com/v1
+    description: Staging server
+
+paths:
+  /coaching/trigger:
+    post:
+      summary: Trigger AI coaching response
+      description: Activates AI coaching based on workout trigger with personalized response
+      operationId: triggerCoaching
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CoachingTriggerRequest"
+      responses:
+        "200":
+          description: Coaching response generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoachingResponse"
+        "400":
+          description: Invalid trigger request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitResponse"
+        "503":
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /coaching/personas:
+    get:
+      summary: Get available AI personas
+      description: Retrieves list of available AI coaching personas (Alice, Aiden)
+      operationId: getPersonas
+      responses:
+        "200":
+          description: List of available personas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AIPersona"
+
+  /coaching/personas/{personaId}:
+    get:
+      summary: Get specific AI persona details
+      description: Retrieves detailed information about a specific AI persona
+      operationId: getPersona
+      parameters:
+        - name: personaId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [alice, aiden]
+      responses:
+        "200":
+          description: Persona details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIPersona"
+        "404":
+          description: Persona not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /coaching/subscription:
+    get:
+      summary: Get user subscription status
+      description: Retrieves current user's subscription and coaching preferences
+      operationId: getSubscription
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User subscription details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSubscription"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      summary: Update subscription preferences
+      description: Updates user's coaching preferences and persona selection
+      operationId: updateSubscription
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriptionUpdateRequest"
+      responses:
+        "200":
+          description: Subscription updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSubscription"
+        "400":
+          description: Invalid subscription data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /coaching/feedback:
+    post:
+      summary: Submit coaching feedback
+      description: Submits user feedback on AI coaching response quality
+      operationId: submitFeedback
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackRequest"
+      responses:
+        "201":
+          description: Feedback submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackResponse"
+        "400":
+          description: Invalid feedback data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /coaching/audio/{responseId}:
+    get:
+      summary: Get cached audio response
+      description: Retrieves cached audio file for a coaching response
+      operationId: getAudioResponse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: responseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Audio file
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Audio not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CoachingTriggerRequest:
+      type: object
+      required:
+        - triggerId
+        - userId
+        - workoutContext
+      properties:
+        triggerId:
+          type: string
+          enum:
+            [onboarding, pre-start, set-start, set-end, strainsync, workout-end]
+          description: Type of workout trigger
+        userId:
+          type: string
+          description: Unique user identifier
+        personaId:
+          type: string
+          enum: [alice, aiden]
+          description: Preferred AI persona
+          default: alice
+        workoutContext:
+          type: object
+          description: Context data for personalized response
+          properties:
+            exercise:
+              type: string
+              description: Current exercise name
+            reps:
+              type: integer
+              description: Number of repetitions
+            weight:
+              type: number
+              description: Weight in pounds
+            strain:
+              type: number
+              minimum: 0
+              maximum: 100
+              description: Current strain percentage
+            heartRate:
+              type: integer
+              description: Current heart rate (BPM)
+            sleepHours:
+              type: number
+              description: Hours of sleep last night
+        deviceState:
+          type: object
+          description: User's device state
+          properties:
+            hasEarbuds:
+              type: boolean
+              description: Whether earbuds are detected
+            audioEnabled:
+              type: boolean
+              description: Whether audio output is available
+
+    CoachingResponse:
+      type: object
+      required:
+        - responseId
+        - text
+        - toastMessage
+        - hasAudio
+      properties:
+        responseId:
+          type: string
+          description: Unique response identifier
+        text:
+          type: string
+          maxLength: 200
+          description: Generated coaching text
+        toastMessage:
+          type: string
+          maxLength: 50
+          description: Shortened text for toast notification
+        hasAudio:
+          type: boolean
+          description: Whether audio is available for this response
+        audioUrl:
+          type: string
+          format: uri
+          description: URL to audio file (if hasAudio is true)
+        metadata:
+          type: object
+          description: Response generation metadata
+          properties:
+            generationLatency:
+              type: integer
+              description: Time to generate text (ms)
+            ttsLatency:
+              type: integer
+              description: Time to generate audio (ms)
+            cacheHit:
+              type: boolean
+              description: Whether audio was served from cache
+            modelVersion:
+              type: string
+              description: GPT-2 model version used
+
+    AIPersona:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - voicePreview
+      properties:
+        id:
+          type: string
+          enum: [alice, aiden]
+          description: Persona identifier
+        name:
+          type: string
+          description: Display name
+        description:
+          type: string
+          description: Persona personality description
+        voicePreview:
+          type: string
+          format: uri
+          description: URL to voice sample audio
+        personalityTraits:
+          type: object
+          description: Personality configuration
+          properties:
+            enthusiasm:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: Energy level
+            supportiveness:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: Encouragement level
+            directness:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: Communication style
+
+    UserSubscription:
+      type: object
+      required:
+        - userId
+        - subscriptionType
+        - voiceAccess
+        - preferredPersona
+      properties:
+        userId:
+          type: string
+          description: User identifier
+        subscriptionType:
+          type: string
+          enum: [free, pro, trainer]
+          description: Subscription level
+        voiceAccess:
+          type: boolean
+          description: Whether user has voice coaching access
+        trainingFrequency:
+          type: string
+          enum: [weekly, monthly, none]
+          description: AI training schedule
+        preferredPersona:
+          type: string
+          enum: [alice, aiden]
+          description: Selected AI persona
+        devicePreferences:
+          type: object
+          properties:
+            autoDetectEarbuds:
+              type: boolean
+              description: Auto-detect earbuds setting
+            fallbackToSpeaker:
+              type: boolean
+              description: Speaker fallback setting
+            toastDuration:
+              type: integer
+              minimum: 1000
+              maximum: 10000
+              description: Toast display duration (ms)
+        privacySettings:
+          type: object
+          properties:
+            allowDataCollection:
+              type: boolean
+              description: Consent for data collection
+            allowAITraining:
+              type: boolean
+              description: Consent for AI training
+            dataRetentionDays:
+              type: integer
+              minimum: 1
+              maximum: 180
+              description: Data retention period
+
+    SubscriptionUpdateRequest:
+      type: object
+      properties:
+        preferredPersona:
+          type: string
+          enum: [alice, aiden]
+        devicePreferences:
+          type: object
+          properties:
+            autoDetectEarbuds:
+              type: boolean
+            fallbackToSpeaker:
+              type: boolean
+            toastDuration:
+              type: integer
+              minimum: 1000
+              maximum: 10000
+        privacySettings:
+          type: object
+          properties:
+            allowDataCollection:
+              type: boolean
+            allowAITraining:
+              type: boolean
+            dataRetentionDays:
+              type: integer
+              minimum: 1
+              maximum: 180
+
+    FeedbackRequest:
+      type: object
+      required:
+        - responseId
+        - rating
+      properties:
+        responseId:
+          type: string
+          description: ID of the coaching response being rated
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: User rating (1-5 stars)
+        helpful:
+          type: boolean
+          description: Whether response was helpful
+        comments:
+          type: string
+          maxLength: 500
+          description: Optional user comments
+
+    FeedbackResponse:
+      type: object
+      required:
+        - feedbackId
+        - status
+      properties:
+        feedbackId:
+          type: string
+          description: Unique feedback identifier
+        status:
+          type: string
+          enum: [received, processed]
+          description: Feedback processing status
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+
+    RateLimitResponse:
+      type: object
+      required:
+        - error
+        - message
+        - retryAfter
+      properties:
+        error:
+          type: string
+          enum: [rate_limit_exceeded]
+        message:
+          type: string
+          description: Rate limit error message
+        retryAfter:
+          type: integer
+          description: Seconds until next request allowed
+        queuePosition:
+          type: integer
+          description: Position in priority queue (if applicable)
