@@ -1041,4 +1041,225 @@ export default defineSchema({
     .index("by_estimated_completion", ["timing.estimatedCompletion"])
     .index("by_user_created_desc", ["userId", "createdAt"])
     .index("by_status_priority", ["status", "priority"]),
+
+  // OAuth Security Audit & Monitoring Tables
+
+  securityAuditLog: defineTable({
+    userId: v.optional(v.id("users")),
+    eventType: v.string(), // 'login_attempt' | 'token_refresh' | 'suspicious_activity' | etc.
+    riskLevel: v.number(), // 1-4 (low, medium, high, critical)
+    description: v.string(),
+    metadata: v.object({}), // { ip, userAgent, provider, endpoint, errorCode, additional }
+    timestamp: v.number(),
+    resolved: v.boolean(),
+    expiresAt: v.number(), // Data retention (2 years)
+  })
+    .index("by_userId_timestamp", ["userId", "timestamp"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_event_type", ["eventType"])
+    .index("by_risk_level", ["riskLevel"])
+    .index("by_resolved", ["resolved"])
+    .index("by_expires_at", ["expiresAt"])
+    .index("by_user_risk", ["userId", "riskLevel"])
+    .index("by_type_timestamp", ["eventType", "timestamp"]),
+
+  securityAlerts: defineTable({
+    eventId: v.id("securityAuditLog"),
+    alertLevel: v.string(), // 'high' | 'critical'
+    description: v.string(),
+    timestamp: v.number(),
+    acknowledged: v.boolean(),
+    acknowledgedBy: v.optional(v.string()),
+    acknowledgedAt: v.optional(v.number()),
+    resolvedAt: v.optional(v.number()),
+    resolution: v.optional(v.string()),
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_alert_level", ["alertLevel"])
+    .index("by_acknowledged", ["acknowledged"])
+    .index("by_event_id", ["eventId"])
+    .index("by_level_acknowledged", ["alertLevel", "acknowledged"]),
+
+  // Provider-Specific Features Tables
+
+  providerFeatures: defineTable({
+    providerId: v.string(), // References OAuthProvider.id
+    featureType: v.string(), // 'spotify_connect' | 'apple_music_radio' | 'youtube_premium'
+    featureName: v.string(),
+    description: v.string(),
+    isEnabled: v.boolean(),
+    isPremiumOnly: v.boolean(),
+    configuration: v.object({}), // Feature-specific configuration
+    capabilities: v.array(v.string()), // What the feature can do
+    requirements: v.object({
+      minAppVersion: v.optional(v.string()),
+      platformSupport: v.array(v.string()),
+      permissions: v.array(v.string()),
+      premiumRequired: v.boolean(),
+    }),
+    usageStats: v.object({
+      totalUsers: v.number(),
+      activeUsers: v.number(),
+      usageCount: v.number(),
+      lastUsedAt: v.optional(v.number()),
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_provider_id", ["providerId"])
+    .index("by_feature_type", ["featureType"])
+    .index("by_enabled", ["isEnabled"])
+    .index("by_provider_enabled", ["providerId", "isEnabled"])
+    .index("by_premium_only", ["isPremiumOnly"]),
+
+  userProviderFeatures: defineTable({
+    userId: v.id("users"),
+    providerId: v.string(),
+    featureId: v.id("providerFeatures"),
+    isEnabled: v.boolean(),
+    configuration: v.object({}), // User-specific feature settings
+    usageCount: v.number(),
+    lastUsedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_provider", ["userId", "providerId"])
+    .index("by_user_feature", ["userId", "featureId"])
+    .index("by_feature_id", ["featureId"])
+    .index("by_enabled", ["isEnabled"])
+    .index("by_last_used", ["lastUsedAt"]),
+
+  // Music Discovery Tables
+
+  musicDiscovery: defineTable({
+    userId: v.id("users"),
+    discoveryType: v.string(), // 'trending' | 'personalized' | 'genre_exploration' | 'workout_focused'
+    category: v.string(), // 'tracks' | 'artists' | 'albums' | 'playlists'
+    items: v.array(v.object({
+      id: v.string(),
+      name: v.string(),
+      artist: v.optional(v.string()),
+      imageUrl: v.optional(v.string()),
+      previewUrl: v.optional(v.string()),
+      externalUrls: v.object({}),
+      score: v.number(), // Relevance/popularity score
+      reason: v.string(), // Why this was recommended
+      source: v.string(), // Which provider/algorithm
+    })),
+    metadata: v.object({
+      algorithm: v.string(),
+      version: v.string(),
+      confidence: v.number(), // 0-1
+      freshness: v.number(), // How recent the discovery is
+      diversity: v.number(), // How diverse the recommendations are
+    }),
+    userContext: v.object({
+      workoutType: v.optional(v.string()),
+      mood: v.optional(v.string()),
+      timeOfDay: v.optional(v.number()),
+      location: v.optional(v.string()),
+    }),
+    engagement: v.object({
+      views: v.number(),
+      clicks: v.number(),
+      saves: v.number(),
+      shares: v.number(),
+      plays: v.number(),
+      completionRate: v.number(), // 0-1
+    }),
+    feedback: v.object({
+      likes: v.number(),
+      dislikes: v.number(),
+      rating: v.optional(v.number()), // 1-5
+      comments: v.array(v.string()),
+    }),
+    status: v.string(), // 'active' | 'expired' | 'archived'
+    expiresAt: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_type", ["userId", "discoveryType"])
+    .index("by_user_category", ["userId", "category"])
+    .index("by_expires_at", ["expiresAt"])
+    .index("by_status", ["status"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_user_created", ["userId", "createdAt"]),
+
+  // OAuth Analytics Tables
+
+  oauthAnalytics: defineTable({
+    userId: v.optional(v.id("users")),
+    providerId: v.string(),
+    eventType: v.string(), // 'connection' | 'disconnection' | 'token_refresh' | 'api_call' | 'sync'
+    action: v.string(), // Specific action taken
+    metadata: v.object({
+      platform: v.optional(v.string()),
+      userAgent: v.optional(v.string()),
+      ipAddress: v.optional(v.string()),
+      duration: v.optional(v.number()),
+      success: v.boolean(),
+      errorCode: v.optional(v.string()),
+      errorMessage: v.optional(v.string()),
+      dataSize: v.optional(v.number()),
+      responseTime: v.optional(v.number()),
+    }),
+    dimensions: v.object({
+      hour: v.number(), // 0-23
+      dayOfWeek: v.number(), // 0-6
+      month: v.number(), // 1-12
+      year: v.number(),
+    }),
+    metrics: v.object({
+      count: v.number(),
+      duration: v.optional(v.number()),
+      bytes: v.optional(v.number()),
+      errorRate: v.optional(v.number()),
+    }),
+    timestamp: v.number(),
+  })
+    .index("by_provider_timestamp", ["providerId", "timestamp"])
+    .index("by_user_provider", ["userId", "providerId"])
+    .index("by_event_type", ["eventType"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_success", ["metadata.success"])
+    .index("by_provider_event", ["providerId", "eventType"])
+    .index("by_hour", ["dimensions.hour"])
+    .index("by_day", ["dimensions.dayOfWeek"]),
+
+  providerPerformance: defineTable({
+    providerId: v.string(),
+    timeWindow: v.string(), // '1h' | '24h' | '7d' | '30d'
+    metrics: v.object({
+      totalRequests: v.number(),
+      successfulRequests: v.number(),
+      failedRequests: v.number(),
+      averageResponseTime: v.number(), // milliseconds
+      p95ResponseTime: v.number(),
+      p99ResponseTime: v.number(),
+      errorRate: v.number(), // 0-1
+      uptime: v.number(), // 0-1
+      throughput: v.number(), // requests per second
+    }),
+    errors: v.object({
+      authentication: v.number(),
+      rateLimit: v.number(),
+      serverError: v.number(),
+      network: v.number(),
+      timeout: v.number(),
+      other: v.number(),
+    }),
+    health: v.object({
+      status: v.string(), // 'healthy' | 'degraded' | 'down'
+      lastIncident: v.optional(v.number()),
+      mttr: v.optional(v.number()), // Mean time to recovery in minutes
+      availability: v.number(), // 0-1
+    }),
+    timestamp: v.number(),
+    windowStart: v.number(),
+    windowEnd: v.number(),
+  })
+    .index("by_provider_window", ["providerId", "timeWindow"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_provider_timestamp", ["providerId", "timestamp"])
+    .index("by_health_status", ["health.status"]),
 });
