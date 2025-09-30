@@ -8,6 +8,10 @@ Auto-generated from all feature plans. Last updated: 2025-09-26
 - Convex database with real-time queries (003-intensity-score-live)
 - [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION] (004-enhance-adaptivefit-with)
 - [if applicable, e.g., PostgreSQL, CoreData, files or N/A] (004-enhance-adaptivefit-with)
+- TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+ + Svelte, Capacitor, Tailwind CSS 4.1+, @capacitor/haptics, @capacitor/biometric-auth, @capacitor/camera (012-mobile-ui-with)
+- Convex real-time database with localStorage fallback for offline capability (012-mobile-ui-with)
+- TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Tailwind CSS 4.1+ (013-web-dashboard-ui)
+- Convex real-time database with offline-capable storage (013-web-dashboard-ui)
 
 ## Project Structure
 ```
@@ -22,8 +26,8 @@ npm test; npm run lint
 TypeScript 5.0+, JavaScript ES2022: Follow standard conventions
 
 ## Recent Changes
-- 004-enhance-adaptivefit-with: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-- 004-enhance-adaptivefit-with: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
+- 013-web-dashboard-ui: Added TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Tailwind CSS 4.1+
+- 012-mobile-ui-with: Added TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+ + Svelte, Capacitor, Tailwind CSS 4.1+, @capacitor/haptics, @capacitor/biometric-auth, @capacitor/camera
 - 004-enhance-adaptivefit-with: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 
 <!-- MANUAL ADDITIONS START -->

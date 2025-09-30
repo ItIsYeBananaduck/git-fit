@@ -15,7 +15,17 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"admin:setup": "tsx scripts/setup-admin.ts",
-		"admin:status": "tsx scripts/setup-admin.ts --status"
+		"admin:status": "tsx scripts/setup-admin.ts --status",
+		"mobile:dev": "npm run build && npx cap sync && npx cap run ios",
+		"mobile:dev:android": "npm run build && npx cap sync && npx cap run android",
+		"mobile:build": "npm run build && npx cap sync",
+		"mobile:sync": "npx cap sync",
+		"mobile:open:ios": "npx cap open ios",
+		"mobile:open:android": "npx cap open android",
+		"mobile:add:ios": "npx cap add ios",
+		"mobile:add:android": "npx cap add android",
+		"mobile:test": "npm run test && npm run test:mobile",
+		"test:mobile": "vitest run --config vitest.mobile.config.ts"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
@@ -23,10 +33,13 @@
 		]
 	},
 	"dependencies": {
+		"@aparajita/capacitor-biometric-auth": "^9.0.0",
 		"@capacitor/android": "^7.4.3",
+		"@capacitor/camera": "^7.0.2",
 		"@capacitor/cli": "^7.4.3",
 		"@capacitor/core": "^7.4.3",
 		"@capacitor/device": "^7.0.0",
+		"@capacitor/haptics": "^7.0.2",
 		"@capacitor/ios": "^7.4.3",
 		"@felix-health/capacitor-health-data": "^1.0.9",
 		"@stripe/stripe-js": "^7.9.0",

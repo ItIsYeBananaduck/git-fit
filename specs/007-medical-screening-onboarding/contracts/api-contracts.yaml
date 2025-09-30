@@ -1,0 +1,765 @@
+openapi: 3.0.3
+info:
+  title: Medical Screening & User Onboarding API
+  version: 1.0.0
+  description: API contracts for medical screening, risk assessment, and training split recommendations
+
+paths:
+  /api/onboarding/medical:
+    post:
+      summary: Submit medical screening information
+      description: Create or update user medical profile with comprehensive health information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MedicalScreeningRequest'
+      responses:
+        201:
+          description: Medical screening completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicalScreeningResponse'
+        400:
+          description: Invalid medical data or missing required fields
+        403:
+          description: Privacy consent required before medical data collection
+
+  /api/onboarding/medical/{userId}:
+    get:
+      summary: Retrieve user medical profile
+      description: Get current medical profile with risk assessment and restrictions
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Medical profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicalProfile'
+        404:
+          description: Medical profile not found
+    
+    put:
+      summary: Update medical profile
+      description: Update existing medical information and recalculate risk assessment
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MedicalUpdateRequest'
+      responses:
+        200:
+          description: Medical profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicalScreeningResponse'
+
+  /api/onboarding/goals:
+    post:
+      summary: Set fitness goals and priorities
+      description: Define user fitness goals with priority weighting and specific targets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalSettingRequest'
+      responses:
+        201:
+          description: Fitness goals set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalSettingResponse'
+        400:
+          description: Invalid goal data or priority weights don't sum to 100
+
+  /api/onboarding/experience:
+    post:
+      summary: Assess user fitness experience and preferences
+      description: Evaluate user fitness level, training history, and preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExperienceAssessmentRequest'
+      responses:
+        201:
+          description: Experience assessment completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceAssessmentResponse'
+
+  /api/onboarding/equipment:
+    post:
+      summary: Define equipment availability and constraints
+      description: Set available equipment, location, and budget constraints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquipmentProfileRequest'
+      responses:
+        201:
+          description: Equipment profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EquipmentProfileResponse'
+
+  /api/onboarding/recommend-splits:
+    post:
+      summary: Get training split recommendations
+      description: Generate personalized training split recommendations based on complete user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SplitRecommendationRequest'
+      responses:
+        200:
+          description: Training split recommendations generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SplitRecommendationResponse'
+        400:
+          description: Incomplete user profile or invalid parameters
+
+  /api/onboarding/select-split:
+    post:
+      summary: Select and customize training split
+      description: Choose training split and apply customizations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SplitSelectionRequest'
+      responses:
+        200:
+          description: Training split selected and activated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SplitSelectionResponse'
+
+  /api/onboarding/progress/{userId}:
+    get:
+      summary: Get onboarding progress
+      description: Retrieve current onboarding progress and next steps
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Onboarding progress retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingProgress'
+
+  /api/medical/clearance:
+    post:
+      summary: Submit medical clearance documentation
+      description: Upload medical clearance for high-risk conditions
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                conditionType:
+                  type: string
+                clearanceType:
+                  type: string
+                  enum: [general-exercise, high-intensity, resistance-training, cardio]
+                providerName:
+                  type: string
+                providerCredentials:
+                  type: string
+                document:
+                  type: string
+                  format: binary
+                expirationDate:
+                  type: string
+                  format: date
+      responses:
+        201:
+          description: Medical clearance submitted for review
+        400:
+          description: Invalid clearance data or missing required fields
+
+components:
+  schemas:
+    MedicalScreeningRequest:
+      type: object
+      required: [conditions, medications, injuries, emergencyContact, privacyConsent]
+      properties:
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChronicCondition'
+        medications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Medication'
+        injuries:
+          type: array
+          items:
+            $ref: '#/components/schemas/InjuryHistory'
+        emergencyContact:
+          $ref: '#/components/schemas/EmergencyContact'
+        privacyConsent:
+          type: boolean
+          description: Must be true to proceed
+
+    MedicalScreeningResponse:
+      type: object
+      properties:
+        riskLevel:
+          type: string
+          enum: [low, moderate, high, requires-clearance]
+        restrictions:
+          type: array
+          items:
+            type: string
+        requiresClearance:
+          type: boolean
+        recommendedActions:
+          type: array
+          items:
+            type: string
+        nextStep:
+          type: string
+          enum: [continue, medical-clearance-required]
+
+    MedicalProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChronicCondition'
+        medications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Medication'
+        injuries:
+          type: array
+          items:
+            $ref: '#/components/schemas/InjuryHistory'
+        riskLevel:
+          type: string
+          enum: [low, moderate, high, requires-clearance]
+        restrictions:
+          type: array
+          items:
+            type: string
+        privacyConsent:
+          type: boolean
+        lastUpdated:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    ChronicCondition:
+      type: object
+      required: [type, severity, controlled]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [diabetes, heart-disease, hypertension, arthritis, asthma, other]
+        severity:
+          type: string
+          enum: [mild, moderate, severe]
+        controlled:
+          type: boolean
+        diagnosedDate:
+          type: string
+          format: date
+        notes:
+          type: string
+          maxLength: 500
+        exerciseRestrictions:
+          type: array
+          items:
+            type: string
+        intensityLimit:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    Medication:
+      type: object
+      required: [name, type]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum: [blood-pressure, diabetes, heart, pain, other]
+        dosage:
+          type: string
+        frequency:
+          type: string
+        sideEffects:
+          type: array
+          items:
+            type: string
+        exerciseInteractions:
+          type: array
+          items:
+            type: string
+        intensityWarnings:
+          type: boolean
+
+    InjuryHistory:
+      type: object
+      required: [bodyPart, injuryType, severity, dateOccurred, currentStatus]
+      properties:
+        id:
+          type: string
+        bodyPart:
+          type: string
+          enum: [knee, back, shoulder, ankle, wrist, hip, elbow, other]
+        injuryType:
+          type: string
+          enum: [acute, chronic, surgical, overuse]
+        severity:
+          type: string
+          enum: [minor, moderate, major]
+        dateOccurred:
+          type: string
+          format: date
+        currentStatus:
+          type: string
+          enum: [recovered, managing, ongoing-pain, rehabbing]
+        painLevel:
+          type: number
+          minimum: 0
+          maximum: 10
+        affectedMovements:
+          type: array
+          items:
+            type: string
+        restrictions:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+          maxLength: 500
+
+    EmergencyContact:
+      type: object
+      required: [name, phone]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+          pattern: '^[\+]?[1-9][\d]{0,15}$'
+        relationship:
+          type: string
+
+    GoalSettingRequest:
+      type: object
+      required: [primaryGoal, targetTimeframe, priorityWeights]
+      properties:
+        primaryGoal:
+          type: string
+          enum: [strength, endurance, weight-loss, muscle-gain, sport-specific, general-fitness]
+        secondaryGoals:
+          type: array
+          items:
+            type: string
+        targetTimeframe:
+          type: string
+          enum: [short-term, medium-term, long-term]
+        specificTargets:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceTarget'
+        motivations:
+          type: array
+          items:
+            type: string
+        barriers:
+          type: array
+          items:
+            type: string
+        priorityWeights:
+          type: object
+          additionalProperties:
+            type: number
+            minimum: 0
+            maximum: 100
+
+    PerformanceTarget:
+      type: object
+      required: [type, current, target, unit]
+      properties:
+        type:
+          type: string
+          enum: [weight-loss, strength-gain, endurance, body-composition, performance]
+        current:
+          type: number
+        target:
+          type: number
+        unit:
+          type: string
+        deadline:
+          type: string
+          format: date
+        priority:
+          type: string
+          enum: [high, medium, low]
+
+    GoalSettingResponse:
+      type: object
+      properties:
+        goalsProfile:
+          $ref: '#/components/schemas/FitnessGoals'
+        recommendedApproaches:
+          type: array
+          items:
+            type: string
+        estimatedTimeline:
+          type: object
+          properties:
+            shortTermMilestones:
+              type: array
+              items:
+                type: string
+            mediumTermGoals:
+              type: array
+              items:
+                type: string
+            longTermOutcomes:
+              type: array
+              items:
+                type: string
+
+    ExperienceAssessmentRequest:
+      type: object
+      required: [fitnessLevel, yearsTraining, timeAvailability]
+      properties:
+        fitnessLevel:
+          type: string
+          enum: [beginner, intermediate, advanced, elite]
+        yearsTraining:
+          type: number
+          minimum: 0
+        familiarExercises:
+          type: array
+          items:
+            type: string
+        preferredIntensity:
+          type: string
+          enum: [low, moderate, high, variable]
+        recoveryNeeds:
+          type: string
+          enum: [minimal, standard, extended]
+        timeAvailability:
+          $ref: '#/components/schemas/TimeAvailability'
+        trainingPreferences:
+          type: array
+          items:
+            type: string
+
+    TimeAvailability:
+      type: object
+      required: [daysPerWeek, minutesPerSession]
+      properties:
+        daysPerWeek:
+          type: number
+          minimum: 1
+          maximum: 7
+        minutesPerSession:
+          type: number
+          minimum: 15
+          maximum: 300
+        preferredTimes:
+          type: array
+          items:
+            type: string
+        scheduleFlexibility:
+          type: string
+          enum: [rigid, moderate, flexible]
+        consistencyRating:
+          type: number
+          minimum: 1
+          maximum: 10
+
+    EquipmentProfileRequest:
+      type: object
+      required: [primaryLocation, availableEquipment]
+      properties:
+        primaryLocation:
+          type: string
+          enum: [home, gym, outdoor, multiple]
+        availableEquipment:
+          type: array
+          items:
+            type: string
+        spaceConstraints:
+          type: array
+          items:
+            type: string
+        budget:
+          type: number
+          minimum: 0
+        equipmentCondition:
+          type: object
+          additionalProperties:
+            type: string
+        accessLimitations:
+          type: array
+          items:
+            type: string
+
+    SplitRecommendationRequest:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
+        forceRegeneration:
+          type: boolean
+          default: false
+
+    SplitRecommendationResponse:
+      type: object
+      properties:
+        recommendedSplits:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrainingSplit'
+        reasoning:
+          type: array
+          items:
+            $ref: '#/components/schemas/SplitReasoning'
+        alternatives:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrainingSplit'
+        customizationOptions:
+          type: array
+          items:
+            type: string
+
+    TrainingSplit:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        daysPerWeek:
+          type: number
+          minimum: 1
+          maximum: 7
+        sessionDuration:
+          type: number
+          minimum: 15
+          maximum: 300
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        primaryGoals:
+          type: array
+          items:
+            type: string
+        requiredEquipment:
+          type: array
+          items:
+            type: string
+        contraindications:
+          type: array
+          items:
+            type: string
+        weeklyStructure:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkoutDay'
+        estimatedResults:
+          type: object
+          properties:
+            timeToResults:
+              type: string
+            expectedOutcomes:
+              type: array
+              items:
+                type: string
+
+    WorkoutDay:
+      type: object
+      properties:
+        dayNumber:
+          type: number
+          minimum: 1
+          maximum: 7
+        name:
+          type: string
+        muscleGroups:
+          type: array
+          items:
+            type: string
+        exerciseTypes:
+          type: array
+          items:
+            type: string
+        estimatedDuration:
+          type: number
+        intensity:
+          type: string
+          enum: [low, moderate, high]
+
+    SplitReasoning:
+      type: object
+      properties:
+        splitId:
+          type: string
+        factors:
+          type: array
+          items:
+            type: object
+            properties:
+              factor:
+                type: string
+              weight:
+                type: number
+              rationale:
+                type: string
+
+    SplitSelectionRequest:
+      type: object
+      required: [userId, splitId]
+      properties:
+        userId:
+          type: string
+        splitId:
+          type: string
+        customizations:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              parameters:
+                type: object
+
+    OnboardingProgress:
+      type: object
+      properties:
+        userId:
+          type: string
+        currentStep:
+          type: string
+          enum: [medical, goals, experience, equipment, split-selection, review, complete]
+        completedSteps:
+          type: array
+          items:
+            type: string
+        stepProgress:
+          type: object
+          additionalProperties:
+            type: number
+            minimum: 0
+            maximum: 100
+        medicalCompleted:
+          type: boolean
+        goalsCompleted:
+          type: boolean
+        experienceCompleted:
+          type: boolean
+        equipmentCompleted:
+          type: boolean
+        splitSelected:
+          type: boolean
+        startedAt:
+          type: string
+          format: date-time
+        lastActiveAt:
+          type: string
+          format: date-time
+        estimatedTimeRemaining:
+          type: number
+        dropoffRisk:
+          type: string
+          enum: [low, medium, high]
+
+    FitnessGoals:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        primaryGoal:
+          type: string
+        secondaryGoals:
+          type: array
+          items:
+            type: string
+        targetTimeframe:
+          type: string
+        specificTargets:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceTarget'
+        priorityWeights:
+          type: object
+          additionalProperties:
+            type: number
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

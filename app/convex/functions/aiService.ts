@@ -1,8 +1,8 @@
 import { action } from '../_generated/server';
 import { v } from 'convex/values';
 
-// AI Service Configuration
-const AI_SERVICE_URL = 'https://technically-fit-ai.fly.dev';
+// AI Service Configuration - use environment variable
+const AI_SERVICE_URL = process.env.VITE_AI_API_URL || 'https://technically-fit-ai.fly.dev';
 
 // Types for AI service responses
 export interface AIWorkoutTweak {
@@ -46,14 +46,26 @@ export const getAIWorkoutTweaks = action({
     },
     handler: async (ctx, { userId, workoutData }) => {
         try {
-            const response = await fetch(`${AI_SERVICE_URL}/tweak-workout`, {
+            // Use the /event endpoint that matches the FastAPI backend
+            const response = await fetch(`${AI_SERVICE_URL}/event`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    event: 'complete_workout',
                     user_id: userId,
-                    workout: workoutData
+                    context: {
+                        exercise: workoutData.exercises[0]?.name || 'unknown',
+                        set_number: 1
+                    },
+                    user_data: {
+                        fitness_level: workoutData.userProfile?.experience_level || 'beginner',
+                        current_program: {
+                            planned_reps: workoutData.exercises[0]?.sets || 3
+                        },
+                        goals: workoutData.userProfile?.goals || ['build_muscle']
+                    }
                 })
             });
 
