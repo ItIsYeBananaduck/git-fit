@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { get } from 'svelte/store';
   import { convex } from '$lib/convex';
-  import { api } from '../../../../../../convex/_generated/api';
+  import { api } from '$lib/convex';
 
   let status: 'idle' | 'verifying' | 'success' | 'error' = 'idle';
   let message = '';

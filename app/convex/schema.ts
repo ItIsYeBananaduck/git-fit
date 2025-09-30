@@ -17,6 +17,8 @@ export default defineSchema({
     lastLogin: v.optional(v.string()),
     failedLoginAttempts: v.optional(v.number()),
     lockedUntil: v.optional(v.string()),
+    // Payments
+    stripeCustomerId: v.optional(v.string()),
     // Client-specific fields
     dateOfBirth: v.optional(v.string()),
     height: v.optional(v.number()), // in cm
@@ -39,7 +41,7 @@ export default defineSchema({
       dataSharing: v.optional(v.boolean()),
       timezone: v.optional(v.string()),
     })),
-  }).index("by_email", ["email"]).index("by_role", ["role"]).index("by_active", ["isActive"]),
+  }).index("by_email", ["email"]).index("by_role", ["role"]).index("by_active", ["isActive"]).index("by_stripe_customer", ["stripeCustomerId"]),
 
   // User sessions for authentication
   sessions: defineTable({
@@ -83,6 +85,49 @@ export default defineSchema({
   })
     .index("by_user", ["userId"]) 
     .index("by_provider_sub", ["providerSubscriptionId"]),
+
+  // Learning system: optimal order of adjustments (sets, reps, volume)
+  adjustmentPolicies: defineTable({
+    userId: v.id("users"),
+    // We model 6 possible orders as arms: e.g., ["sets","reps","volume"], ["sets","volume","reps"], ...
+    armStats: v.array(v.object({
+      plays: v.number(),
+      rewardSum: v.number(),
+    })),
+    // epsilon for epsilon-greedy
+    epsilon: v.number(),
+    updatedAt: v.string(),
+  }).index("by_user", ["userId"]),
+
+  adjustmentOutcomes: defineTable({
+    userId: v.id("users"),
+    armIndex: v.number(),
+    // Reward can be composite; for scaffold use numeric: e.g., performance delta normalized 0..1
+    reward: v.number(),
+    context: v.optional(v.any()),
+    createdAt: v.string(),
+  }).index("by_user", ["userId"]),
+
+  // One adjustment per exercise per week enforcement
+  adjustmentDecisions: defineTable({
+    userId: v.id("users"),
+    exerciseId: v.id("exercises"),
+    weekStart: v.string(), // ISO date (e.g., Monday of week)
+    armIndex: v.number(),
+    adjustmentType: v.union(v.literal("sets"), v.literal("reps"), v.literal("volume")),
+    createdAt: v.string(),
+  }).index("by_user_exercise_week", ["userId", "exerciseId", "weekStart"]),
+
+  // Record user's actual achieved adjustment vs planned (user override respected)
+  adjustmentAchievements: defineTable({
+    userId: v.id("users"),
+    exerciseId: v.id("exercises"),
+    weekStart: v.string(),
+    adjustmentType: v.union(v.literal("sets"), v.literal("reps"), v.literal("volume")),
+    plannedValue: v.number(),
+    achievedValue: v.number(),
+    createdAt: v.string(),
+  }).index("by_user_exercise_week", ["userId", "exerciseId", "weekStart"]),
 
   // Email verification tokens
   emailVerifications: defineTable({
@@ -245,6 +290,7 @@ export default defineSchema({
     actualWeight: v.array(v.number()), // weight per set in kg
     actualDuration: v.optional(v.number()), // for time-based exercises
     difficulty: v.optional(v.union(v.literal("easy"), v.literal("moderate"), v.literal("hard"))),
+    rpePerSet: v.optional(v.array(v.number())), // optional RPE per set (e.g., 6..10 scale)
     notes: v.optional(v.string()),
     createdAt: v.string(),
   }).index("by_session", ["sessionId"]).index("by_exercise", ["exerciseId"]),

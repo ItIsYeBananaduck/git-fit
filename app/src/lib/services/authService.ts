@@ -72,6 +72,7 @@ export class AuthService {
         profile: userData.profile
       });
 
+      // Path 1: Immediate session (legacy)
       if (result.success && result.user && result.token) {
         this.setAuthData(result.user, result.token);
         return {
@@ -79,6 +80,15 @@ export class AuthService {
           user: result.user,
           token: result.token,
           requiresVerification: !result.user.emailVerified
+        };
+      }
+
+      // Path 2: Requires email verification first (no token returned)
+      if (result.success && result.user && result.requiresVerification) {
+        return {
+          success: true,
+          user: result.user,
+          requiresVerification: true
         };
       }
 

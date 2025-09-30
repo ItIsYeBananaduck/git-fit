@@ -4,10 +4,14 @@
 	import { onMount } from 'svelte';
 	import { checkPasswordStrength } from '$lib/utils/password';
 	import type { PasswordStrength } from '$lib/utils/password';
+	import { convex } from '$lib/convex';
+	import { api } from '$lib/convex';
+	import { emailService } from '$lib/services/emailService';
 
 	let currentStep = 1;
 	let loading = false;
 	let error = '';
+	let successMsg = '';
 
 	// Form data
 	let email = '';
@@ -65,7 +69,9 @@
 		'Flexibility',
 		'General Fitness',
 		'Sport Performance',
-		'Rehabilitation'
+		'Rehabilitation',
+		'Senior Fitness',
+		'Youth Training'
 	];
 
 	const trainerSpecialties = [
@@ -211,8 +217,18 @@
 			});
 
 			if (result.success) {
-				// Registration successful, redirect to dashboard
-				goto('/');
+				// Issue verification email via Convex and (in dev) send with EmailService
+				try {
+					const { token } = await convex.mutation(api.functions.users.issueEmailVerificationByEmail, { email: email.toLowerCase().trim() });
+					if (token) {
+						// In dev, send via EmailService abstraction (will log)
+						await emailService.sendEmailVerificationEmail(email.toLowerCase().trim(), token, name.trim());
+					}
+				} catch (e) {
+					console.warn('Could not issue/send verification email:', e);
+				}
+				successMsg = 'Account created! Please check your email to verify your address before signing in.';
+				currentStep = 3; // show confirmation panel
 			} else {
 				error = result.error || 'Registration failed';
 				currentStep = 1; // Go back to first step to show error
@@ -669,15 +685,10 @@
 							/>
 						</svg>
 					</div>
-					<h3 class="text-lg font-medium text-gray-900">Ready to get started!</h3>
-					<p class="text-gray-600">
-						You're all set to join Technically Fit as a {role}.
-						{#if role === 'client'}
-							Start exploring programs and connecting with trainers.
-						{:else}
-							Begin creating programs and connecting with clients.
-						{/if}
-					</p>
+					<h3 class="text-lg font-medium text-gray-900">Almost there!</h3>
+					<p class="text-gray-600">{successMsg || `Account created for ${email}.`}</p>
+					<p class="text-gray-600">We've sent a verification link to your email. Please verify to enable sign-in.</p>
+					<a href="/auth/login" class="inline-block mt-4 px-4 py-2 rounded-md bg-blue-600 text-white">Go to Login</a>
 
 					<div class="bg-gray-50 rounded-lg p-4 text-left">
 						<h4 class="font-medium text-gray-900 mb-2">Account Summary:</h4>

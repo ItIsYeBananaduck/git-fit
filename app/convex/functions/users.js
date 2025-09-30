@@ -35,6 +35,32 @@ export const createUser = mutation({
   },
 });
 
+// Issue email verification token by email
+export const issueEmailVerificationByEmail = mutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const email = args.email.toLowerCase().trim();
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .first();
+    if (!user) {
+      // Do not leak existence; succeed without token
+      return { success: true };
+    }
+    const token = generateToken(48);
+    const now = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    await ctx.db.insert("emailVerifications", {
+      userId: user._id,
+      token,
+      expiresAt,
+      createdAt: now,
+    });
+    return { success: true, token };
+  }
+});
+
 export const getUserByEmail = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
@@ -308,18 +334,7 @@ export const register = mutation({
       },
     });
 
-    // Create session
-    const sessionToken = generateToken();
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
-
-    await ctx.db.insert("sessions", {
-      userId,
-      token: sessionToken,
-      expiresAt,
-      createdAt: now,
-      lastActivity: now,
-      isActive: true,
-    });
+    // Do NOT create a session on registration; require email verification first
 
     // Issue email verification token (log in dev; send via email service in production)
     try {
@@ -350,7 +365,7 @@ export const register = mutation({
     return {
       success: true,
       user: userWithoutPassword,
-      token: sessionToken,
+      requiresVerification: true,
     };
   },
 });
@@ -596,6 +611,34 @@ export const resetPassword = mutation({
 
     return { success: true };
   },
+});
+
+// Verify email using a token
+export const verifyEmail = mutation({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const rec = await ctx.db
+      .query("emailVerifications")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+
+    if (!rec) throw new ConvexError("Invalid or expired token");
+    if (rec.usedAt) throw new ConvexError("Token already used");
+    if (new Date(rec.expiresAt) < new Date()) {
+      throw new ConvexError("Token expired");
+    }
+
+    // Update user record
+    await ctx.db.patch(rec.userId, {
+      emailVerified: true,
+      updatedAt: new Date().toISOString(),
+    });
+
+    // Mark token used
+    await ctx.db.patch(rec._id, { usedAt: new Date().toISOString() });
+
+    return { success: true };
+  }
 });
 
 // Session management functions
