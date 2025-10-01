@@ -25,7 +25,7 @@ export const startTrainingSession = mutation({
       trainingMode: args.trainingMode,
       dataRetentionDays: args.dataRetentionDays,
       priority: args.priority || 'normal',
-      status: 'scheduled',
+      status: 'active',
       progress: 0,
       metadata: {
         description: `${args.sessionType} training session`,

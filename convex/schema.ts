@@ -1912,9 +1912,12 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_dataId", ["dataId"]) // Contract primary lookup
     .index("by_userId_type", ["userId", "dataType"])
+    .index("by_status", ["status"]) // Contract expects status-based queries
+    .index("by_consent", ["userConsent"]) // Contract requires consent filtering
+    .index("by_workoutId", ["workoutId"]) // Contract expects workout-based lookup
     .index("by_type_status", ["dataType", "processingStatus"])
-    .index("by_consent", ["privacy.consentLevel"])
     .index("by_quality", ["annotations.qualityScore"])
     .index("by_retention", ["privacy.retentionDate"]),
 
@@ -2023,25 +2026,26 @@ export default defineSchema({
       testSamples: v.number(),
       dataTypes: v.array(v.string()),
     })),
-    resources: v.object({
+    resources: v.optional(v.object({
       computeType: v.string(),
       memoryUsage: v.number(),
       gpuUtilization: v.optional(v.number()),
       estimatedCost: v.number(),
-    }),
-    logs: v.array(v.object({
+    })),
+    logs: v.optional(v.array(v.object({
       timestamp: v.number(),
       level: v.string(),
       message: v.string(),
       details: v.optional(v.object({})),
-    })),
-    startedAt: v.number(),
+    }))),
+    startedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
     createdAt: v.number(),
   })
-    .index("by_model", ["modelId"])
+    .index("by_sessionId", ["sessionId"]) // Contract primary lookup
     .index("by_status", ["status"])
-    .index("by_session", ["sessionId"])
+    .index("by_sessionType", ["sessionType"])
+    .index("by_model", ["modelId"])
     .index("by_started", ["startedAt"])
     .index("by_completed", ["completedAt"]),
 
