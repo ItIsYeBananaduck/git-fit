@@ -1,0 +1,1 @@
+import { describe, test, expect } from "vitest"; import { api } from "../../convex/_generated/api"; describe("AI Training Sessions", () => { test("should list sessions", async () => { const result = await api["functions/aiTraining"].listTrainingSessions({}); expect(result).toBeDefined(); }); });

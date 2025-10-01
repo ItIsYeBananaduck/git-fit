@@ -1,3 +1,5 @@
+"use node";
+
 /**
  * OAuth Authorization Flow - Convex Functions
  * 

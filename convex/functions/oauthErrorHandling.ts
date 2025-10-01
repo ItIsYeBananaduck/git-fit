@@ -521,7 +521,7 @@ export const getErrorExplanation = query({
 // ====================================================================================
 
 async function classifyOAuthError(errorContext: any): Promise<any> {
-  const classification = {
+  let classification = {
     category: 'unknown',
     severity: 'medium',
     isRecoverable: false,
