@@ -43,30 +43,93 @@ class LocalStorageMock {
   }
 }
 
+// Mock window object with essential properties
+const mockWindow = {
+  localStorage: new LocalStorageMock(),
+  sessionStorage: new LocalStorageMock(),
+  location: {
+    href: 'http://localhost:3000',
+    origin: 'http://localhost:3000',
+    hostname: 'localhost',
+    pathname: '/',
+    search: '',
+    hash: ''
+  },
+  navigator: {
+    userAgent: 'Mozilla/5.0 (compatible; Vitest)',
+    language: 'en-US',
+    languages: ['en-US'],
+    onLine: true
+  },
+  document: {
+    title: 'Test Document',
+    createElement: vi.fn(),
+    getElementById: vi.fn(),
+    querySelector: vi.fn(),
+    querySelectorAll: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn()
+  },
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(),
+  open: vi.fn(),
+  close: vi.fn(),
+  alert: vi.fn(),
+  confirm: vi.fn(),
+  prompt: vi.fn(),
+  // WebAuthn API mock
+  PublicKeyCredential: {
+    isUserVerifyingPlatformAuthenticatorAvailable: vi.fn().mockResolvedValue(true),
+    isConditionalMediationAvailable: vi.fn().mockResolvedValue(true)
+  }
+};
+
 type GlobalWithPolyfills = typeof globalThis & {
   localStorage?: LocalStorageMock;
   sessionStorage?: LocalStorageMock;
+  window?: typeof mockWindow;
+  document?: typeof mockWindow.document;
+  navigator?: typeof mockWindow.navigator;
+  location?: typeof mockWindow.location;
 };
 
 const g = globalThis as GlobalWithPolyfills;
 
+// Apply window mock globally
+if (!('window' in g)) {
+  g.window = mockWindow as any;
+}
+
 // Apply localStorage mock globally
 if (!('localStorage' in g)) {
   g.localStorage = new LocalStorageMock();
-  console.log('localStorage mock applied:', g.localStorage);
 }
 
 // Apply sessionStorage mock if needed
 if (!('sessionStorage' in g)) {
   g.sessionStorage = new LocalStorageMock();
-  console.log('sessionStorage mock applied:', g.sessionStorage);
 }
 
-// Debugging: Confirm mocks are applied
-console.debug('Mocks initialized:', {
-  localStorage: !!g.localStorage,
-  sessionStorage: !!g.sessionStorage,
-});
+// Apply document mock
+if (!('document' in g)) {
+  g.document = mockWindow.document as any;
+}
+
+// Apply navigator mock
+if (!('navigator' in g)) {
+  g.navigator = mockWindow.navigator as any;
+}
+
+// Apply PublicKeyCredential mock directly to globalThis  
+if (!('PublicKeyCredential' in g)) {
+  (g as any).PublicKeyCredential = mockWindow.PublicKeyCredential;
+}
+
+// Apply location mock
+if (!('location' in g)) {
+  g.location = mockWindow.location as any;
+}
 
 // Set up environment variables for testing
 process.env.VITE_CONVEX_URL = 'https://test-convex-url.convex.cloud';

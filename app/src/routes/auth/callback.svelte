@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { ConvexClient } from 'convex/browser';
 	// Import the generated api JS file (include extension so tooling finds it)
-	import { api } from '../../../convex/_generated/api.js';
+	import { api } from '$lib/convex/_generated/api';
 
 	const client = new ConvexClient(import.meta.env.PUBLIC_CONVEX_URL);
 

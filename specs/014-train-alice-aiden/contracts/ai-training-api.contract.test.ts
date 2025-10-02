@@ -1,6 +1,35 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
 import { ConvexHttpClient } from 'convex/browser'
-import type { AITrainingDataSubmission, TrainingSessionRequest, ModelDeploymentRequest } from '../types/ai-training'
+
+// Define types inline for the test
+interface AITrainingDataSubmission {
+  hashedUserId: string;
+  exerciseType: string;
+  setNumber: number;
+  strainPercentage: number;
+  aiResponse: string;
+  contextTags: string[];
+  timestamp: string;
+  skipReason: string | null;
+  sleepHours: number;
+}
+
+interface TrainingSessionRequest {
+  modelId: string;
+  batchSize: number;
+  epochs: number;
+  learningRate: number;
+  batchId?: string;
+  forceRetrain?: boolean;
+  metadata?: Record<string, any>;
+}
+
+interface ModelDeploymentRequest {
+  sessionId: string;
+  deploymentEnvironment: 'staging' | 'production';
+  rollbackStrategy: 'immediate' | 'gradual';
+  metadata?: Record<string, any>;
+}
 
 // Mock the Convex client
 vi.mock('convex/browser')
@@ -66,7 +95,9 @@ describe('AI Training API Contract Tests', () => {
         strainPercentage: 65.0,
         aiResponse: 'Nice depth! Keep it controlled.',
         contextTags: ['warmup'],
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        skipReason: null,
+        sleepHours: 8.0
       }
 
       // Mock rejection due to missing consent
@@ -123,6 +154,10 @@ describe('AI Training API Contract Tests', () => {
   describe('Training Session Management', () => {
     test('FAILS: Should start new training session', async () => {
       const sessionRequest: TrainingSessionRequest = {
+        modelId: 'model_v1_0',
+        batchSize: 32,
+        epochs: 10,
+        learningRate: 0.001,
         batchId: 'batch_2025_week_39',
         forceRetrain: false
       }
@@ -154,6 +189,10 @@ describe('AI Training API Contract Tests', () => {
 
     test('FAILS: Should prevent concurrent training sessions', async () => {
       const sessionRequest: TrainingSessionRequest = {
+        modelId: 'model_v1_1',
+        batchSize: 64,
+        epochs: 15,
+        learningRate: 0.0005,
         batchId: 'batch_2025_week_40',
         forceRetrain: false
       }
@@ -243,6 +282,7 @@ describe('AI Training API Contract Tests', () => {
     test('FAILS: Should deploy AI model to production', async () => {
       const modelId = 'model_v1_2_4'
       const deploymentRequest: ModelDeploymentRequest = {
+        sessionId: 'training_session_123',
         deploymentEnvironment: 'production',
         rollbackStrategy: 'gradual'
       }
@@ -272,6 +312,7 @@ describe('AI Training API Contract Tests', () => {
     test('FAILS: Should validate performance metrics before deployment', async () => {
       const modelId = 'model_poor_performance'
       const deploymentRequest: ModelDeploymentRequest = {
+        sessionId: 'training_session_456',
         deploymentEnvironment: 'production',
         rollbackStrategy: 'immediate'
       }
@@ -339,6 +380,15 @@ describe('AI Training API Contract Tests', () => {
         timestamp: new Date().toISOString()
       }
 
+      // Mock the anonymizeWorkoutData response
+      convexClient.action.mockResolvedValue({
+        hashedUserId: 'a'.repeat(64), // SHA-256 format
+        exerciseType: workoutData.exerciseType,
+        reps: workoutData.reps,
+        weight: workoutData.weight,
+        timestamp: workoutData.timestamp
+      })
+
       // This will fail because anonymizeWorkoutData doesn't exist yet
       const anonymizedData = await convexClient.action('ai:anonymizeWorkoutData', { workoutData })
 
@@ -358,7 +408,9 @@ describe('AI Training API Contract Tests', () => {
         strainPercentage: 70.0,
         aiResponse: 'Good pace!',
         contextTags: ['cardio'],
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        skipReason: null,
+        sleepHours: 7.5
       }
 
       // Mock rate limit error

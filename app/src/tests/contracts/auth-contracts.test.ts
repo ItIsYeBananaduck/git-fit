@@ -342,34 +342,32 @@ describe('Authentication Contract Tests', () => {
     });
 
     it('should mock PublicKeyCredential availability check', async () => {
-      const globalWithCredential = window as typeof window & {
-        PublicKeyCredential: {
-          isUserVerifyingPlatformAuthenticatorAvailable: () => Promise<boolean>;
-        };
+      // Access PublicKeyCredential directly from globalThis if window is not available
+      const globalCredential = (globalThis.window?.PublicKeyCredential || globalThis.PublicKeyCredential) as {
+        isUserVerifyingPlatformAuthenticatorAvailable: () => Promise<boolean>;
       };
       
-      const isAvailable = await globalWithCredential.PublicKeyCredential
-        .isUserVerifyingPlatformAuthenticatorAvailable();
+      expect(globalCredential).toBeDefined();
+      const isAvailable = await globalCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       
       expect(isAvailable).toBe(true);
       expect(vi.isMockFunction(
-        globalWithCredential.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable
+        globalCredential.isUserVerifyingPlatformAuthenticatorAvailable
       )).toBe(true);
     });
 
     it('should mock conditional mediation availability', async () => {
-      const globalWithCredential = window as typeof window & {
-        PublicKeyCredential: {
-          isConditionalMediationAvailable: () => Promise<boolean>;
-        };
+      // Access PublicKeyCredential directly from globalThis if window is not available
+      const globalCredential = (globalThis.window?.PublicKeyCredential || globalThis.PublicKeyCredential) as {
+        isConditionalMediationAvailable: () => Promise<boolean>;
       };
       
-      const isAvailable = await globalWithCredential.PublicKeyCredential
-        .isConditionalMediationAvailable();
+      expect(globalCredential).toBeDefined();
+      const isAvailable = await globalCredential.isConditionalMediationAvailable();
       
       expect(isAvailable).toBe(true);
       expect(vi.isMockFunction(
-        globalWithCredential.PublicKeyCredential.isConditionalMediationAvailable
+        globalCredential.isConditionalMediationAvailable
       )).toBe(true);
     });
   });

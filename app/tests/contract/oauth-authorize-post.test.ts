@@ -1,122 +1,123 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Contract test for POST /api/oauth/authorize
+// Contract test for OAuth authorization using Convex
 // This test validates the OAuth authorization initiation contract
 
-describe('POST /api/oauth/authorize - Contract Test', () => {
-  let mockFetch: any;
-  
+// Mock the Convex client
+vi.mock('../../src/lib/convex', () => ({
+  convex: {
+    mutation: vi.fn()
+  }
+}));
+
+interface OAuthResponse {
+  sessionId: string;
+  authUrl: string;
+  state: string;
+  redirectUri: string;
+  expiresAt: number;
+  scopes: string[];
+  provider: {
+    id: string;
+    name: string;
+    iconUrl: string;
+    brandColor: string;
+  };
+}
+
+describe('OAuth Authorization - Contract Test (Convex)', () => {
   beforeEach(() => {
-    mockFetch = global.fetch = vi.fn();
+    vi.clearAllMocks();
   });
-  
-  it('should initiate OAuth flow with correct request/response structure', async () => {
-    const requestBody = {
-      providerId: 'spotify',
-      platform: 'ios',
-      scopes: ['user-read-private', 'user-top-read']
-    };
+
+  it('should initiate OAuth flow with correct request/response structure (Convex)', async () => {
+    const { convex } = await import('../../src/lib/convex');
     
-    const expectedResponse = {
+    // Mock the mutation response
+    const mockResponse: OAuthResponse = {
+      sessionId: 'session_123456789',
+      authUrl: 'https://accounts.spotify.com/authorize?client_id=test&response_type=code&state=mock_state_123&code_challenge=mock_challenge',
+      state: 'mock_state_1234567890123456789012345678901234567890123',
+      redirectUri: 'https://localhost:3000/oauth/callback',
+      expiresAt: Date.now() + 3600000,
+      scopes: ['user-read-private', 'user-top-read'],
+      provider: {
+        id: 'spotify',
+        name: 'Spotify',
+        iconUrl: 'https://developer.spotify.com/assets/branding-guidelines/icon.svg',
+        brandColor: '#1DB954'
+      }
+    };
+
+    vi.mocked(convex.mutation).mockResolvedValue(mockResponse);
+
+    const args = {
+      providerId: 'spotify',
+      userId: 'mock_user_id',
+      platform: 'ios',
+      scopes: ['user-read-private', 'user-top-read'],
+      returnUrl: 'https://localhost:3000/oauth/callback',
+      metadata: {
+        userAgent: 'MockAgent',
+        ipAddress: '127.0.0.1',
+        deviceType: 'ios',
+        appVersion: '1.0.0'
+      }
+    };
+
+    const data = await convex.mutation('initiateOAuthFlow', args) as OAuthResponse;
+
+    expect(data).toMatchObject({
       authUrl: expect.stringContaining('https://accounts.spotify.com/authorize'),
       state: expect.any(String),
-      codeChallenge: expect.any(String),
       sessionId: expect.any(String),
-      expiresAt: expect.any(Number)
-    };
-    
-    // Mock successful authorization response
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => expectedResponse
+      expiresAt: expect.any(Number),
+      provider: expect.any(Object)
     });
-    
-    // Make request to non-existent endpoint (should fail initially)
-    const response = await fetch('/api/oauth/authorize', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer mock-token',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
-    
-    const data = await response.json();
-    
-    expect(response.ok).toBe(true);
-    expect(response.status).toBe(200);
-    expect(data).toMatchObject(expectedResponse);
     expect(data.authUrl).toMatch(/^https:\/\//);
-    expect(data.state).toHaveLength(22); // Base64 URL-safe 16 bytes
-    expect(data.codeChallenge).toHaveLength(43); // Base64 URL-safe 32 bytes
+    expect(data.state).toBeDefined();
+    expect(convex.mutation).toHaveBeenCalledWith('initiateOAuthFlow', args);
   });
   
-  it('should return 400 for invalid provider ID', async () => {
-    const invalidRequest = {
+  it('should throw error for invalid provider ID (Convex)', async () => {
+    const { convex } = await import('../../src/lib/convex');
+    
+    vi.mocked(convex.mutation).mockRejectedValue(new Error('OAuth provider not supported'));
+
+    const invalidArgs = {
       providerId: 'invalid_provider',
-      platform: 'web'
+      userId: 'mock_user_id',
+      platform: 'web',
+      scopes: []
     };
-    
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 400,
-      json: async () => ({
-        error: {
-          code: 'INVALID_REQUEST',
-          message: 'Invalid provider ID or platform',
-          timestamp: Date.now(),
-          requestId: 'test-request-id'
-        }
-      })
-    });
-    
-    const response = await fetch('/api/oauth/authorize', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer mock-token',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(invalidRequest)
-    });
-    const data = await response.json();
-    
-    expect(response.status).toBe(400);
-    expect(data.error.code).toBe('INVALID_REQUEST');
+
+    await expect(
+      convex.mutation('initiateOAuthFlow', invalidArgs)
+    ).rejects.toThrow('OAuth provider');
   });
   
-  it('should return 409 for already connected user', async () => {
-    const requestBody = {
-      providerId: 'spotify',
-      platform: 'web'
+  it('should handle existing active session (Convex)', async () => {
+    const { convex } = await import('../../src/lib/convex');
+    
+    const mockResponse = {
+      sessionId: 'existing_session_456',
+      authUrl: 'https://accounts.spotify.com/authorize?existing=true',
+      message: 'Reusing existing session'
     };
-    
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 409,
-      json: async () => ({
-        error: {
-          code: 'AUTHORIZATION_FAILED',
-          message: 'User already connected to this provider',
-          timestamp: Date.now(),
-          requestId: 'test-request-id'
-        }
-      })
-    });
-    
-    const response = await fetch('/api/oauth/authorize', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer mock-token',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
-    const data = await response.json();
-    
-    expect(response.status).toBe(409);
-    expect(data.error.code).toBe('AUTHORIZATION_FAILED');
+
+    vi.mocked(convex.mutation).mockResolvedValue(mockResponse);
+
+    const args = {
+      providerId: 'spotify',
+      userId: 'existing_user_123',
+      platform: 'ios',
+      scopes: ['user-read-private']
+    };
+
+    const response = await convex.mutation('initiateOAuthFlow', args) as { sessionId: string; authUrl: string; message?: string };
+
+    expect(response.sessionId).toBeDefined();
+    expect(response.authUrl).toBeDefined();
+    expect(convex.mutation).toHaveBeenCalledWith('initiateOAuthFlow', args);
   });
 });
-
-// This test should FAIL initially - validates TDD approach

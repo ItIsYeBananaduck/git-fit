@@ -192,10 +192,13 @@ export class MockApiClient {
     }
 
     if (options.customResponse) {
+      if (options.customResponse instanceof Error) {
+        throw options.customResponse;
+      }
       return options.customResponse;
     }
 
-    if (!options.shouldSucceed) {
+    if (options.shouldSucceed === false) {
       throw new Error('Biometric challenge failed');
     }
 
@@ -210,15 +213,24 @@ export class MockApiClient {
     request: unknown,
     options: MockApiOptions = {}
   ): Promise<unknown> {
+    const validation = this.validator.validateRequest('BiometricVerifyRequestSchema', request);
+    
+    if (!validation.success && !options.validationError) {
+      throw new Error(`Request validation failed: ${validation.errors.join(', ')}`);
+    }
+
     if (options.delay) {
       await new Promise(resolve => setTimeout(resolve, options.delay));
     }
 
     if (options.customResponse) {
+      if (options.customResponse instanceof Error) {
+        throw options.customResponse;
+      }
       return options.customResponse;
     }
 
-    if (!options.shouldSucceed) {
+    if (options.shouldSucceed === false) {
       throw new Error('Biometric verification failed');
     }
 
@@ -244,10 +256,13 @@ export class MockApiClient {
     }
 
     if (options.customResponse) {
+      if (options.customResponse instanceof Error) {
+        throw options.customResponse;
+      }
       return options.customResponse;
     }
 
-    if (!options.shouldSucceed) {
+    if (options.shouldSucceed === false) {
       throw new Error('Email login failed');
     }
 
