@@ -9,7 +9,7 @@ import type {
   LoginCredentials,
   AuthResult,
 } from '../../types/auth';
-import { api } from "../../../convex/_generated/api";
+import { api } from "$lib/convex/_generated/api";
 import { convex } from "$lib/convex";
 import { browser } from '$app/environment';
 

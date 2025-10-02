@@ -6,45 +6,62 @@ export interface PronunciationService {
   getSupportedVoices(): string[];
 }
 
-// OpenAI TTS Implementation
-export class OpenAIPronunciationService implements PronunciationService {
+// ElevenLabs TTS Implementation
+export class ElevenLabsPronunciationService implements PronunciationService {
   private apiKey: string;
+  private voiceId: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, voiceId: string = 'EXAVITQu4vr4xnSDxMaL') { // Default to Bella voice
     this.apiKey = apiKey;
+    this.voiceId = voiceId;
   }
 
   async generatePronunciation(text: string): Promise<string> {
     try {
-      const response = await fetch('https://api.openai.com/v1/audio/speech', {
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${this.voiceId}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Accept': 'audio/mpeg',
           'Content-Type': 'application/json',
+          'xi-api-key': this.apiKey
         },
         body: JSON.stringify({
-          model: 'tts-1',
-          input: text,
-          voice: 'alloy', // Can be alloy, echo, fable, onyx, nova, shimmer
-          response_format: 'mp3'
+          text: text,
+          model_id: 'eleven_monolingual_v1',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.5,
+            style: 0.0,
+            use_speaker_boost: true
+          }
         })
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        throw new Error(`ElevenLabs API error: ${response.status}`);
       }
 
       // Return audio data as base64 for storage
       const audioBuffer = await response.arrayBuffer();
       return Buffer.from(audioBuffer).toString('base64');
     } catch (error) {
-      console.error('Error generating pronunciation with OpenAI:', error);
+      console.error('Error generating pronunciation with ElevenLabs:', error);
       throw error;
     }
   }
 
   getSupportedVoices(): string[] {
-    return ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+    return [
+      'EXAVITQu4vr4xnSDxMaL', // Bella
+      'ErXwobaYiN019PkySvjV', // Antoni
+      'VR6AewLTigWG4xSOukaG', // Arnold
+      'pNInz6obpgDQGcFmaJgB', // Adam
+      'yoZ06aMxZJJ28mfd3POQ', // Sam
+      'AZnzlk1XvdvUeBnXmlld', // Domi
+      'CYw3kZ02Hs0563khs1Fj', // Dave
+      'D38z5RcWu1voky8WS1ja', // Fin
+      'JBFqnCBsd6RMkjVDRZzb', // George
+    ];
   }
 }
 
@@ -168,10 +185,14 @@ export class PronunciationManager {
 }
 
 // Factory function to create pronunciation service
-export function createPronunciationService(type: 'openai' | 'google', apiKey: string): PronunciationService {
+export function createPronunciationService(
+  type: 'elevenlabs' | 'google', 
+  apiKey: string, 
+  voiceId?: string
+): PronunciationService {
   switch (type) {
-    case 'openai':
-      return new OpenAIPronunciationService(apiKey);
+    case 'elevenlabs':
+      return new ElevenLabsPronunciationService(apiKey, voiceId);
     case 'google':
       return new GooglePronunciationService(apiKey);
     default:
@@ -181,8 +202,8 @@ export function createPronunciationService(type: 'openai' | 'google', apiKey: st
 
 // Usage example:
 /*
-// Initialize with OpenAI
-const service = createPronunciationService('openai', process.env.OPENAI_API_KEY!);
+// Initialize with ElevenLabs
+const service = createPronunciationService('elevenlabs', process.env.ELEVENLABS_API_KEY!, 'EXAVITQu4vr4xnSDxMaL');
 const manager = new PronunciationManager(service);
 
 // Preload all exercise pronunciations
@@ -190,4 +211,12 @@ await manager.preloadExercisePronunciations();
 
 // Get pronunciation for a specific exercise
 const benchPressAudio = await manager.getPronunciation('Bench Press');
+*/
+
+// Available ElevenLabs voices for fitness coaching:
+/*
+- EXAVITQu4vr4xnSDxMaL (Bella) - Clear, professional female voice
+- ErXwobaYiN019PkySvjV (Antoni) - Energetic male voice
+- VR6AewLTigWG4xSOukaG (Arnold) - Strong, motivational male voice
+- pNInz6obpgDQGcFmaJgB (Adam) - Calm, instructional male voice
 */

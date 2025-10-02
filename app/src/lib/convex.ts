@@ -4,9 +4,9 @@
 
 // Resolve Convex URL from various env locations (Vite vs Node vs browser)
 const CONVEX_URL =
-  process.env.VITE_CONVEX_URL ||
-  process.env.PUBLIC_CONVEX_URL ||
-  process.env.CONVEX_URL ||
+  import.meta.env.VITE_CONVEX_URL ||
+  import.meta.env.PUBLIC_CONVEX_URL ||
+  (typeof process !== 'undefined' ? process.env.CONVEX_URL : undefined) ||
   undefined;
 
 if (!CONVEX_URL) {

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // Contract test for DELETE /api/oauth/connections/{providerId}
 // This test validates the OAuth disconnection contract
@@ -11,24 +11,22 @@ describe('DELETE /api/oauth/connections/{providerId} - Contract Test', () => {
   });
   
   it('should disconnect OAuth connection with correct response structure', async () => {
-    const expectedResponse = {
+    const mockResponse = {
       success: true,
       providerId: 'spotify',
-      disconnectedAt: expect.any(Number),
+      disconnectedAt: Date.now(),
       dataRetention: {
         musicProfile: 'anonymized',
         recommendations: 'preserved',
         retentionPeriod: 30
       }
     };
-    
+
     mockFetch.mockResolvedValueOnce({
       ok: true,
       status: 200,
-      json: async () => expectedResponse
-    });
-    
-    // Make request to non-existent endpoint (should fail initially)
+      json: async () => mockResponse
+    });    // Make request to non-existent endpoint (should fail initially)
     const response = await fetch('/api/oauth/connections/spotify', {
       method: 'DELETE',
       headers: {
@@ -41,7 +39,16 @@ describe('DELETE /api/oauth/connections/{providerId} - Contract Test', () => {
     
     expect(response.ok).toBe(true);
     expect(response.status).toBe(200);
-    expect(data).toMatchObject(expectedResponse);
+    expect(data).toMatchObject({
+      success: true,
+      providerId: 'spotify',
+      disconnectedAt: expect.any(Number),
+      dataRetention: {
+        musicProfile: 'anonymized',
+        recommendations: 'preserved',
+        retentionPeriod: 30
+      }
+    });
     expect(data.success).toBe(true);
     expect(data.providerId).toBe('spotify');
     expect(data.disconnectedAt).toBeGreaterThan(0);

@@ -1,3 +1,5 @@
+"use node";
+
 /**
  * OAuth Token Management - Convex Functions
  * 

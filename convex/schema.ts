@@ -29,6 +29,22 @@ export default defineSchema({
     avatar: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
+    // Voice UI fields
+    voiceEnabled: v.optional(v.boolean()),
+    voiceProfile: v.optional(v.object({
+      voiceId: v.optional(v.string()),
+      stability: v.optional(v.number()),
+      similarityBoost: v.optional(v.number()),
+      style: v.optional(v.string()),
+    })),
+    // AI Training fields
+    aiTrainingConsent: v.optional(v.boolean()),
+    dataContributionLevel: v.optional(v.string()),
+    privacySettings: v.optional(v.object({
+      allowPersonalization: v.optional(v.boolean()),
+      retentionDays: v.optional(v.number()),
+      shareLevel: v.optional(v.string()),
+    })),
   }),
 
   fitnessData: defineTable({
@@ -194,7 +210,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_id", ["id"])
+    .index("by_provider_id", ["id"])
     .index("by_enabled", ["isEnabled"])
     .index("by_platform", ["supportedPlatforms"])
     .index("by_health_status", ["healthStatus"])
@@ -536,7 +552,7 @@ export default defineSchema({
       novelty: v.number(), // 0-1 how many new-to-user tracks
       coverage: v.number(), // 0-1 how well it covers user preferences
       coherence: v.number(), // 0-1 how well tracks flow together
-      personalización: v.number(), // 0-1 how personalized to this user
+      personalization: v.number(), // 0-1 how personalized to this user
     }),
     // User Feedback & Learning
     feedback: v.object({
@@ -1585,6 +1601,13 @@ export default defineSchema({
         supplementation: v.optional(v.array(v.string())),
       })),
     }),
+    // AI Training fields for workout data collection
+    aiTrainingData: v.optional(v.object({
+      includeInTraining: v.optional(v.boolean()),
+      dataType: v.optional(v.string()),
+      anonymizationLevel: v.optional(v.string()),
+      contributedAt: v.optional(v.number()),
+    })),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -1820,4 +1843,293 @@ export default defineSchema({
     .index("by_userId_timestamp", ["userId", "createdAt"])
     .index("by_plan_type", ["planType"])
     .index("by_recovery_optimized", ["recoveryConsiderations.recoveryScore"]),
+
+  // AI Training and Voice Synthesis System
+
+  aiTrainingData: defineTable({
+    dataId: v.string(), // Contract expects specific dataId field
+    userId: v.optional(v.string()),
+    workoutId: v.optional(v.string()), // Contract expects workoutId
+    userConsent: v.boolean(), // Contract requires explicit consent tracking
+    status: v.string(), // Contract expects: 'accepted', 'rejected', 'processing'
+    dataType: v.string(), // 'workout', 'nutrition', 'recovery', 'voice_interaction'
+    anonymizedData: v.object({ // Contract expects anonymizedData structure
+      exerciseType: v.optional(v.string()),
+      duration: v.optional(v.number()),
+      intensity: v.optional(v.number()),
+      additionalData: v.optional(v.object({})),
+    }),
+    content: v.optional(v.object({
+      workout: v.optional(v.object({
+        exercises: v.array(v.string()),
+        sets: v.array(v.number()),
+        reps: v.array(v.number()),
+        weights: v.array(v.number()),
+        duration: v.number(),
+        intensity: v.number(),
+        context: v.object({}),
+      })),
+      nutrition: v.optional(v.object({
+        meals: v.array(v.object({})),
+        calories: v.number(),
+        macros: v.object({
+          protein: v.number(),
+          carbs: v.number(),
+          fat: v.number(),
+        }),
+        timing: v.array(v.string()),
+      })),
+      recovery: v.optional(v.object({
+        sleepHours: v.number(),
+        recoveryScore: v.number(),
+        hrv: v.optional(v.number()),
+        stress: v.number(),
+        activities: v.array(v.string()),
+      })),
+      voiceInteraction: v.optional(v.object({
+        transcript: v.string(),
+        intent: v.string(),
+        confidence: v.number(),
+        duration: v.number(),
+        emotionalTone: v.optional(v.string()),
+      })),
+    })),
+    submittedAt: v.number(), // Contract expects submittedAt timestamp
+    annotations: v.object({
+      labels: v.array(v.string()),
+      categories: v.array(v.string()),
+      qualityScore: v.number(),
+      verified: v.boolean(),
+      source: v.string(),
+    }),
+    privacy: v.object({
+      anonymized: v.boolean(),
+      consentLevel: v.string(),
+      retentionDate: v.number(),
+      sharePermission: v.boolean(),
+    }),
+    processingStatus: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_dataId", ["dataId"]) // Contract primary lookup
+    .index("by_userId_type", ["userId", "dataType"])
+    .index("by_status", ["status"]) // Contract expects status-based queries
+    .index("by_consent", ["userConsent"]) // Contract requires consent filtering
+    .index("by_workoutId", ["workoutId"]) // Contract expects workout-based lookup
+    .index("by_type_status", ["dataType", "processingStatus"])
+    .index("by_quality", ["annotations.qualityScore"])
+    .index("by_retention", ["privacy.retentionDate"]),
+
+  voicePreferences: defineTable({
+    userId: v.string(),
+    voiceId: v.string(),
+    name: v.string(),
+    provider: v.string(), // 'elevenlabs', 'system', 'custom'
+    settings: v.object({
+      stability: v.number(),
+      similarityBoost: v.number(),
+      style: v.optional(v.string()),
+      pace: v.optional(v.number()),
+      volume: v.optional(v.number()),
+    }),
+    usage: v.object({
+      totalUsage: v.number(),
+      lastUsed: v.number(),
+      averageLength: v.number(),
+      contexts: v.array(v.string()),
+    }),
+    isActive: v.boolean(),
+    isDefault: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_provider", ["provider"])
+    .index("by_isDefault", ["isDefault"])
+    .index("by_lastUsed", ["usage.lastUsed"]),
+
+  aiModels: defineTable({
+    modelId: v.string(), // Contract expects specific modelId field
+    name: v.string(),
+    version: v.string(),
+    type: v.string(), // 'language', 'voice_synthesis', 'recommendation'
+    status: v.string(), // 'training', 'deployed', 'archived' (contract specific values)
+    metadata: v.object({
+      accuracy: v.number(),
+      description: v.optional(v.string()),
+      tags: v.optional(v.array(v.string())),
+    }),
+    performanceMetrics: v.object({
+      accuracy: v.number(),
+      precision: v.number(),
+      recall: v.number(),
+      f1Score: v.optional(v.number()),
+      latency: v.optional(v.number()),
+    }),
+    configuration: v.object({
+      modelParams: v.object({}),
+      hyperparameters: v.object({}),
+      trainingConfig: v.object({}),
+      endpoints: v.array(v.string()),
+    }),
+    training: v.object({
+      datasetSize: v.number(),
+      trainingSessions: v.number(),
+      lastTrainingDate: v.number(),
+      nextScheduledTraining: v.optional(v.number()),
+    }),
+    deployment: v.object({
+      environment: v.string(),
+      replicas: v.number(),
+      autoScale: v.boolean(),
+      deploymentId: v.optional(v.string()),
+      estimatedCompletion: v.optional(v.number()),
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_modelId", ["modelId"])
+    .index("by_type", ["type"])
+    .index("by_status", ["status"])
+    .index("by_version", ["version"])
+    .index("by_accuracy", ["performanceMetrics.accuracy"])
+    .index("by_lastTraining", ["training.lastTrainingDate"]),
+
+  trainingSessions: defineTable({
+    modelId: v.optional(v.id("aiModels")), // Optional for contract flexibility
+    sessionId: v.string(), // Contract expects this as primary identifier
+    sessionType: v.string(), // Contract expects: 'coaching', etc.
+    trainingMode: v.string(), // Contract expects: 'incremental', 'full'
+    dataRetentionDays: v.number(),
+    priority: v.optional(v.string()), // Contract expects: 'normal', 'high', 'low'
+    status: v.string(), // Contract expects: 'active', 'paused', 'completed', 'failed', 'scheduled'
+    progress: v.number(), // Contract expects simple percentage (0-100)
+    estimatedDuration: v.optional(v.number()),
+    metadata: v.object({
+      description: v.optional(v.string()),
+      tags: v.optional(v.array(v.string())),
+      source: v.optional(v.string()),
+    }),
+    metrics: v.object({
+      loss: v.optional(v.number()),
+      accuracy: v.optional(v.number()),
+      epochsCompleted: v.optional(v.number()),
+      trainingLoss: v.optional(v.array(v.number())),
+      validationLoss: v.optional(v.array(v.number())),
+      learningRate: v.optional(v.number()),
+    }),
+    datasetInfo: v.optional(v.object({
+      totalSamples: v.number(),
+      trainingSamples: v.number(),
+      validationSamples: v.number(),
+      testSamples: v.number(),
+      dataTypes: v.array(v.string()),
+    })),
+    resources: v.optional(v.object({
+      computeType: v.string(),
+      memoryUsage: v.number(),
+      gpuUtilization: v.optional(v.number()),
+      estimatedCost: v.number(),
+    })),
+    logs: v.optional(v.array(v.object({
+      timestamp: v.number(),
+      level: v.string(),
+      message: v.string(),
+      details: v.optional(v.object({})),
+    }))),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_sessionId", ["sessionId"]) // Contract primary lookup
+    .index("by_status", ["status"])
+    .index("by_sessionType", ["sessionType"])
+    .index("by_model", ["modelId"])
+    .index("by_started", ["startedAt"])
+    .index("by_completed", ["completedAt"]),
+
+  voiceInteractions: defineTable({
+    userId: v.string(),
+    sessionId: v.string(),
+    interactionType: v.string(), // 'coaching', 'workout_guidance', 'motivation', 'question_answer'
+    input: v.object({
+      text: v.optional(v.string()),
+      audioUrl: v.optional(v.string()),
+      transcript: v.optional(v.string()),
+      intent: v.optional(v.string()),
+    }),
+    response: v.object({
+      text: v.string(),
+      audioUrl: v.optional(v.string()),
+      voiceId: v.string(),
+      emotionalTone: v.optional(v.string()),
+      length: v.number(),
+    }),
+    context: v.object({
+      workoutPhase: v.optional(v.string()),
+      userMood: v.optional(v.string()),
+      timeOfDay: v.string(),
+      location: v.optional(v.string()),
+    }),
+    quality: v.object({
+      audioQuality: v.number(),
+      responseRelevance: v.number(),
+      userSatisfaction: v.optional(v.number()),
+      technicalIssues: v.array(v.string()),
+    }),
+    processing: v.object({
+      synthesisTime: v.number(),
+      cacheHit: v.boolean(),
+      modelVersion: v.string(),
+      apiCalls: v.number(),
+    }),
+    feedback: v.optional(v.object({
+      helpful: v.boolean(),
+      rating: v.number(),
+      comments: v.optional(v.string()),
+      followupNeeded: v.boolean(),
+    })),
+    createdAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_session", ["sessionId"])
+    .index("by_type", ["interactionType"])
+    .index("by_satisfaction", ["quality.userSatisfaction"])
+    .index("by_created", ["createdAt"]),
+
+  voiceCache: defineTable({
+    textHash: v.string(),
+    text: v.string(),
+    voiceId: v.string(),
+    audioUrl: v.string(),
+    metadata: v.object({
+      duration: v.number(),
+      fileSize: v.number(),
+      format: v.string(),
+      sampleRate: v.number(),
+    }),
+    usage: v.object({
+      hitCount: v.number(),
+      lastAccessed: v.number(),
+      popularity: v.number(),
+      contexts: v.array(v.string()),
+    }),
+    expiry: v.object({
+      expiresAt: v.number(),
+      priority: v.string(),
+      canExtend: v.boolean(),
+    }),
+    quality: v.object({
+      synthesisQuality: v.number(),
+      compressionLevel: v.string(),
+      verified: v.boolean(),
+    }),
+    createdAt: v.number(),
+  })
+    .index("by_textHash", ["textHash"])
+    .index("by_voiceId", ["voiceId"])
+    .index("by_hitCount", ["usage.hitCount"])
+    .index("by_expiresAt", ["expiry.expiresAt"])
+    .index("by_popularity", ["usage.popularity"]),
 });

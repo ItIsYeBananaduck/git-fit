@@ -11,7 +11,15 @@ export default {
 	theme: {
 		extend: {
 			colors: {
-				// Mobile-optimized color palette: black, electric blue, royal blue, gray
+				// Mobile UI Dark Theme - specified palette
+				dark: {
+					bg: '#0A0A0A',      // black
+					navy: '#001F3F',     // navy  
+					blue: '#00BFFF',     // electric blue
+					gray: '#333333',     // gray
+					text: '#FFFFFF'      // white text
+				},
+				// Existing color scheme maintained for compatibility
 				primary: {
 					50: '#eff6ff',
 					100: '#dbeafe', 

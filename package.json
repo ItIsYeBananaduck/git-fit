@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "cd app && npm run dev",
+    "build": "cd app && npm run build",
     "test": "vitest"
   },
   "keywords": [],
@@ -14,7 +16,7 @@
     "@capacitor/android": "^7.4.3",
     "@capacitor/core": "^7.4.3",
     "@capacitor/ios": "^7.4.3",
-    "convex": "^1.26.2",
+    "convex": "^1.27.3",
     "cordova-plugin-music-controls2": "^3.0.7",
     "lucide-svelte": "^0.542.0",
     "papaparse": "^5.5.3",

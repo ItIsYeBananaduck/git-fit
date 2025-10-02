@@ -1089,4 +1089,50 @@ export default defineSchema({
     .index("by_workout_session", ["workoutSessionId"])
     .index("by_exercise", ["exerciseId"])
     .index("by_session_and_set", ["workoutSessionId", "setNumber"]),
+
+  // AI Training Tables
+  trainingSessions: defineTable({
+    sessionId: v.string(),
+    userId: v.id("users"),
+    status: v.union(v.literal("active"), v.literal("completed"), v.literal("failed")),
+    progress: v.number(),
+    sessionType: v.string(),
+    trainingMode: v.string(),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    metrics: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"])
+    .index("by_session_id", ["sessionId"])
+    .index("by_status", ["status"]),
+
+  aiModels: defineTable({
+    modelId: v.string(),
+    name: v.string(),
+    version: v.string(),
+    type: v.string(),
+    status: v.union(v.literal("training"), v.literal("deployed"), v.literal("archived")),
+    performanceMetrics: v.any(),
+    metadata: v.any(),
+    configuration: v.any(),
+    training: v.any(),
+    deployment: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_model_id", ["modelId"])
+    .index("by_status", ["status"])
+    .index("by_type", ["type"]),
+
+  aiTrainingData: defineTable({
+    sessionId: v.string(),
+    dataId: v.string(),
+    dataType: v.string(),
+    anonymizedData: v.any(),
+    annotations: v.any(),
+    submittedAt: v.number(),
+    createdAt: v.number(),
+  }).index("by_session", ["sessionId"])
+    .index("by_data_id", ["dataId"])
+    .index("by_type", ["dataType"]),
 });
