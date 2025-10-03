@@ -1,7 +1,9 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import { authTables } from '@convex-dev/auth/server';
 
 export default defineSchema({
+  ...authTables,
   equipment: defineTable({
     name: v.string(),
     type: v.string(),
@@ -140,146 +142,7 @@ export default defineSchema({
   })
     .index("by_stripeSubscriptionId", ["stripeSubscriptionId"]),
 
-  // OAuth Implementation & Platform-Specific UI Entities
 
-  oauthProviders: defineTable({
-    id: v.string(), // 'spotify' | 'apple_music' | 'youtube_music'
-    name: v.string(),
-    displayName: v.string(),
-    description: v.optional(v.string()),
-    // OAuth Configuration
-    scopes: v.array(v.string()),
-    defaultScopes: v.array(v.string()), // Recommended scopes for this provider
-    authEndpoint: v.string(),
-    tokenEndpoint: v.string(),
-    revokeEndpoint: v.optional(v.string()),
-    redirectUri: v.string(),
-    clientId: v.string(), // Environment-specific
-    clientSecret: v.string(), // Encrypted, environment-specific
-    // Provider Features & Capabilities
-    features: v.object({
-      supportsRefreshToken: v.boolean(),
-      supportsTokenRevocation: v.boolean(),
-      supportsUserInfo: v.boolean(),
-      supportsPlaylistSync: v.boolean(),
-      supportsRealtimeData: v.boolean(),
-      rateLimitRpm: v.number(), // Requests per minute
-      maxTokenLifetime: v.number(), // Seconds
-    }),
-    // Platform Support
-    supportedPlatforms: v.array(v.string()), // 'ios' | 'android' | 'web'
-    platformConfig: v.object({
-      ios: v.optional(v.object({
-        customScheme: v.string(),
-        universalLink: v.optional(v.string()),
-        bundleIdentifier: v.string(),
-      })),
-      android: v.optional(v.object({
-        customScheme: v.string(),
-        packageName: v.string(),
-        intentFilters: v.array(v.string()),
-      })),
-      web: v.optional(v.object({
-        redirectPaths: v.array(v.string()),
-        corsOrigins: v.array(v.string()),
-      })),
-    }),
-    // UI & Branding
-    iconUrl: v.optional(v.string()),
-    brandColor: v.optional(v.string()),
-    brandColorDark: v.optional(v.string()),
-    logoUrl: v.optional(v.string()),
-    buttonStyle: v.object({
-      backgroundColor: v.string(),
-      textColor: v.string(),
-      borderColor: v.optional(v.string()),
-      iconPosition: v.string(), // 'left' | 'right' | 'center'
-    }),
-    // Provider Status
-    isEnabled: v.boolean(),
-    isProduction: v.boolean(),
-    maintenanceMode: v.boolean(),
-    lastHealthCheck: v.optional(v.number()),
-    healthStatus: v.string(), // 'healthy' | 'degraded' | 'down'
-    // Usage Statistics
-    totalConnections: v.number(),
-    activeConnections: v.number(),
-    lastConnectionAt: v.optional(v.number()),
-    // Metadata
-    version: v.string(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_provider_id", ["id"])
-    .index("by_enabled", ["isEnabled"])
-    .index("by_platform", ["supportedPlatforms"])
-    .index("by_health_status", ["healthStatus"])
-    .index("by_production", ["isProduction"])
-    .index("by_last_health_check", ["lastHealthCheck"])
-    .index("by_enabled_production", ["isEnabled", "isProduction"]),
-
-  userOAuthConnections: defineTable({
-    userId: v.string(),
-    providerId: v.string(), // References OAuthProvider.id
-    // Token Management
-    accessToken: v.string(), // Encrypted
-    refreshToken: v.optional(v.string()), // Encrypted
-    tokenExpiry: v.number(), // Unix timestamp
-    scopes: v.array(v.string()),
-    grantedPermissions: v.array(v.string()), // Actual permissions granted by user
-    tokenType: v.string(), // 'Bearer' | 'OAuth'
-    // Connection Status
-    isActive: v.boolean(),
-    status: v.string(), // 'connected' | 'expired' | 'revoked' | 'error'
-    lastSyncAt: v.optional(v.number()),
-    nextSyncAt: v.optional(v.number()),
-    syncInterval: v.number(), // Minutes
-    // Provider-specific user info
-    externalUserId: v.string(),
-    displayName: v.optional(v.string()),
-    email: v.optional(v.string()),
-    profileImageUrl: v.optional(v.string()),
-    username: v.optional(v.string()),
-    country: v.optional(v.string()),
-    isPremium: v.optional(v.boolean()), // For music services
-    // Connection Health & Error Handling
-    lastErrorAt: v.optional(v.number()),
-    lastErrorMessage: v.optional(v.string()),
-    lastErrorCode: v.optional(v.string()),
-    retryCount: v.number(),
-    maxRetries: v.number(),
-    backoffDelay: v.number(), // Milliseconds
-    consecutiveErrors: v.number(),
-    // Connection Quality Metrics
-    responseTimeMs: v.optional(v.number()),
-    successRate: v.number(), // 0-1 scale
-    dataQuality: v.number(), // 0-1 scale
-    // Usage Statistics
-    totalApiCalls: v.number(),
-    totalDataSynced: v.number(), // Bytes
-    lastActivityAt: v.optional(v.number()),
-    // Security & Audit
-    ipAddressHash: v.optional(v.string()), // Where connection was created
-    userAgent: v.optional(v.string()),
-    connectionSource: v.string(), // 'web' | 'ios' | 'android'
-    // Platform-specific metadata
-    platformData: v.object({}), // { deviceInfo, appVersion, etc. }
-    // Lifecycle
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    lastRefreshedAt: v.optional(v.number()),
-    expiresAt: v.optional(v.number()), // When user should re-authorize
-  })
-    .index("by_user_provider", ["userId", "providerId"])
-    .index("by_provider_active", ["providerId", "isActive"])
-    .index("by_user_active", ["userId", "isActive"])
-    .index("by_status", ["status"])
-    .index("by_next_sync", ["nextSyncAt"])
-    .index("by_expires_at", ["expiresAt"])
-    .index("by_external_user_id", ["providerId", "externalUserId"])
-    .index("by_consecutive_errors", ["consecutiveErrors", "status"])
-    .index("by_provider_expires", ["providerId", "expiresAt"])
-    .index("by_connection_source", ["connectionSource", "createdAt"]),
 
   musicProfiles: defineTable({
     userId: v.string(),
@@ -2132,4 +1995,111 @@ export default defineSchema({
     .index("by_hitCount", ["usage.hitCount"])
     .index("by_expiresAt", ["expiry.expiresAt"])
     .index("by_popularity", ["usage.popularity"]),
+
+  // Alice AI System Tables
+
+  alice_states: defineTable({
+    userId: v.string(),
+    state: v.object({
+      // Visual state
+      currentShape: v.union(v.literal('neutral'), v.literal('intense'), v.literal('rhythmic')),
+      morphProgress: v.number(),
+      isAnimating: v.boolean(),
+      
+      // Interaction state
+      interactionMode: v.union(
+        v.literal('idle'),
+        v.literal('listening'), 
+        v.literal('speaking'),
+        v.literal('coaching')
+      ),
+      visibilityState: v.union(
+        v.literal('visible'),
+        v.literal('hidden'),
+        v.literal('minimized')
+      ),
+      isInteractive: v.boolean(),
+      
+      // Voice coaching state
+      isVoiceEnabled: v.boolean(),
+      isSpeaking: v.boolean(),
+      currentMessage: v.optional(v.string()),
+      
+      // Data sync state
+      lastSyncTimestamp: v.number(),
+      isOnline: v.boolean(),
+      
+      // Page context
+      currentPage: v.string(),
+      shouldShowOnPage: v.boolean()
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number()
+  })
+    .index("by_user", ["userId"])
+    .index("by_updated", ["updatedAt"])
+    .index("by_sync_timestamp", ["state.lastSyncTimestamp"]),
+
+  alice_preferences: defineTable({
+    userId: v.string(),
+    config: v.object({
+      primaryColor: v.string(),
+      accentColor: v.string(),
+      size: v.union(v.literal('small'), v.literal('medium'), v.literal('large')),
+      voiceEnabled: v.boolean(),
+      coachingFrequency: v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
+      hapticsEnabled: v.boolean(),
+      autoHide: v.boolean(),
+      syncInterval: v.number(),
+      offlineMode: v.boolean()
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number()
+  })
+    .index("by_user", ["userId"])
+    .index("by_updated", ["updatedAt"]),
+
+  // Health data and workouts for strain calculation
+  health_data: defineTable({
+    userId: v.string(),
+    strain: v.number(),
+    heartRate: v.optional(v.number()),
+    timestamp: v.number(),
+    source: v.string(), // 'whoop', 'oura', 'apple_health', etc.
+    workoutId: v.optional(v.string()),
+    metadata: v.optional(v.object({}))
+  })
+    .index("by_user_timestamp", ["userId", "timestamp"])
+    .index("by_workout", ["workoutId"])
+    .index("by_source", ["source"]),
+
+  workouts: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    isActive: v.boolean(),
+    startTime: v.optional(v.number()),
+    endTime: v.optional(v.number()),
+    exercises: v.array(v.object({})),
+    metadata: v.optional(v.object({})),
+    createdAt: v.number(),
+    updatedAt: v.number()
+  })
+    .index("by_user_active", ["userId", "isActive"])
+    .index("by_user_created", ["userId", "createdAt"])
+    .index("by_active", ["isActive"]),
+
+  alice_interactions: defineTable({
+    userId: v.string(),
+    interactionType: v.string(),
+    context: v.object({
+      page: v.optional(v.string()),
+      strain: v.optional(v.number()),
+      message: v.optional(v.string()),
+      duration: v.optional(v.number())
+    }),
+    timestamp: v.number()
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_timestamp", ["userId", "timestamp"])
+    .index("by_type", ["interactionType"]),
 });

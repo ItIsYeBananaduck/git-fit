@@ -1,19 +1,22 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { authStore } from '$lib/stores/auth';
-	import { theme } from '$lib/stores/theme';
+	import { page } from '$app/stores';
 	import favicon from '$lib/assets/favicon.svg';
 	import Navigation from '$lib/components/Navigation.svelte';
 	import AccessibilityUtils from '$lib/components/AccessibilityUtils.svelte';
+	import GlobalAlice from '$lib/components/GlobalAlice.svelte';
 	import '../app.css';
 
 	let { children } = $props();
 
-	// Initialize authentication and theme on app startup
-	onMount(async () => {
-		await authStore.initialize();
-		theme.init();
-	});
+	// Page class for styling
+	const pageClass = $derived((() => {
+		const path = $page.url?.pathname || '/';
+		if (path === '/') return 'page-home';
+		if (path.startsWith('/workouts')) return 'page-workout';
+		if (path.startsWith('/nutrition')) return 'page-nutrition';
+		return 'page-other';
+	})());
 </script>
 
 <svelte:head>
@@ -35,7 +38,7 @@
 	Skip to main content
 </a>
 
-<div class="min-h-screen bg-background">
+<div class="min-h-screen bg-background {pageClass}">
 	<Navigation />
 	<main id="main-content" class="container mx-auto px-safe py-6" tabindex="-1">
 		{@render children?.()}
@@ -44,3 +47,6 @@
 
 <!-- Accessibility utilities (invisible but functional) -->
 <AccessibilityUtils />
+
+<!-- Alice AI companion on all pages -->
+<GlobalAlice />

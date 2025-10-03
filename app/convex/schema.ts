@@ -2,6 +2,70 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // Alice Orb Color Customization Feature Tables
+  aliceOrbPreferences: defineTable({
+    userId: v.id("users"),
+    baseColorHue: v.number(), // 0-360 degrees HSL hue
+    customColorEnabled: v.boolean(),
+    lastModified: v.number(), // Unix timestamp for sync resolution
+    syncVersion: v.number(), // Version counter for offline conflicts
+  }).index("by_user", ["userId"]),
+
+  workoutStrainData: defineTable({
+    userId: v.id("users"),
+    sessionId: v.string(), // Unique workout session identifier
+    currentStrain: v.number(), // 0-120 percentage
+    timestamp: v.number(), // Unix timestamp when recorded
+    isActive: v.boolean(), // Only one active session per user allowed
+  }).index("by_user", ["userId"])
+    .index("by_user_active", ["userId", "isActive"])
+    .index("by_session", ["sessionId"])
+    .index("by_timestamp", ["timestamp"]),
+
+  watchSyncState: defineTable({
+    userId: v.id("users"),
+    deviceId: v.string(), // Unique device identifier per user
+    lastSyncTimestamp: v.number(), // Unix timestamp of last successful sync
+    pendingUpdates: v.string(), // JSON string of pending offline changes
+    connectionStatus: v.union(
+      v.literal("connected"),
+      v.literal("offline"), 
+      v.literal("syncing"),
+      v.literal("connecting"),
+      v.literal("error")
+    ),
+    exerciseData: v.string(), // JSON string of current exercise state
+  }).index("by_user", ["userId"])
+    .index("by_user_device", ["userId", "deviceId"])
+    .index("by_connection_status", ["connectionStatus"])
+    .index("by_last_sync", ["lastSyncTimestamp"]),
+
+  audioDeviceContext: defineTable({
+    userId: v.id("users"),
+    deviceType: v.union(
+      v.literal("bluetooth"),
+      v.literal("wired"),
+      v.literal("builtin")
+    ),
+    deviceName: v.string(), // Human-readable device name
+    deviceId: v.string(), // System device identifier (unique per user)
+    isConnected: v.boolean(), // Current connection status
+    lastDetected: v.number(), // Unix timestamp of last detection
+    supportsAudioFeedback: v.boolean(), // Whether device can receive Alice's voice
+    isPrimary: v.boolean(), // Only one primary device per user
+    audioQuality: v.union(
+      v.literal("low"),     // Basic audio support
+      v.literal("standard"), // Standard quality
+      v.literal("high"),    // High quality (e.g., good Bluetooth codecs)
+      v.literal("studio")   // Studio quality (wired/high-end)
+    ),
+    batteryLevel: v.optional(v.number()), // Battery percentage for wireless devices (0-100)
+  }).index("by_user", ["userId"])
+    .index("by_user_connected", ["userId", "isConnected"])
+    .index("by_user_primary", ["userId", "isPrimary"])
+    .index("by_device_id", ["userId", "deviceId"])
+    .index("by_last_detected", ["lastDetected"]),
+
   // AI Summary System Tables
   user_configs: defineTable({
     userId: v.id("users"),

@@ -3,13 +3,15 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
-	import { user, isAuthenticated } from '$lib/stores/auth.js';
-	import { Activity, Target, TrendingUp, Clock } from 'lucide-svelte';
+	// Temporarily disabled auth for debugging
+	// import { user, isAuthenticated } from '$lib/stores/auth';
+	// Temporarily disabled problematic icons
+	// import { Activity, Target, TrendingUp, Clock } from 'lucide-svelte';
 
-	// Redirect to login if not authenticated (only in browser)
-	$: if (browser && !$isAuthenticated && $user === null) {
-		goto(`/auth/login?redirect=${encodeURIComponent($page.url.pathname)}`);
-	}
+	// Redirect to login if not authenticated (only in browser) - Temporarily disabled
+	// $: if (browser && !$isAuthenticated && $user === null) {
+	//   goto(`/auth/login?redirect=${encodeURIComponent($page.url.pathname)}`);
+	// }
 
 	let fitnessData = {
 		todaySteps: 8432,
@@ -26,20 +28,33 @@
 </svelte:head>
 
 <div class="space-y-6">
-	{#if $user}
+	<!-- Demo Mode - Auth temporarily disabled -->
 		<!-- Welcome Header -->
 		<div class="card bg-gradient-to-r from-primary to-blue-600 text-white border-0">
 			<div class="flex items-center justify-between">
 				<div>
-					<h1 class="text-2xl font-bold">Welcome back, {$user.name}!</h1>
-					<p class="text-blue-100 mt-1">Ready to crush your fitness goals today?</p>
+					<h1 class="text-2xl font-bold">Welcome to Adaptive fIt! 🚀</h1>
+					<p class="text-blue-100 mt-1">Alice AI Companion Ready - Demo Mode Active</p>
 				</div>
 				<div class="hidden sm:block">
 					<div class="text-right">
-						<div class="text-sm text-blue-100">Role</div>
-						<div class="text-lg font-semibold capitalize">{$user.role}</div>
+						<div class="text-sm text-blue-100">Mode</div>
+						<div class="text-lg font-semibold capitalize">Demo</div>
 					</div>
 				</div>
+			</div>
+		</div>
+
+		<!-- Welcome Message -->
+		<div class="card bg-gradient-to-br from-surface to-muted/20 border-primary/20">
+			<div class="text-center space-y-4">
+				<h2 class="text-xl font-semibold text-primary">Meet Alice, Your AI Fitness Companion</h2>
+				<p class="text-muted">
+					Alice is here to guide your fitness journey. She learns from your progress and adapts to help you reach your goals.
+				</p>
+				<p class="text-sm text-muted">
+					💫 Swipe Alice left or right to navigate • Touch to interact
+				</p>
 			</div>
 		</div>
 
@@ -48,7 +63,7 @@
 			<div class="card">
 				<div class="flex items-center gap-3">
 					<div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-						<Activity class="w-5 h-5 text-primary" />
+						<div class="w-5 h-5 text-primary text-center">📈</div>
 					</div>
 					<div>
 						<p class="text-sm text-muted">Today's Steps</p>
@@ -60,7 +75,7 @@
 			<div class="card">
 				<div class="flex items-center gap-3">
 					<div class="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center">
-						<Target class="w-5 h-5 text-secondary" />
+						<div class="w-5 h-5 text-secondary text-center">🎯</div>
 					</div>
 					<div>
 						<p class="text-sm text-muted">Weekly Progress</p>
@@ -74,7 +89,7 @@
 			<div class="card">
 				<div class="flex items-center gap-3">
 					<div class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
-						<TrendingUp class="w-5 h-5 text-success" />
+						<div class="w-5 h-5 text-success text-center">📊</div>
 					</div>
 					<div>
 						<p class="text-sm text-muted">Avg Heart Rate</p>
@@ -86,7 +101,7 @@
 			<div class="card">
 				<div class="flex items-center gap-3">
 					<div class="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
-						<Clock class="w-5 h-5 text-warning" />
+						<div class="w-5 h-5 text-warning text-center">🔥</div>
 					</div>
 					<div>
 						<p class="text-sm text-muted">Calories Burned</p>
@@ -160,7 +175,7 @@
 						<div class="flex items-center justify-between p-4 bg-surface rounded-lg">
 							<div class="flex items-center gap-3">
 								<div class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-									<Activity class="w-4 h-4 text-primary" />
+									<div class="w-4 h-4 text-primary text-center">💪</div>
 								</div>
 								<div>
 									<p class="font-medium">Upper Body Strength</p>
@@ -173,7 +188,7 @@
 						<div class="flex items-center justify-between p-4 bg-surface rounded-lg">
 							<div class="flex items-center gap-3">
 								<div class="w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center">
-									<Target class="w-4 h-4 text-secondary" />
+									<div class="w-4 h-4 text-secondary text-center">🎯</div>
 								</div>
 								<div>
 									<p class="font-medium">Cardio HIIT</p>
@@ -186,7 +201,7 @@
 						<div class="flex items-center justify-between p-4 bg-surface rounded-lg">
 							<div class="flex items-center gap-3">
 								<div class="w-8 h-8 bg-warning/10 rounded-lg flex items-center justify-center">
-									<TrendingUp class="w-4 h-4 text-warning" />
+									<div class="w-4 h-4 text-warning text-center">📊</div>
 								</div>
 								<div>
 									<p class="font-medium">Lower Body Power</p>
@@ -202,15 +217,5 @@
 				</div>
 			</div>
 		</div>
-	{:else}
-		<!-- Not authenticated fallback -->
-		<div class="card text-center">
-			<h1 class="text-2xl font-bold mb-4">Welcome to Adaptive fIt</h1>
-			<p class="text-muted mb-6">Sign in to access your personalized fitness dashboard</p>
-			<div class="space-x-2">
-				<a href="/auth/login" class="btn-primary">Sign In</a>
-				<a href="/auth/register" class="btn-secondary">Get Started</a>
-			</div>
-		</div>
-	{/if}
+	<!-- Auth blocks temporarily removed for demo mode -->
 </div>
