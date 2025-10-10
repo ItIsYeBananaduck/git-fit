@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { api } from '../../../convex/_generated/api.js';
+	import { api } from '$lib/api/convex';
 
 	const dispatch = createEventDispatcher();
 

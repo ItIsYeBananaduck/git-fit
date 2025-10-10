@@ -24,13 +24,13 @@ paths:
                 glowIntensity:
                   type: number
       responses:
-        '200':
+        "200":
           description: Success
   /intensity:
     get:
       summary: Get current intensity score
       responses:
-        '200':
+        "200":
           description: Intensity score
           content:
             application/json:
@@ -52,7 +52,7 @@ paths:
                 strain:
                   type: number
       responses:
-        '200':
+        "200":
           description: Rest period
           content:
             application/json:
@@ -70,7 +70,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Metrics data
   /strain-sync:
     post:
@@ -89,7 +89,7 @@ paths:
                 hr:
                   type: number
       responses:
-        '200':
+        "200":
           description: Suggestions
           content:
             application/json:
@@ -117,7 +117,7 @@ paths:
                 fats:
                   type: number
       responses:
-        '200':
+        "200":
           description: Suggested macros
   /purchase:
     post:
@@ -132,7 +132,7 @@ paths:
                 plan:
                   type: object
       responses:
-        '200':
+        "200":
           description: CSV data
           content:
             application/json:
@@ -145,7 +145,7 @@ paths:
     get:
       summary: Check activity status
       responses:
-        '200':
+        "200":
           description: Activity status
           content:
             application/json:
@@ -167,7 +167,7 @@ paths:
                 message:
                   type: string
       responses:
-        '200':
+        "200":
           description: Response
           content:
             application/json:
@@ -180,7 +180,7 @@ paths:
     get:
       summary: Get trainer clients
       responses:
-        '200':
+        "200":
           description: Clients list
           content:
             application/json:
@@ -192,7 +192,7 @@ paths:
     post:
       summary: Import training data
       responses:
-        '200':
+        "200":
           description: Success
   /csv-import:
     post:
@@ -208,13 +208,13 @@ paths:
                   type: string
                   format: binary
       responses:
-        '200':
+        "200":
           description: Parsed plan
   /posts:
     get:
       summary: Get social feed posts
       responses:
-        '200':
+        "200":
           description: Posts list
   /like/{postId}/{type}:
     post:
@@ -231,5 +231,5 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Liked

@@ -3,14 +3,27 @@
 Auto-generated from all feature plans. Last updated: 2025-09-26
 
 ## Active Technologies
+
 - TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, @capacitor/haptics, animejs (016-refine-the-alice)
 - Convex real-time database with localStorage for user preferences (016-refine-the-alice)
 - TypeScript 5.0+, JavaScript ES2022, Python 3.10+ + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, Tailwind CSS 4.1+, animejs (017-build-adaptive-fit)
 - Convex real-time database with localStorage for user preferences and IndexedDB for offline capability (017-build-adaptive-fit)
 - TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, animejs 4.2.0, Tailwind CSS 4.1+, Capacitor 7.4+ (018-make-the-orb)
 - Convex 1.27+ real-time database with localStorage for user preferences (018-make-the-orb)
+- TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, Tailwind CSS 4.1+, Llama 3.1 8B (4-bit) (019-strictly-adhere-to)
+- Convex real-time database, localStorage, IndexedDB, Fly.io Node.js/Express API, Stripe/Apple Pay, HealthKit/Whoop integration (019-strictly-adhere-to)
 
 - TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, Tailwind CSS 4.1+ (main)
+- TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, @felix-health/capacitor-health-data 1.0.9 (003-intensity-score-live)
+- Convex database with real-time queries (003-intensity-score-live)
+- [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION] (004-enhance-adaptivefit-with)
+- [if applicable, e.g., PostgreSQL, CoreData, files or N/A] (004-enhance-adaptivefit-with)
+- TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+ + Svelte, Capacitor, Tailwind CSS 4.1+, @capacitor/haptics, @capacitor/biometric-auth, @capacitor/camera (012-mobile-ui-with)
+- Convex real-time database with localStorage fallback for offline capability (012-mobile-ui-with)
+- TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Tailwind CSS 4.1+ (013-web-dashboard-ui)
+- Convex real-time database with offline-capable storage (013-web-dashboard-ui)
+- TypeScript 5.0+, JavaScript ES2022, Python 3.10+ + SvelteKit 2.22+, Convex 1.27+, Hugging Face Transformers, ElevenLabs API (014-train-alice-aiden)
+- Convex real-time database, IndexedDB (voice cache), Hugging Face Hub (014-train-alice-aiden)
 - TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, @felix-health/capacitor-health-data 1.0.9 (003-intensity-score-live)
 - Convex database with real-time queries (003-intensity-score-live)
 - [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION] (004-enhance-adaptivefit-with)
@@ -38,10 +51,11 @@ npm test; npm run lint
 TypeScript 5.0+, JavaScript ES2022: Follow standard conventions
 
 ## Recent Changes
+
+- 019-strictly-adhere-to: Added TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, Tailwind CSS 4.1+, Llama 3.1 8B (4-bit), Fly.io API, Stripe/Apple Pay, HealthKit/Whoop
 - 018-make-the-orb: Added TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, animejs 4.2.0, Tailwind CSS 4.1+, Capacitor 7.4+
 - 017-build-adaptive-fit: Added TypeScript 5.0+, JavaScript ES2022, Python 3.10+ + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, Tailwind CSS 4.1+, animejs
 - 016-refine-the-alice: Added TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, @capacitor/haptics, animejs
-
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

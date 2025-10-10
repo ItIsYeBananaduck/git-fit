@@ -16,12 +16,13 @@ foreach ($url in $urls) {
     try {
         $response = Invoke-RestMethod -Uri "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=$videoId&key=$youtubeApiKey"
         $data += @{
-            type = 'youtube'
-            videoId = $videoId
-            title = $response.items[0].snippet.title
+            type        = 'youtube'
+            videoId     = $videoId
+            title       = $response.items[0].snippet.title
             description = $response.items[0].snippet.description
         }
-    } catch {
+    }
+    catch {
         Write-Host "Error fetching YouTube data for $videoId"
     }
 }
@@ -32,11 +33,12 @@ foreach ($query in $queries) {
     try {
         # Mock PubMed API call
         $data += @{
-            type = 'pubmed'
-            query = $query
+            type     = 'pubmed'
+            query    = $query
             articles = @('Article1', 'Article2')
         }
-    } catch {
+    }
+    catch {
         Write-Host "Error fetching PubMed data for $query"
     }
 }

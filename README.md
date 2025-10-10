@@ -22,12 +22,14 @@ This repository implements the 15 tasks for the Adaptive Fit fitness app, adheri
 ### Backend Setup (Fly.io)
 
 1. Navigate to `api/`:
+
    ```bash
    cd api
    npm install
    ```
 
 2. Set environment variables in `.env`:
+
    ```
    PORT=3000
    STRIPE_SECRET_KEY=your_stripe_key
@@ -45,6 +47,7 @@ This repository implements the 15 tasks for the Adaptive Fit fitness app, adheri
 ### Frontend Setup (SvelteKit + Capacitor)
 
 1. Navigate to `app/`:
+
    ```bash
    cd app
    npm install
@@ -58,6 +61,7 @@ This repository implements the 15 tasks for the Adaptive Fit fitness app, adheri
    - Use Capacitor plugin for local ML (e.g., custom plugin for llama.cpp)
 
 4. Run development:
+
    ```bash
    npm run dev
    ```

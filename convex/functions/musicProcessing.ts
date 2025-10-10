@@ -8,9 +8,9 @@
  * - Music preference learning and pattern recognition
  */
 
-import { mutation, query } from '../_generated/server';
-import { v, ConvexError } from 'convex/values';
-import { MusicServiceFactory } from '../lib/musicServices';
+import { mutation, query } from '../_generated/server.js';
+import { v, ConvexError } from 'convex/values.js';
+import { MusicServiceFactory } from '../lib/musicServices.js';
 
 // ====================================================================================
 // MUSIC DATA PROCESSING FUNCTIONS
@@ -30,7 +30,7 @@ export const processMusicData = mutation({
       maxTracks: v.optional(v.number()),
     })),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     try {
       // Get OAuth connection
       const connection = await ctx.db.get(args.connectionId);
@@ -181,7 +181,7 @@ export const analyzePlaylistComposition = query({
       // Get user's music profile
       const profile = await ctx.db
         .query('musicProfiles')
-        .filter(q => q.eq(q.field('userId'), args.userId))
+        .filter((q: any) => q.eq(q.field('userId'), args.userId))
         .filter(q => q.eq(q.field('providerId'), args.providerId))
         .first();
 

@@ -8,7 +8,7 @@
 	import RestLogicExplanation from '$lib/components/onboarding/RestLogicExplanation.svelte';
 	import CoachSelection from '$lib/components/onboarding/CoachSelection.svelte';
 	import { getAuthUser } from '$lib/stores/auth';
-	import { api } from '$lib/convex/_generated/api';
+	import { api } from '$lib/api/convex';
 	import type { Id } from '$lib/convex/_generated/dataModel.js';
 
 	let currentStep = 0;
