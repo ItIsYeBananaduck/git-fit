@@ -1,6 +1,6 @@
 <script>
 	import { useQuery, useConvexClient } from 'convex-svelte';
-	import { api } from '$lib/convex/_generated/api';
+	import { api } from '../../convex/_generated/api.js';
 
 	const client = useConvexClient();
 	// Cast generated api to any to avoid TypeScript index type errors in the template

@@ -1,4 +1,4 @@
-import type { ProgressionScheme, AdaptationRecord, Exercise, VolumeMetrics } from '../../../../sharedTypes.js';
+import type { ProgressionScheme, AdaptationRecord, Exercise, VolumeMetrics } from '../../../../sharedTypes';
 
 // Shared types for the AI Training Engine and related modules
 
@@ -89,88 +89,4 @@ export interface FatigueNotification {
   actions: Array<{ label: string; action: string; value: unknown }>;
   timestamp: string;
   expiresAt: string;
-}
-
-// Alice Orb Customization Types
-export interface OrbPreferences {
-  _id?: string;
-  userId: string;
-  baseColor: {
-    h: number; // Hue (0-360)
-    s: number; // Saturation (0-100)
-    l: number; // Lightness (0-100)
-  };
-  enableStrainAdjustment: boolean;
-  strainAdjustmentAmount: number; // Percentage (0-100)
-  customName?: string;
-  lastUpdated: number;
-}
-
-// Strain Data Types
-export interface StrainData {
-  _id?: string;
-  userId: string;
-  currentStrain: number; // 0-150+ scale
-  optimalRange: {
-    min: number; // Usually around 90
-    max: number; // Usually around 100
-  };
-  workoutActive: boolean;
-  exerciseName?: string;
-  setNumber?: number;
-  lastUpdated: number;
-}
-
-// Watch Interface Types
-export interface WatchInterfaceState {
-  _id?: string;
-  userId: string;
-  isConnected: boolean;
-  deviceName: string;
-  currentExercise?: {
-    name: string;
-    reps: number;
-    weight: number;
-    targetReps: number;
-    targetWeight: number;
-    setNumber: number;
-    totalSets: number;
-  };
-  workoutState: 'idle' | 'active' | 'resting' | 'completed';
-  restTimer?: {
-    duration: number; // seconds
-    remaining: number; // seconds
-    active: boolean;
-  };
-  lastSync: number;
-}
-
-// Audio Device Types
-export interface AudioDeviceInfo {
-  _id?: string;
-  userId: string;
-  deviceId: string;
-  deviceName: string;
-  deviceType: 'headphones' | 'earbuds' | 'speaker' | 'watch' | 'phone';
-  isConnected: boolean;
-  isPreferred: boolean;
-  batteryLevel?: number; // 0-100
-  lastConnected: number;
-}
-
-// Watch Sync Types
-export interface WatchSyncData {
-  _id?: string;
-  userId: string;
-  pendingChanges: Array<{
-    id: string;
-    type: 'exercise_param' | 'set_complete' | 'workout_start' | 'workout_end';
-    data: Record<string, unknown>;
-    timestamp: number;
-    synced: boolean;
-  }>;
-  lastSyncTimestamp: number;
-  offlineChangesCount: number;
-  syncStatus: 'online' | 'offline' | 'syncing' | 'error';
-  maxOfflineChanges: number; // Default 50
 }

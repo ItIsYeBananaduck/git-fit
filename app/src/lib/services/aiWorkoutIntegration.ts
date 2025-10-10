@@ -63,7 +63,7 @@ export interface AIImplementation {
 }
 
 export class AIWorkoutIntegrationService {
-  private readonly AI_SERVICE_URL = import.meta.env.VITE_AI_API_URL || 'https://technically-fit-ai.fly.dev';
+  private readonly AI_SERVICE_URL = 'https://technically-fit-ai.fly.dev';
   private readonly strainService: DailyStrainAssessmentService;
   private readonly mesocycleService: MesocycleTrackerService;
 
@@ -91,7 +91,7 @@ export class AIWorkoutIntegrationService {
       const prompt = this.buildPromptWithMesocycle(context, mesocycleData);
       
       // Call AI service with timeout
-      const aiResponse = await this.callAIService(context);
+      const aiResponse = await this.callAIService(prompt);
       
       // Apply safety net and implement changes automatically
       const safeImplementation = this.applySafetyNetAndImplement(aiResponse, context, mesocycleData);
@@ -193,74 +193,31 @@ export class AIWorkoutIntegrationService {
   }
 
   /**
-   * Call deployed AI service with timeout - using the /event endpoint
+   * Call deployed AI service with timeout
    */
-  private async callAIService(context: WorkoutContext): Promise<string> {
+  private async callAIService(prompt: string): Promise<string> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout for AI model
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
     try {
-      // Prepare event data for FastAPI backend
-      const eventData = {
-        event: "complete_workout", // or determine from context
-        user_id: context.userId,
-        context: {
-          exercise: context.currentExercise,
-          current_weight: context.currentWeight,
-          current_reps: context.currentReps,
-          heart_rate: context.heartRate,
-          spo2: context.spo2
-        },
-        user_data: {
-          fitness_level: this.determineFitnessLevel(context.userPrefs.successRates),
-          current_program: {
-            planned_reps: context.currentReps,
-            planned_weight: context.currentWeight
-          },
-          goals: ["build_muscle", "increase_strength"], // Could be dynamic
-          blacklisted_exercises: context.userPrefs.blacklistedExercises,
-          preferred_exercises: context.userPrefs.preferredExercises
-        }
-      };
-
-      const response = await fetch(`${this.AI_SERVICE_URL}/event`, {
+      const response = await fetch(`${this.AI_SERVICE_URL}/api/recommend`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(eventData),
+        body: JSON.stringify({ prompt }),
         signal: controller.signal
       });
 
       if (!response.ok) {
-        throw new Error(`AI service returned ${response.status}: ${response.statusText}`);
+        throw new Error(`AI service returned ${response.status}`);
       }
 
       const data = await response.json();
-      
-      // Handle the FastAPI response format
-      if (data.success && data.tweak) {
-        return `${data.tweak.action}: ${data.tweak.reason}`;
-      } else {
-        throw new Error('Invalid response format from AI service');
-      }
-    } catch (error) {
-      console.error('AI service call failed:', error);
-      throw error; // Re-throw to trigger fallback
+      return data.recommendation || data.response || 'increase rest by 30s';
     } finally {
       clearTimeout(timeoutId);
     }
-  }
-
-  /**
-   * Determine fitness level from success rates
-   */
-  private determineFitnessLevel(successRates: Record<string, number>): string {
-    const avgSuccessRate = Object.values(successRates).reduce((a, b) => a + b, 0) / Object.values(successRates).length || 0.5;
-    
-    if (avgSuccessRate > 0.8) return 'advanced';
-    if (avgSuccessRate > 0.6) return 'intermediate';
-    return 'beginner';
   }
 
   /**

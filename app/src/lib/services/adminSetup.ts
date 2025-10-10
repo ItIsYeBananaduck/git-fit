@@ -1,7 +1,7 @@
 // Admin Setup Service - Initialize admin system
 
 import { ConvexError } from "convex/values";
-import { api } from "$lib/convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 import { convex } from "$lib/convex";
 import * as bcrypt from "bcryptjs";
 import type { AdminUser } from "../types/admin";

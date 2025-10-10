@@ -1,10 +1,10 @@
-# Implementation Plan: Smooth Orb-to-Card Workout Interface
 
-**Branch**: `018-make-the-orb` | **Date**: October 6, 2025 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/018-make-the-orb/spec.md`
+# Implementation Plan: [FEATURE]
+
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 ## Execution Flow (/plan command scope)
-
 ```
 1. Load feature spec from Input path
    → If not found: ERROR "No feature spec at {path}"
@@ -27,45 +27,31 @@
 ```
 
 **IMPORTANT**: The /plan command STOPS at step 7. Phases 2-4 are executed by other commands:
-
 - Phase 2: /tasks command creates tasks.md
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-
-Smooth transformation of Alice AI orb into responsive workout card with breathing expansion animation, soft glow effects, interactive elements, and real-time progress visualization. Extends existing AliceUnified.svelte component with new card view mode while preserving current orb functionality.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
-
-**Language/Version**: TypeScript 5.0+, JavaScript ES2022  
-**Primary Dependencies**: SvelteKit 2.22+, animejs 4.2.0, Tailwind CSS 4.1+, Capacitor 7.4+  
-**Storage**: Convex 1.27+ real-time database with localStorage for user preferences  
-**Testing**: Vitest 3.2+ with @testing-library/svelte, Playwright for E2E  
-**Target Platform**: Web application (responsive), iOS/Android via Capacitor  
-**Project Type**: Web application (SvelteKit frontend + Convex backend)  
-**Performance Goals**: <1s animations, <250ms UI updates, 60fps smooth transitions  
-**Constraints**: Existing AliceUnified component extension, responsive screen width percentage, sensor+AI data integration  
-**Scale/Scope**: Single component enhancement, 5 UI layout sections, 3 animation states
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
-
-**✅ User-Centric Design**: Enhances workout experience with intuitive visual feedback and clean card interface for exercise tracking  
-**✅ Adaptability and Learning**: Leverages existing sensor+AI integration for real-time progress metrics and strain-based adaptations  
-**✅ Cost-Effectiveness**: Extends existing AliceUnified component, no new service costs, uses current SvelteKit/Convex stack  
-**✅ Scalability and Performance**: Targets <1s animations, <250ms updates, operates within existing 1GB RAM constraints  
-**✅ Safety and Privacy**: Uses existing security model, no additional data collection beyond current metrics  
-**✅ Engagement and Gamification**: Smooth card transformation and progress visualization enhance user engagement  
-**✅ Data Ethics & Transparency**: Real-time progress display with clear visual feedback, user control over interface preferences  
-**✅ Existing Code Analysis**: Extends current AliceUnified.svelte component, integrates with existing Alice ecosystem (aliceStore, aliceDataService, colorUtils), preserves current functionality while adding card view mode
-
-**No Constitution violations detected** - Implementation aligns with all constitutional principles and extends existing architecture.
+[Gates determined based on constitution file]
 
 ## Project Structure
 
 ### Documentation (this feature)
-
 ```
 specs/[###-feature]/
 ├── plan.md              # This file (/plan command output)
@@ -77,7 +63,6 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-
 ```
 # Option 1: Single project (DEFAULT)
 src/
@@ -117,14 +102,12 @@ ios/ or android/
 **Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
 
 ## Phase 0: Outline & Research
-
 1. **Extract unknowns from Technical Context** above:
    - For each NEEDS CLARIFICATION → research task
    - For each dependency → best practices task
    - For each integration → patterns task
 
 2. **Generate and dispatch research agents**:
-
    ```
    For each unknown in Technical Context:
      Task: "Research {unknown} for {feature context}"
@@ -140,8 +123,7 @@ ios/ or android/
 **Output**: research.md with all NEEDS CLARIFICATION resolved
 
 ## Phase 1: Design & Contracts
-
-_Prerequisites: research.md complete_
+*Prerequisites: research.md complete*
 
 1. **Extract entities from feature spec** → `data-model.md`:
    - Entity name, fields, relationships
@@ -171,82 +153,60 @@ _Prerequisites: research.md complete_
    - Keep under 150 lines for token efficiency
    - Output to repository root
 
-**Output**: data-model.md, /contracts/\*, failing tests, quickstart.md, agent-specific file
+**Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file
 
 ## Phase 2: Task Planning Approach
-
-_This section describes what the /tasks command will do - DO NOT execute during /plan_
+*This section describes what the /tasks command will do - DO NOT execute during /plan*
 
 **Task Generation Strategy**:
-
 - Load `.specify/templates/tasks-template.md` as base
 - Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
-- Component extension tasks: Extend AliceUnified.svelte with card mode [P]
-- Service extension tasks: Extend aliceStore.ts and aliceDataService.ts [P]
-- Animation tasks: Card expansion, fade transitions, pulse effects [P]
-- Layout tasks: CSS Grid responsive card, progress bars, speech bubbles [P]
-- Integration test tasks: User story validation, performance testing
-- Contract test tasks: Component props, event emissions, service interfaces
+- Each contract → contract test task [P]
+- Each entity → model creation task [P] 
+- Each user story → integration test task
+- Implementation tasks to make tests pass
 
 **Ordering Strategy**:
+- TDD order: Tests before implementation 
+- Dependency order: Models before services before UI
+- Mark [P] for parallel execution (independent files)
 
-- TDD order: Tests before implementation
-- Extension order: Existing component enhancement before new features
-- Animation order: Basic expansion before advanced effects (breathing, glow)
-- Integration order: Core functionality before interactive elements
-- Mark [P] for parallel execution (independent component files)
-
-**Estimated Output**: 18-22 numbered, ordered tasks in tasks.md
-
-**Task Categories**:
-
-1. **Contract Tests** (5-6 tasks): Component interface, service contracts, animation performance
-2. **Component Extension** (4-5 tasks): AliceUnified.svelte card mode, state management
-3. **Animation Implementation** (3-4 tasks): Orb-to-card expansion, fade transitions, pulse effects
-4. **Layout & Styling** (3-4 tasks): CSS Grid card layout, responsive design, progress bars
-5. **Interactive Features** (2-3 tasks): Speech bubbles, gesture handling, movement detection
-6. **Integration Tests** (1-2 tasks): User story validation, performance benchmarks
+**Estimated Output**: 25-30 numbered, ordered tasks in tasks.md
 
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
 ## Phase 3+: Future Implementation
-
-_These phases are beyond the scope of the /plan command_
+*These phases are beyond the scope of the /plan command*
 
 **Phase 3**: Task execution (/tasks command creates tasks.md)  
 **Phase 4**: Implementation (execute tasks.md following constitutional principles)  
 **Phase 5**: Validation (run tests, execute quickstart.md, performance validation)
 
 ## Complexity Tracking
+*Fill ONLY if Constitution Check has violations that must be justified*
 
-_Fill ONLY if Constitution Check has violations that must be justified_
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
 
-| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
-| -------------------------- | ------------------ | ------------------------------------ |
-| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
 
 ## Progress Tracking
-
-_This checklist is updated during execution flow_
+*This checklist is updated during execution flow*
 
 **Phase Status**:
-
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
-- [x] Phase 2: Task planning complete (/plan command - describe approach only)
+- [ ] Phase 0: Research complete (/plan command)
+- [ ] Phase 1: Design complete (/plan command)
+- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-
-- [x] Initial Constitution Check: PASS
-- [x] Post-Design Constitution Check: PASS
-- [x] All NEEDS CLARIFICATION resolved
-- [x] Complexity deviations documented
+- [ ] Initial Constitution Check: PASS
+- [ ] Post-Design Constitution Check: PASS
+- [ ] All NEEDS CLARIFICATION resolved
 - [ ] Complexity deviations documented
 
 ---
-
-_Based on Constitution v2.1.1 - See `/memory/constitution.md`_
+*Based on Constitution v2.1.1 - See `/memory/constitution.md`*

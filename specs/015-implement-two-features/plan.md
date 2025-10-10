@@ -1,10 +1,10 @@
-# Implementation Plan: Customizable Alice Orb Color & Watch Interface
 
-**Branch**: `015-implement-two-features` | **Date**: October 2, 2025 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `specs/015-implement-two-features/spec.md`
+# Implementation Plan: [FEATURE]
+
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 ## Execution Flow (/plan command scope)
-
 ```
 1. Load feature spec from Input path
    → If not found: ERROR "No feature spec at {path}"
@@ -27,45 +27,31 @@
 ```
 
 **IMPORTANT**: The /plan command STOPS at step 7. Phases 2-4 are executed by other commands:
-
 - Phase 2: /tasks command creates tasks.md
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-
-Implement two key user experience enhancements for the AdaptiveFit app: (1) Customizable Alice orb color with strain-responsive visual feedback that updates within 250ms, and (2) Platform-agnostic smartwatch interface displaying workout intensity, exercise controls, and synchronized offline tracking. Both features leverage the existing Svelte/Capacitor frontend with Convex backend, requiring new UI components, device integration, and real-time data synchronization.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
-
-**Language/Version**: TypeScript 5.0+, JavaScript ES2022  
-**Primary Dependencies**: SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, Tailwind CSS 4.1+  
-**Storage**: Convex real-time database with localStorage fallback for offline capability  
-**Testing**: Vitest for unit testing, mobile testing with vitest.mobile.config.ts  
-**Target Platform**: iOS 15+, Android 8.0+, Web browsers (cross-platform via Capacitor)
-**Project Type**: Mobile + Web application (Svelte frontend with Capacitor mobile wrapper)  
-**Performance Goals**: <250ms orb color updates, real-time strain data visualization, smooth watch interface  
-**Constraints**: Offline-capable synchronization, platform-agnostic smartwatch support, <100MB memory usage  
-**Scale/Scope**: Support 100-1,000 users in beta phase with real-time device synchronization
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
-
-**✅ User-Centric Design**: Features directly improve user experience with visual customization and convenient watch interface  
-**✅ Adaptability & Learning**: Uses existing AI strain data to provide real-time visual feedback  
-**✅ Cost-Effectiveness**: Leverages existing SvelteKit/Convex stack, adds no new service costs  
-**✅ Scalability & Performance**: Targets <250ms updates, offline capability, minimal memory impact  
-**✅ Safety & Privacy**: Uses existing security model, no additional data collection  
-**✅ Engagement & Gamification**: Visual orb customization enhances user engagement  
-**✅ Data Ethics**: Transparent real-time feedback, user control over visual preferences  
-**✅ Existing Code Analysis**: Extends current Orb component and adds watch interface to existing structure
-
-**No Constitution violations detected** - Implementation aligns with all constitutional principles
+[Gates determined based on constitution file]
 
 ## Project Structure
 
 ### Documentation (this feature)
-
 ```
 specs/[###-feature]/
 ├── plan.md              # This file (/plan command output)
@@ -77,7 +63,6 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-
 ```
 # Option 1: Single project (DEFAULT)
 src/
@@ -114,17 +99,15 @@ ios/ or android/
 └── [platform-specific structure]
 ```
 
-**Structure Decision**: Option 3 (Mobile + API) - Existing Svelte/Capacitor app with Convex backend
+**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
 
 ## Phase 0: Outline & Research
-
 1. **Extract unknowns from Technical Context** above:
    - For each NEEDS CLARIFICATION → research task
    - For each dependency → best practices task
    - For each integration → patterns task
 
 2. **Generate and dispatch research agents**:
-
    ```
    For each unknown in Technical Context:
      Task: "Research {unknown} for {feature context}"
@@ -140,8 +123,7 @@ ios/ or android/
 **Output**: research.md with all NEEDS CLARIFICATION resolved
 
 ## Phase 1: Design & Contracts
-
-_Prerequisites: research.md complete_
+*Prerequisites: research.md complete*
 
 1. **Extract entities from feature spec** → `data-model.md`:
    - Entity name, fields, relationships
@@ -171,24 +153,21 @@ _Prerequisites: research.md complete_
    - Keep under 150 lines for token efficiency
    - Output to repository root
 
-**Output**: data-model.md, /contracts/\*, failing tests, quickstart.md, agent-specific file
+**Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file
 
 ## Phase 2: Task Planning Approach
-
-_This section describes what the /tasks command will do - DO NOT execute during /plan_
+*This section describes what the /tasks command will do - DO NOT execute during /plan*
 
 **Task Generation Strategy**:
-
 - Load `.specify/templates/tasks-template.md` as base
 - Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
 - Each contract → contract test task [P]
-- Each entity → model creation task [P]
+- Each entity → model creation task [P] 
 - Each user story → integration test task
 - Implementation tasks to make tests pass
 
 **Ordering Strategy**:
-
-- TDD order: Tests before implementation
+- TDD order: Tests before implementation 
 - Dependency order: Models before services before UI
 - Mark [P] for parallel execution (independent files)
 
@@ -197,28 +176,25 @@ _This section describes what the /tasks command will do - DO NOT execute during 
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
 ## Phase 3+: Future Implementation
-
-_These phases are beyond the scope of the /plan command_
+*These phases are beyond the scope of the /plan command*
 
 **Phase 3**: Task execution (/tasks command creates tasks.md)  
 **Phase 4**: Implementation (execute tasks.md following constitutional principles)  
 **Phase 5**: Validation (run tests, execute quickstart.md, performance validation)
 
 ## Complexity Tracking
+*Fill ONLY if Constitution Check has violations that must be justified*
 
-_Fill ONLY if Constitution Check has violations that must be justified_
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
 
-| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
-| -------------------------- | ------------------ | ------------------------------------ |
-| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
 
 ## Progress Tracking
-
-_This checklist is updated during execution flow_
+*This checklist is updated during execution flow*
 
 **Phase Status**:
-
 - [ ] Phase 0: Research complete (/plan command)
 - [ ] Phase 1: Design complete (/plan command)
 - [ ] Phase 2: Task planning complete (/plan command - describe approach only)
@@ -227,12 +203,10 @@ _This checklist is updated during execution flow_
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-
 - [ ] Initial Constitution Check: PASS
 - [ ] Post-Design Constitution Check: PASS
 - [ ] All NEEDS CLARIFICATION resolved
 - [ ] Complexity deviations documented
 
 ---
-
-_Based on Constitution v2.1.1 - See `/memory/constitution.md`_
+*Based on Constitution v2.1.1 - See `/memory/constitution.md`*

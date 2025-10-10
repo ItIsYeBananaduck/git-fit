@@ -1,1 +1,0 @@
-import { describe, test, expect } from "vitest"; import { api } from "../../convex/_generated/api"; describe("AI Training Session Update", () => { test("should update session", async () => { const result = await api["functions/aiTraining"].updateTrainingSession({ sessionId: "test" }); expect(result).toBeDefined(); }); });

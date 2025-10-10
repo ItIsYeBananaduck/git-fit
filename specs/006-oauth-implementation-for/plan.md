@@ -1,8 +1,8 @@
 
-# Implementation Plan: OAuth Implementation & Platform-Specific UI for AdaptiveFit
+# Implementation Plan: [FEATURE]
 
-**Branch**: `006-oauth-implementation-for` | **Date**: September 28, 2025 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/006-oauth-implementation-for/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -31,87 +31,23 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-OAuth Implementation & Platform-Specific UI integration for AdaptiveFit via Convex backend. Primary requirements: secure Spotify/Apple Music OAuth for StrainSync Radio music metadata logging, encrypted trainer-client payments through external Stripe integration, and platform-specific UI separation using Capacitor (mobile workout tracking vs web dashboard/marketplace). Technical approach leverages existing SvelteKit + Convex + Capacitor architecture with 3D avatar integration, real-time strain monitoring (10k concurrent users), and GDPR/CCPA compliance with auto-scaling infrastructure.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
-**Language/Version**: TypeScript 5.0+, JavaScript ES2022  
-**Primary Dependencies**: SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+, OAuth libraries (Spotify/Apple Music SDKs), Stripe SDK  
-**Storage**: Convex database (real-time), secure token storage via Capacitor SecureStorage  
-**Testing**: Vitest 3.2+ (unit), Playwright (E2E), OAuth flow testing  
-**Target Platform**: Web (SvelteKit SSR), iOS/Android (Capacitor native), Multi-platform responsive design  
-**Project Type**: mobile + web - SvelteKit frontend + Convex backend + Capacitor mobile deployment  
-**Performance Goals**: <5s OAuth flow, <1s real-time updates, 10k concurrent users, <200ms API response  
-**Constraints**: GDPR/CCPA compliance, Apple IAP bypass, end-to-end encryption, 30-day data deletion, auto-scaling  
-**Scale/Scope**: OAuth integration (2 providers), platform-specific UI (3 form factors), payment system, real-time monitoring
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-### ✅ User-Centric Design
-- OAuth integration prioritizes user control and privacy with granular toggles
-- Platform-specific UI optimizes for mobile workout tracking and web dashboard analysis
-- Real-time strain monitoring with 5s alerts ensures user safety during workouts
-
-### ✅ Adaptability and Learning
-- Music metadata correlation enables AI learning from user workout preferences
-- 3D avatar coaching (Alice/Aiden) provides personalized real-time feedback
-- System adapts to user roles (client/trainer) based on subscription status
-
-### ✅ Cost-Effectiveness
-- Leverages existing Convex infrastructure (<$10/month target)
-- Auto-scaling prevents over-provisioning while handling 10k concurrent users
-- External Stripe integration bypasses Apple's 30% fee structure
-
-### ✅ Scalability and Performance
-- Auto-scaling architecture handles concurrent user growth
-- <200ms API response time maintained with real-time updates <5s
-- Convex real-time database supports seamless scaling
-
-### ✅ Safety and Privacy
-- End-to-end encryption for trainer-client communications
-- GDPR/CCPA compliance with 30-day data deletion
-- OAuth token auto-refresh prevents workout interruption
-- No personal music data storage (BPM/genre only)
-
-### ✅ Engagement and Gamification
-- 3D avatar integration (Alice/Aiden) with fade-in animations
-- Platform-specific UI ensures optimal experience per device
-- Minimalist design reduces cognitive load during workouts
-
-### ✅ Data Ethics & Transparency
-- Anonymous music correlation data with user consent
-- 6-month automatic data deletion unless opted out
-- Clear role management based on subscription transparency
-
-### ⚠️ Technical Constraints Validation
-- **Budget**: Auto-scaling may exceed $10/month at peak usage - justified for user safety and compliance
-- **Complexity**: OAuth + Platform UI + Payments adds significant scope - justified for core business model
-- **Dependencies**: External OAuth providers create failure points - mitigated with graceful degradation
-
-## Constitutional Re-check (Post-Design)
-
-**Date**: 2025-01-27  
-**Phase**: Post-Phase 1 Design Review
-
-| Principle | Status | Assessment |
-|-----------|--------|------------|
-| **User Value First** | ✅ PASS | OAuth integration provides significant user value through seamless music platform connection and personalized workout experiences. Platform-specific UI ensures optimal native experience. |
-| **Sustainable Complexity** | ✅ PASS | Design maintains modular architecture with clear separation between OAuth, music, and UI concerns. Convex handles complex real-time sync automatically. |
-| **Cost Effective** | ✅ PASS | Leverages existing Convex infrastructure. OAuth APIs are free tier compatible. No additional hosting costs. Estimated $0 additional monthly cost for MVP. |
-| **Privacy Protective** | ✅ PASS | End-to-end encryption for OAuth tokens. PKCE security flow. Minimal data collection with user consent. GDPR compliance built-in. |
-| **Platform Agnostic** | ✅ PASS | Capacitor enables single codebase deployment to iOS, Android, web. Platform-specific adaptations enhance rather than fragment experience. |
-| **AI Enhanced** | ✅ PASS | AI-powered music recommendations based on user preferences and workout patterns. Machine learning improves recommendations over time. |
-| **Deployment Ready** | ✅ PASS | Comprehensive deployment documentation. Platform-specific build processes. Production security configurations. |
-
-**Overall Status**: ✅ CONSTITUTIONAL COMPLIANCE MAINTAINED
-
-**Key Design Decisions Supporting Constitution**:
-- Modular OAuth system prevents vendor lock-in (Platform Agnostic)
-- Encrypted token storage protects user privacy (Privacy Protective) 
-- Free tier API usage keeps costs minimal (Cost Effective)
-- AI recommendations provide personalized value (AI Enhanced, User Value First)
-- Convex auto-scaling prevents operational complexity (Sustainable Complexity)
-- Production deployment guides ensure readiness (Deployment Ready)
+[Gates determined based on constitution file]
 
 ## Project Structure
 
@@ -163,7 +99,7 @@ ios/ or android/
 └── [platform-specific structure]
 ```
 
-**Structure Decision**: Option 3 (Mobile + API) - SvelteKit frontend with Capacitor for iOS/Android deployment, Convex backend for real-time data, OAuth token management via secure storage
+**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -259,19 +195,18 @@ ios/ or android/
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
-- [x] Phase 2: Task planning complete (/tasks command)
+- [ ] Phase 0: Research complete (/plan command)
+- [ ] Phase 1: Design complete (/plan command)
+- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-
-- [x] Initial Constitution Check: PASS (with documented budget justification)
-- [x] Post-Design Constitution Check: PASS
-- [x] All NEEDS CLARIFICATION resolved
-- [x] Complexity deviations documented
+- [ ] Initial Constitution Check: PASS
+- [ ] Post-Design Constitution Check: PASS
+- [ ] All NEEDS CLARIFICATION resolved
+- [ ] Complexity deviations documented
 
 ---
 *Based on Constitution v2.1.1 - See `/memory/constitution.md`*

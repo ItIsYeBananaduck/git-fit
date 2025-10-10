@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { api } from '$lib/convex/_generated/api';
+	import { api } from '../../../convex/_generated/api.js';
 	let file: File | null = null;
 	let error = '';
 	let uploadStatus = '';

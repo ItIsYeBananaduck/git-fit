@@ -5,13 +5,6 @@ import path from 'path';
 
 export default defineConfig({
         plugins: [sveltekit()],
-        envDir: '../',  // Load .env files from the parent directory
-        optimizeDeps: {
-                include: ['animejs']
-        },
-        ssr: {
-                noExternal: ['animejs']
-        },
         server: {
                 host: '0.0.0.0',
                 port: 3000,

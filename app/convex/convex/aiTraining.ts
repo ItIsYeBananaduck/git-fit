@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query } from "../convex/_generated/server";
 import { v } from "convex/values";
 
 export const startTrainingSession = mutation({
@@ -236,48 +236,5 @@ export const getAIModel = query({
         status: model.status,
       }
     };
-  },
-});
-
-// Note: For actions that require Node.js (like crypto), create a separate file
-// This is a placeholder that will be implemented in a Node.js action file
-export const anonymizeWorkoutData = mutation({
-  args: {
-    workoutData: v.object({
-      userId: v.string(),
-      userEmail: v.optional(v.string()),
-      exerciseType: v.string(),
-      sets: v.array(v.object({
-        weight: v.number(),
-        reps: v.number(),
-        strainPercentage: v.number(),
-      })),
-      timestamp: v.string(),
-    }),
-  },
-  handler: async (ctx, args) => {
-    const { workoutData } = args;
-    
-    // Simple hash simulation without Node.js crypto
-    // In production, this should be done with a proper crypto action
-    let hash = 0;
-    const str = workoutData.userId;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    const hashedUserId = Math.abs(hash).toString(16).padStart(16, '0');
-    
-    // Remove PII and return anonymized data
-    const anonymizedData = {
-      hashedUserId,
-      exerciseType: workoutData.exerciseType,
-      sets: workoutData.sets,
-      timestamp: workoutData.timestamp,
-      // Remove userId and userEmail
-    };
-    
-    return anonymizedData;
   },
 });

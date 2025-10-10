@@ -3,7 +3,6 @@
     "version": "1.0.0",
     "type": "module",
     "dependencies": {
-        "@convex-dev/auth": "^0.0.90",
         "convex": "^1.27.0"
     }
 }

@@ -1,8 +1,8 @@
 
-# Implementation Plan: Web Dashboard UI
+# Implementation Plan: [FEATURE]
 
-**Branch**: `013-web-dashboard-ui` | **Date**: September 30, 2025 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/013-web-dashboard-ui/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -31,32 +31,23 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-Create a web dashboard UI that replicates the mobile app's visual style and functionality, providing users with workout summaries, macro calculator, trainer access, and data synchronization features. The dashboard enables seamless cross-platform user experience while maintaining mobile-first functionality boundaries.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
-**Language/Version**: TypeScript 5.0+, JavaScript ES2022  
-**Primary Dependencies**: SvelteKit 2.22+, Convex 1.27+, Tailwind CSS 4.1+  
-**Storage**: Convex real-time database with offline-capable storage  
-**Testing**: Vitest 3.2+, @testing-library/svelte  
-**Target Platform**: Web browsers (responsive design 320px to 4K)  
-**Project Type**: web (SvelteKit frontend + Convex backend)  
-**Performance Goals**: <500ms interaction response, <2s load times, 10,000 concurrent users  
-**Constraints**: No live workout tracking, mobile visual style replication, auto-scaling infrastructure  
-**Scale/Scope**: 60 functional requirements, 7 key entities, comprehensive trainer access system
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-✅ **User-Centric Design**: Dashboard prioritizes user needs with intuitive workout tracking, nutrition logging, and trainer collaboration  
-✅ **Adaptability and Learning**: Integrates with existing AI learning system via API calls to adaptation endpoints  
-✅ **Cost-Effectiveness**: Extends existing SvelteKit/Convex infrastructure, no additional hosting costs  
-✅ **Scalability and Performance**: Auto-scaling infrastructure specified, <500ms response targets align with <200ms API goals  
-✅ **Safety and Privacy**: WebAuthn biometric auth, encrypted QR tokens, audit logging for trainer access  
-✅ **Engagement and Gamification**: Visual style replication maintains existing gamified mobile experience  
-✅ **Data Ethics & Transparency**: User-controlled data retention, clear conflict resolution interfaces  
-✅ **Existing Code Analysis**: Extends existing Convex schema, leverages current auth system, integrates with mobile sync
-
-**Constitutional Compliance**: PASS - All principles satisfied within existing architecture
+[Gates determined based on constitution file]
 
 ## Project Structure
 
@@ -108,7 +99,7 @@ ios/ or android/
 └── [platform-specific structure]
 ```
 
-**Structure Decision**: Option 2 (Web application) - SvelteKit frontend with Convex backend detected
+**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -170,26 +161,17 @@ ios/ or android/
 **Task Generation Strategy**:
 - Load `.specify/templates/tasks-template.md` as base
 - Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
-- Each API contract → contract test task [P]
-- Each entity → model creation task [P]
+- Each contract → contract test task [P]
+- Each entity → model creation task [P] 
 - Each user story → integration test task
 - Implementation tasks to make tests pass
 
 **Ordering Strategy**:
-- TDD order: Tests before implementation
+- TDD order: Tests before implementation 
 - Dependency order: Models before services before UI
 - Mark [P] for parallel execution (independent files)
 
-**Estimated Output**: 30-35 numbered, ordered tasks in tasks.md
-
-**Task Categories**:
-1. **Contract Tests** (8 tasks): Authentication, Workouts, Macros, Trainer, Food APIs
-2. **Data Models** (7 tasks): User, Workout, Exercise, Macro, Trainer, Relationship, CustomFood entities
-3. **Integration Tests** (5 tasks): User stories from quickstart.md
-4. **UI Components** (12 tasks): Authentication, Dashboard, Workouts, Macros, Trainer, Settings pages
-5. **Performance & Security** (3 tasks): Response time validation, scalability testing, security hardening
-6. **Visual Style** (2 tasks): Mobile UI replication, responsive design
-7. **Documentation** (3 tasks): API docs, user guides, deployment instructions
+**Estimated Output**: 25-30 numbered, ordered tasks in tasks.md
 
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
@@ -213,17 +195,17 @@ ios/ or android/
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
-- [x] Phase 2: Task planning complete (/plan command - describe approach only)
+- [ ] Phase 0: Research complete (/plan command)
+- [ ] Phase 1: Design complete (/plan command)
+- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-- [x] Initial Constitution Check: PASS
-- [x] Post-Design Constitution Check: PASS
-- [x] All NEEDS CLARIFICATION resolved
+- [ ] Initial Constitution Check: PASS
+- [ ] Post-Design Constitution Check: PASS
+- [ ] All NEEDS CLARIFICATION resolved
 - [ ] Complexity deviations documented
 
 ---

@@ -1,1 +1,0 @@
-import { describe, test, expect } from "vitest"; import { api } from "../../convex/_generated/api"; describe("AI Model Rollback", () => { test("should rollback model", async () => { const result = await api["functions/aiTraining"].rollbackAIModel({ modelId: "test" }); expect(result).toBeDefined(); }); });

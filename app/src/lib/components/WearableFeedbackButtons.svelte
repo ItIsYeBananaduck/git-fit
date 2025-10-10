@@ -1,6 +1,5 @@
-<script lang="ts">
+<script>
 	import { createEventDispatcher } from 'svelte';
-	import type { MondayWorkoutData } from '$lib/stores/mondayWorkoutData.js';
 
 	export let exercise = '';
 	export let setNumber = 1;
@@ -8,7 +7,7 @@
 
 	const dispatch = createEventDispatcher();
 
-	function submitFeedback(difficulty: MondayWorkoutData['userFeedback']) {
+	function submitFeedback(difficulty) {
 		dispatch('feedback', {
 			exercise,
 			setNumber,
@@ -18,15 +17,15 @@
 	}
 
 	function handleTooEasy() {
-		submitFeedback('easy_killer');
+		submitFeedback('easy');
 	}
 
 	function handleModerate() {
-		submitFeedback('neutral');
+		submitFeedback('moderate');
 	}
 
 	function handleTooHard() {
-		submitFeedback('flag_review');
+		submitFeedback('hard');
 	}
 </script>
 

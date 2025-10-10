@@ -1,311 +1,170 @@
 import { mutation, query } from '../_generated/server';
 import { v } from 'convex/values';
+import type { Id } from '../_generated/dataModel';
 
-/**
- * AI Training Functions - Simplified Contract Implementation
- * Provides core AI training functionality for git-fit application
- */
-
-/**
- * Start a new training session
- */
-export const startTrainingSession = mutation({
-  args: {
-    sessionType: v.string(),
-    trainingMode: v.string(),
-    dataRetentionDays: v.number(),
-    priority: v.optional(v.string())
-  },
-  handler: async (ctx, args) => {
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-    
-    await ctx.db.insert('trainingSessions', {
-      sessionId,
-      sessionType: args.sessionType,
-      trainingMode: args.trainingMode,
-      dataRetentionDays: args.dataRetentionDays,
-      priority: args.priority || 'normal',
-      status: 'scheduled',
-      progress: 0,
-      metadata: {
-        description: `${args.sessionType} training session`,
-        tags: [args.sessionType, args.trainingMode],
-        source: 'api'
-      },
-      metrics: {
-        epochsCompleted: 0,
-        trainingLoss: [],
-        validationLoss: []
-      },
-      createdAt: Date.now()
-    });
-
-    return { sessionId, status: 'scheduled' };
-  }
-});
-
-/**
- * Get training session details
- */
-export const getTrainingSession = query({
-  args: {
-    sessionId: v.string()
-  },
-  handler: async (ctx, args) => {
-    const session = await ctx.db
-      .query('trainingSessions')
-      .filter((q) => q.eq(q.field('sessionId'), args.sessionId))
-      .first();
-
-    if (!session) {
-      return null;
-    }
-
-    return {
-      sessionId: session.sessionId,
-      status: session.status,
-      progress: session.progress,
-      sessionType: session.sessionType,
-      trainingMode: session.trainingMode,
-      startedAt: session.startedAt || null,
-      estimatedCompletion: session.completedAt || null,
-      metrics: session.metrics
-    };
-  }
-});
-
-/**
- * Submit training data
- */
+// T038: Submit training data
 export const submitTrainingData = mutation({
   args: {
-    trainingData: v.object({
-      workoutId: v.string(),
-      exerciseType: v.string(),
-      duration: v.number(),
-      intensity: v.number()
-    }),
+    userId: v.string(),
     dataType: v.string(),
-    userConsent: v.boolean()
-  },
-  handler: async (ctx, args) => {
-    if (!args.userConsent) {
-      return { status: 'rejected', reason: 'User consent required' };
-    }
-
-    const dataId = `data_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-    
-    await ctx.db.insert('aiTrainingData', {
-      dataId,
-      userId: 'anonymous_user',
-      workoutId: args.trainingData.workoutId,
-      userConsent: args.userConsent,
-      status: 'accepted',
-      dataType: args.dataType,
-      anonymizedData: {
-        exerciseType: args.trainingData.exerciseType,
-        duration: args.trainingData.duration,
-        intensity: args.trainingData.intensity
-      },
-      submittedAt: Date.now(),
-      annotations: {
-        labels: [args.trainingData.exerciseType],
-        categories: ['workout'],
-        qualityScore: 1.0,
-        verified: true,
-        source: 'user_submission'
-      },
-      privacy: {
-        anonymized: true,
-        consentLevel: 'explicit',
-        retentionDate: Date.now() + (180 * 24 * 60 * 60 * 1000),
-        sharePermission: true
-      },
-      processingStatus: 'pending',
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    });
-
-    return {
-      status: 'accepted',
-      dataId,
-      submittedAt: new Date()
-    };
-  }
-});
-
-/**
- * List AI models
- */
-export const listAIModels = query({
-  args: {
-    filter: v.optional(v.object({
-      type: v.optional(v.string()),
-      status: v.optional(v.string())
-    }))
-  },
-  handler: async (ctx, args) => {
-    let query = ctx.db.query('aiModels');
-
-    if (args.filter?.type) {
-      query = query.filter((q) => q.eq(q.field('type'), args.filter!.type));
-    }
-
-    if (args.filter?.status) {
-      query = query.filter((q) => q.eq(q.field('status'), args.filter!.status));
-    }
-
-    const models = await query.collect();
-
-    return {
-      models: models.map(model => ({
-        modelId: model.modelId,
-        name: model.name,
-        version: model.version,
-        type: model.type,
-        status: model.status,
-        accuracy: model.performanceMetrics.accuracy,
-        lastTraining: new Date(model.training.lastTrainingDate),
-        deploymentStatus: model.deployment.environment
+    content: v.object({
+      workout: v.optional(v.object({
+        exercises: v.array(v.string()),
+        sets: v.array(v.number()),
+        reps: v.array(v.number()),
+        weights: v.array(v.number()),
+        duration: v.number(),
+        intensity: v.number(),
+        context: v.object({}),
       })),
-      totalCount: models.length
-    };
-  }
-});
-
-/**
- * Deploy AI model
- */
-export const deployAIModel = mutation({
-  args: {
-    modelId: v.string(),
-    environment: v.string(),
-    config: v.optional(v.object({
-      replicas: v.optional(v.number()),
-      autoScale: v.optional(v.boolean())
-    }))
+      nutrition: v.optional(v.object({
+        meals: v.array(v.object({})),
+        calories: v.number(),
+        macros: v.object({
+          protein: v.number(),
+          carbs: v.number(),
+          fat: v.number(),
+        }),
+        timing: v.array(v.string()),
+      })),
+      recovery: v.optional(v.object({
+        sleepHours: v.number(),
+        recoveryScore: v.number(),
+        hrv: v.optional(v.number()),
+        stress: v.number(),
+        activities: v.array(v.string()),
+      })),
+      voiceInteraction: v.optional(v.object({
+        transcript: v.string(),
+        intent: v.string(),
+        confidence: v.number(),
+        duration: v.number(),
+        emotionalTone: v.optional(v.string()),
+      })),
+    }),
+    annotations: v.object({
+      labels: v.array(v.string()),
+      categories: v.array(v.string()),
+      qualityScore: v.number(),
+      verified: v.boolean(),
+      source: v.string(),
+    }),
+    privacy: v.object({
+      anonymized: v.boolean(),
+      consentLevel: v.string(),
+      retentionDate: v.number(),
+      sharePermission: v.boolean(),
+    }),
   },
   handler: async (ctx, args) => {
-    const model = await ctx.db
-      .query('aiModels')
-      .filter((q) => q.eq(q.field('modelId'), args.modelId))
-      .first();
-
-    if (!model) {
-      throw new Error('Model not found');
+    // Validate user exists and has training consent
+    const user = await ctx.db.get(args.userId as Id<"users">);
+    if (!user || !user.aiTrainingConsent) {
+      throw new Error('User not found or AI training consent not provided');
     }
 
-    const deploymentId = `deploy_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    // Validate data type
+    const validDataTypes = ['workout', 'nutrition', 'recovery', 'voice_interaction'];
+    if (!validDataTypes.includes(args.dataType)) {
+      throw new Error(`Invalid data type. Must be one of: ${validDataTypes.join(', ')}`);
+    }
 
-    await ctx.db.patch(model._id, {
-      status: 'deployed',
-      deployment: {
-        environment: args.environment,
-        replicas: args.config?.replicas || 1,
-        autoScale: args.config?.autoScale || false,
-        deploymentId
-      },
-      updatedAt: Date.now()
+    // Validate content matches data type
+    if (args.dataType === 'workout' && !args.content.workout) {
+      throw new Error('Workout content required for workout data type');
+    }
+    if (args.dataType === 'nutrition' && !args.content.nutrition) {
+      throw new Error('Nutrition content required for nutrition data type');
+    }
+    if (args.dataType === 'recovery' && !args.content.recovery) {
+      throw new Error('Recovery content required for recovery data type');
+    }
+    if (args.dataType === 'voice_interaction' && !args.content.voiceInteraction) {
+      throw new Error('Voice interaction content required for voice_interaction data type');
+    }
+
+    // Validate quality score
+    if (args.annotations.qualityScore < 0 || args.annotations.qualityScore > 1) {
+      throw new Error('Quality score must be between 0 and 1');
+    }
+
+    // Validate consent level
+    const validConsentLevels = ['none', 'anonymous', 'identified', 'full'];
+    if (!validConsentLevels.includes(args.privacy.consentLevel)) {
+      throw new Error(`Invalid consent level. Must be one of: ${validConsentLevels.join(', ')}`);
+    }
+
+    // Create training data entry
+    const now = Date.now();
+    const trainingDataId = await ctx.db.insert('aiTrainingData', {
+      userId: args.userId,
+      dataType: args.dataType,
+      content: args.content,
+      annotations: args.annotations,
+      privacy: args.privacy,
+      processingStatus: 'pending',
+      createdAt: now,
+      updatedAt: now,
     });
 
-    return {
-      deploymentId,
-      status: 'deployed',
-      endpoint: `https://api.git-fit.com/models/${args.modelId}`,
-      environment: args.environment
-    };
-  }
-});
-
-/**
- * Rollback AI model
- */
-export const rollbackAIModel = mutation({
-  args: {
-    modelId: v.string(),
-    targetVersion: v.string()
+    return { id: trainingDataId, status: 'submitted' };
   },
-  handler: async (ctx, args) => {
-    const model = await ctx.db
-      .query('aiModels')
-      .filter((q) => q.eq(q.field('modelId'), args.modelId))
-      .first();
-
-    if (!model) {
-      throw new Error('Model not found');
-    }
-
-    await ctx.db.patch(model._id, {
-      version: args.targetVersion,
-      status: 'archived',
-      updatedAt: Date.now()
-    });
-
-    return {
-      modelId: args.modelId,
-      version: args.targetVersion,
-      status: 'archived',
-      rolledBackAt: new Date()
-    };
-  }
 });
 
-/**
- * List training sessions
- */
+// T039: List training sessions
 export const listTrainingSessions = query({
   args: {
-    filter: v.optional(v.object({
-      status: v.optional(v.string())
-    })),
-    pagination: v.optional(v.object({
-      limit: v.optional(v.number()),
-      offset: v.optional(v.number())
-    }))
+    modelType: v.optional(v.string()),
+    status: v.optional(v.string()),
+    limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     let query = ctx.db.query('trainingSessions');
 
-    if (args.filter?.status) {
-      query = query.filter((q) => q.eq(q.field('status'), args.filter!.status));
+    // Apply filters
+    if (args.status) {
+      query = query.filter((q) => q.eq(q.field('status'), args.status));
     }
 
-    const limit = args.pagination?.limit || 50;
-    const offset = args.pagination?.offset || 0;
-    
-    const allSessions = await query.collect();
-    const totalCount = allSessions.length;
-    const sessions = allSessions.slice(offset, offset + limit);
-    
-    return {
-      sessions: sessions.map(session => ({
-        sessionId: session.sessionId,
-        status: session.status,
-        createdAt: new Date(session.createdAt),
-        sessionType: session.sessionType || 'coaching'
-      })),
-      totalCount,
-      pagination: {
-        limit,
-        offset,
-        hasMore: offset + limit < totalCount
+    // Apply limit (default 50)
+    const limit = args.limit || 50;
+    const sessions = await query.order('desc').take(limit);
+
+    // If modelType filter is provided, join with aiModels to filter
+    if (args.modelType) {
+      const filteredSessions = [];
+      for (const session of sessions) {
+        const model = await ctx.db.get(session.modelId);
+        if (model && model.type === args.modelType) {
+          filteredSessions.push({
+            ...session,
+            modelName: model.name,
+            modelType: model.type,
+          });
+        }
       }
-    };
-  }
+      return filteredSessions;
+    }
+
+    // Add model info to all sessions
+    const sessionsWithModels = [];
+    for (const session of sessions) {
+      const model = await ctx.db.get(session.modelId);
+      sessionsWithModels.push({
+        ...session,
+        modelName: model?.name || 'Unknown',
+        modelType: model?.type || 'Unknown',
+      });
+    }
+
+    return sessionsWithModels;
+  },
 });
 
-/**
- * Update training session status
- */
-export const updateTrainingSession = mutation({
+// T040: Get training session status
+export const getTrainingSessionStatus = query({
   args: {
     sessionId: v.string(),
-    status: v.string(),
-    progress: v.optional(v.number()),
-    metrics: v.optional(v.object({
-      loss: v.optional(v.number()),
-      accuracy: v.optional(v.number())
-    }))
   },
   handler: async (ctx, args) => {
     const session = await ctx.db
@@ -317,95 +176,92 @@ export const updateTrainingSession = mutation({
       throw new Error('Training session not found');
     }
 
+    const model = await ctx.db.get(session.modelId);
+
+    return {
+      ...session,
+      modelName: model?.name || 'Unknown',
+      modelType: model?.type || 'Unknown',
+      progressPercentage: session.progress.totalEpochs > 0 
+        ? (session.progress.currentEpoch / session.progress.totalEpochs) * 100 
+        : 0,
+    };
+  },
+});
+
+// T041: Update training data processing status
+export const updateProcessingStatus = mutation({
+  args: {
+    trainingDataId: v.id('aiTrainingData'),
+    status: v.string(),
+    annotations: v.optional(v.object({
+      labels: v.array(v.string()),
+      categories: v.array(v.string()),
+      qualityScore: v.number(),
+      verified: v.boolean(),
+      source: v.string(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const validStatuses = ['pending', 'processing', 'completed', 'failed', 'skipped'];
+    if (!validStatuses.includes(args.status)) {
+      throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    }
+
+    const trainingData = await ctx.db.get(args.trainingDataId);
+    if (!trainingData) {
+      throw new Error('Training data not found');
+    }
+
     const updateData: any = {
-      status: args.status
+      processingStatus: args.status,
+      updatedAt: Date.now(),
     };
 
-    if (args.progress !== undefined) {
-      updateData.progress = args.progress;
+    if (args.annotations) {
+      updateData.annotations = args.annotations;
     }
 
-    if (args.metrics) {
-      updateData.metrics = {
-        ...session.metrics,
-        ...args.metrics
-      };
-    }
+    await ctx.db.patch(args.trainingDataId, updateData);
 
-    if (args.status === 'active' && !session.startedAt) {
-      updateData.startedAt = Date.now();
-    }
-
-    if (args.status === 'completed' && !session.completedAt) {
-      updateData.completedAt = Date.now();
-    }
-
-    await ctx.db.patch(session._id, updateData);
-
-    return {
-      sessionId: args.sessionId,
-      status: args.status,
-      updatedAt: new Date()
-    };
-  }
+    return { success: true, status: args.status };
+  },
 });
 
-/**
- * Get session training data
- */
-export const getSessionTrainingData = query({
+// T042: Get user training data
+export const getUserTrainingData = query({
   args: {
-    sessionId: v.string(),
-    limit: v.optional(v.number())
+    userId: v.string(),
+    dataType: v.optional(v.string()),
+    limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = args.limit || 100;
-    
-    const trainingData = await ctx.db
+    let query = ctx.db
       .query('aiTrainingData')
-      .filter((q) => q.eq(q.field('status'), 'accepted'))
-      .take(limit);
+      .filter((q) => q.eq(q.field('userId'), args.userId));
 
-    return trainingData.map(data => ({
-      dataId: data.dataId,
-      dataType: data.dataType,
-      submittedAt: new Date(data.submittedAt),
-      anonymizedData: data.anonymizedData,
-      annotations: data.annotations
-    }));
-  }
-});
-
-/**
- * Get AI model by ID
- */
-export const getAIModel = query({
-  args: {
-    modelId: v.string()
-  },
-  handler: async (ctx, args) => {
-    const model = await ctx.db
-      .query('aiModels')
-      .filter((q) => q.eq(q.field('modelId'), args.modelId))
-      .first();
-
-    if (!model) {
-      throw new Error('Model not found');
+    if (args.dataType) {
+      query = query.filter((q) => q.eq(q.field('dataType'), args.dataType));
     }
 
-    return {
-      modelId: model.modelId,
-      name: model.name,
-      version: model.version,
-      type: model.type,
-      status: model.status,
-      metadata: model.metadata,
-      performanceMetrics: model.performanceMetrics,
-      configuration: model.configuration,
-      training: model.training,
-      deployment: model.deployment,
-      createdAt: new Date(model.createdAt),
-      updatedAt: new Date(model.updatedAt)
-    };
-  }
+    const limit = args.limit || 100;
+    const trainingData = await query.order('desc').take(limit);
+
+    return trainingData.map((data) => ({
+      id: data._id,
+      dataType: data.dataType,
+      processingStatus: data.processingStatus,
+      qualityScore: data.annotations.qualityScore,
+      verified: data.annotations.verified,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+      // Don't return the actual content for privacy
+      contentSummary: {
+        hasWorkout: !!data.content.workout,
+        hasNutrition: !!data.content.nutrition,
+        hasRecovery: !!data.content.recovery,
+        hasVoiceInteraction: !!data.content.voiceInteraction,
+      },
+    }));
+  },
 });

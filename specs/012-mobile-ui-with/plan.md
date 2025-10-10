@@ -1,8 +1,8 @@
 
-# Implementation Plan: Mobile UI with Dark Mode, Liquid Glass Effects, and Complete App Flow
+# Implementation Plan: [FEATURE]
 
-**Branch**: `012-mobile-ui-with` | **Date**: September 30, 2025 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/012-mobile-ui-with/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -31,35 +31,23 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-Primary requirement: Complete mobile UI redesign with dark theme, liquid glass effects, haptic feedback, and responsive design supporting both phone and tablet layouts for fitness tracking, nutrition logging, and trainer-client interactions. Technical approach involves extending existing SvelteKit + Convex + Capacitor stack with enhanced styling, biometric authentication, and comprehensive unit system support.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
-**Language/Version**: TypeScript 5.0+, JavaScript ES2022 + SvelteKit 2.22+, Convex 1.27+, Capacitor 7.4+  
-**Primary Dependencies**: Svelte, Capacitor, Tailwind CSS 4.1+, @capacitor/haptics, @capacitor/biometric-auth, @capacitor/camera  
-**Storage**: Convex real-time database with localStorage fallback for offline capability  
-**Testing**: Vitest for unit tests, Playwright for integration, Capacitor test suite for mobile  
-**Target Platform**: iOS 15+, Android 8+ via Capacitor, responsive web via SvelteKit  
-**Project Type**: mobile - Capacitor hybrid app with API backend  
-**Performance Goals**: 60fps animations, <500ms UI response, <2s data loading, <10s barcode scans  
-**Constraints**: Dark theme only, liquid glass styling, haptic feedback required, offline capability, biometric auth  
-**Scale/Scope**: Complete app redesign covering 10+ screens, 37 functional requirements, 5 fitness goals, Imperial/Metric units
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-**User-Centric Design**: ✅ PASS - Comprehensive mobile UI prioritizes user experience with intuitive dark theme, haptic feedback, and responsive design for all user types (novice to advanced, trainers)
-
-**Adaptability and Learning**: ✅ PASS - Integrates with existing AI system, maintains workout feedback logging, supports macro adjustments based on user preferences
-
-**Cost-Effectiveness**: ✅ PASS - Extends existing SvelteKit/Convex stack without new infrastructure costs, leverages Capacitor for cross-platform mobile deployment within budget constraints
-
-**Scalability and Performance**: ✅ PASS - Targets 60fps performance, <500ms UI response times, maintains existing architecture scalability, offline capability with sync
-
-**Safety and Privacy**: ✅ PASS - Implements biometric authentication, maintains existing security model, adds 30-day data deletion option, user-controlled data collection toggles
-
-**Engagement and Gamification**: ✅ PASS - Enhanced UI with liquid glass effects, haptic feedback, central orb interactions, maintains existing gamification elements
-
-**Data Ethics & Transparency**: ✅ PASS - Maintains transparent AI decision-making, adds explicit user consent for trainer access, preserves data control mechanisms
+[Gates determined based on constitution file]
 
 ## Project Structure
 
@@ -111,7 +99,7 @@ ios/ or android/
 └── [platform-specific structure]
 ```
 
-**Structure Decision**: Option 3: Mobile + API (Capacitor hybrid app with existing Convex backend)
+**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -171,53 +159,19 @@ ios/ or android/
 *This section describes what the /tasks command will do - DO NOT execute during /plan*
 
 **Task Generation Strategy**:
-- Load `.specify/templates/tasks-template.md` as base structure
-- Generate tasks from Phase 1 design artifacts (contracts, data model, quickstart scenarios)
-- Each API contract endpoint → contract test task [P] (can run in parallel)
-- Each entity in data model → model creation task [P] (independent files)
-- Each quickstart scenario → integration test task (validates user stories)
-- Implementation tasks derived from failing tests (TDD approach)
-
-**Mobile-Specific Task Categories**:
-1. **Capacitor Setup Tasks**: Plugin installation, native configuration, platform setup
-2. **Dark Theme Tasks**: CSS custom properties, Tailwind configuration, component styling
-3. **Liquid Glass Effects**: CSS backdrop-filter implementation, animation optimization
-4. **Haptic Integration**: @capacitor/haptics setup, gesture mapping, fallback handling
-5. **Biometric Auth**: @capacitor/biometric-auth integration, security flow implementation
-6. **Unit System**: Conversion service, real-time updates, preference storage
-7. **Responsive Design**: Breakpoint implementation, iPad trainer mode, touch optimization
-8. **Offline Sync**: LocalStorage fallback, conflict resolution UI, sync queue management
+- Load `.specify/templates/tasks-template.md` as base
+- Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
+- Each contract → contract test task [P]
+- Each entity → model creation task [P] 
+- Each user story → integration test task
+- Implementation tasks to make tests pass
 
 **Ordering Strategy**:
-- **Foundation First**: Capacitor setup, basic styling, theme configuration
-- **TDD Order**: Contract tests → failing tests → implementation to make tests pass
-- **Dependency Order**: Models → services → UI components → integration
-- **Parallel Execution**: Mark independent tasks with [P] for concurrent development
-- **Critical Path**: Biometric auth → user profile → core workout/nutrition flows
+- TDD order: Tests before implementation 
+- Dependency order: Models before services before UI
+- Mark [P] for parallel execution (independent files)
 
-**Performance Integration**:
-- Each implementation task includes performance validation against targets
-- Animation tasks require 60fps verification
-- API tasks include response time validation (<500ms UI, <2s data, <10s scans)
-- Mobile-specific tasks include device testing requirements
-
-**Estimated Task Breakdown**:
-- **Setup & Configuration**: 8-10 tasks (Capacitor, plugins, theme setup)
-- **Authentication & Security**: 6-8 tasks (biometric flow, session management)
-- **Core UI Components**: 12-15 tasks (orb, navigation, liquid glass effects)
-- **Workout Features**: 10-12 tasks (session tracking, feedback, vitals integration)
-- **Nutrition Features**: 8-10 tasks (barcode scanning, timeline, custom foods)
-- **Trainer Mode**: 6-8 tasks (client management, iPad layout, calendar integration)
-- **Offline & Sync**: 8-10 tasks (conflict resolution, queue management, storage)
-- **Testing & Validation**: 15-20 tasks (unit tests, integration tests, performance tests)
-
-**Total Estimated Output**: 75-95 numbered, prioritized tasks in tasks.md
-
-**Quality Gates per Task**:
-- Each task includes acceptance criteria from functional requirements
-- Performance targets embedded in task descriptions
-- Mobile-specific validation steps (device testing, haptic verification)
-- Constitution compliance checks (security, privacy, cost-effectiveness)
+**Estimated Output**: 25-30 numbered, ordered tasks in tasks.md
 
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
@@ -241,18 +195,18 @@ ios/ or android/
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
-- [x] Phase 2: Task planning complete (/plan command - describe approach only)
+- [ ] Phase 0: Research complete (/plan command)
+- [ ] Phase 1: Design complete (/plan command)
+- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-- [x] Initial Constitution Check: PASS
-- [x] Post-Design Constitution Check: PASS
-- [x] All NEEDS CLARIFICATION resolved
-- [x] Complexity deviations documented
+- [ ] Initial Constitution Check: PASS
+- [ ] Post-Design Constitution Check: PASS
+- [ ] All NEEDS CLARIFICATION resolved
+- [ ] Complexity deviations documented
 
 ---
 *Based on Constitution v2.1.1 - See `/memory/constitution.md`*

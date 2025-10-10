@@ -28,25 +28,6 @@ const config: CapacitorConfig = {
         ],
       },
     },
-    Haptics: {
-      // Haptic feedback configuration
-    },
-    Camera: {
-      // Camera permissions and configuration
-      ios: {
-        cameraUsageDescription: 'This app uses the camera to scan QR codes for quick workout tracking.'
-      },
-      android: {
-        requestPermissions: true
-      }
-    },
-    BiometricAuth: {
-      // Biometric authentication configuration
-      allowDeviceCredential: true,
-      ios: {
-        biometryUsageDescription: 'Use biometric authentication for secure app access.'
-      }
-    }
   },
 };
 

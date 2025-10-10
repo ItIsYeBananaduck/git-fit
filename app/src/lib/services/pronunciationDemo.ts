@@ -1,18 +1,18 @@
-import { PronunciationManager, createPronunciationService } from './pronunciationService.js';
+import { PronunciationManager } from './pronunciationService.js';
 
 // Demo script to test pronunciation generation
 async function demoPronunciationService() {
-  console.log('🎤 ElevenLabs Pronunciation Service Demo\n');
+  console.log('🎤 Pronunciation Service Demo\n');
 
   // For demo purposes, we'll use a mock service since we don't have API keys
   const mockService = {
     generatePronunciation: async (text: string): Promise<string> => {
-      console.log(`🤖 Generating ElevenLabs pronunciation for: "${text}"`);
+      console.log(`🤖 Generating pronunciation for: "${text}"`);
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 100));
-      return `elevenlabs-audio-data-for-${text.toLowerCase().replace(/\s+/g, '-')}`;
+      return `mock-audio-data-for-${text.toLowerCase().replace(/\s+/g, '-')}`;
     },
-    getSupportedVoices: () => ['bella', 'antoni', 'arnold', 'adam']
+    getSupportedVoices: () => ['alloy', 'echo', 'fable']
   };
 
   const manager = new PronunciationManager(mockService);
@@ -22,8 +22,7 @@ async function demoPronunciationService() {
     'Bench Press',
     'Romanian Deadlift',
     'Good Mornings',
-    'Clean and Press',
-    'Bulgarian Split Squats'
+    'Clean and Press'
   ];
 
   for (const exercise of testExercises) {
@@ -45,7 +44,7 @@ async function demoPronunciationService() {
 
 // Comparison analysis
 function compareApproaches() {
-  console.log('\n🔍 MANUAL vs ELEVENLABS vs GOOGLE TTS COMPARISON\n');
+  console.log('\n🔍 MANUAL vs AI APPROACH COMPARISON\n');
 
   const comparison = {
     'Manual Approach': {
@@ -66,43 +65,25 @@ function compareApproaches() {
       'Cost': '$0',
       'Accuracy': 'Depends on creator expertise'
     },
-    'ElevenLabs TTS': {
+    'AI Approach': {
       'Pros': [
-        'Premium voice quality',
-        'Natural-sounding speech',
-        'Voice cloning capabilities',
         'Fast generation',
-        'Multiple voice personalities',
-        'Customizable voice settings',
-        'Great for fitness coaching tone'
+        'High quality pronunciations',
+        'Handles complex terms well',
+        'Easy to scale',
+        'Consistent quality',
+        'Can learn from corrections'
       ],
       'Cons': [
-        'Higher API costs than alternatives',
+        'API costs (per request)',
         'Requires internet connection',
-        'Character-based pricing',
-        'Rate limits on free tier'
+        'Dependent on service availability',
+        'May need manual overrides for edge cases',
+        'Less control over specific pronunciations'
       ],
-      'Effort': 'Low initial, minimal maintenance',
-      'Cost': '$0.30 per 1K characters (premium)',
-      'Accuracy': 'Excellent for fitness terms'
-    },
-    'Google TTS': {
-      'Pros': [
-        'Lower cost than ElevenLabs',
-        'Neural voices available',
-        'Extensive language support',
-        'Google Cloud integration',
-        'Good pronunciation accuracy'
-      ],
-      'Cons': [
-        'More complex setup',
-        'Less natural than ElevenLabs',
-        'Limited voice personality options',
-        'Google Cloud dependency'
-      ],
-      'Effort': 'Medium initial, low maintenance',
-      'Cost': '$4.00 per 1M characters',
-      'Accuracy': 'Very good for standard terms'
+      'Effort': 'Low initial, some maintenance',
+      'Cost': '$0.015-0.030 per 1K characters',
+      'Accuracy': 'Very high for standard terms'
     }
   };
 
@@ -115,19 +96,10 @@ function compareApproaches() {
     console.log(`   ❌ Cons: ${details.Cons.join(', ')}\n`);
   }
 
-  console.log('🏆 RECOMMENDATION FOR FITNESS APP:');
-  console.log('   🥇 ElevenLabs: Best for premium fitness coaching experience');
-  console.log('      - Natural coaching voice personalities');
-  console.log('      - Professional trainer-like delivery');
-  console.log('      - Worth the premium for user experience');
-  console.log('');
-  console.log('   🥈 Google TTS: Best for cost-conscious implementations');
-  console.log('      - Significantly cheaper for high volume');
-  console.log('      - Good quality for basic pronunciation needs');
-  console.log('      - Better for multi-language support');
-  console.log('');
-  console.log('   💡 Hybrid Approach: ElevenLabs + manual overrides provides');
-  console.log('      the best quality control and user experience.');
+  console.log('🏆 RECOMMENDATION:');
+  console.log('   For a fitness app with 50+ exercises, AI approach is significantly easier');
+  console.log('   and more accurate. The hybrid approach (AI + manual overrides) provides');
+  console.log('   the best of both worlds: fast generation + quality control.');
 }
 
 // Run the demo

@@ -1,8 +1,8 @@
 
-# Implementation Plan: AI Training System with Voice Integration
+# Implementation Plan: [FEATURE]
 
-**Branch**: `014-train-alice-aiden` | **Date**: September 30, 2025 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/014-train-alice-aiden/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -31,29 +31,23 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-Automated AI training pipeline that retrains Alice/Aiden model weekly using anonymized user workout logs, combined with premium voice synthesis featuring ElevenLabs TTS, voice caching, context-aware tone adaptation, and comprehensive accessibility support for hearing-impaired users.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
-**Language/Version**: TypeScript 5.0+, JavaScript ES2022, Python 3.10+  
-**Primary Dependencies**: SvelteKit 2.22+, Convex 1.27+, Hugging Face Transformers, ElevenLabs API  
-**Storage**: Convex real-time database, IndexedDB (voice cache), Hugging Face Hub  
-**Testing**: Vitest 3.2+, Convex testing framework  
-**Target Platform**: Web (SvelteKit), Capacitor mobile apps, Convex serverless backend  
-**Project Type**: Web application (frontend + backend)  
-**Performance Goals**: <500ms voice playback, <200ms AI response, 99.5% voice uptime  
-**Constraints**: $0.02/voice-line cost, 10-clip cache limit, 50GB training datasets  
-**Scale/Scope**: 50K active users, weekly model retraining, premium voice features
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-**Cost-Effectiveness**: ✅ PASS - Voice synthesis cost ~$0.50/week per active user, well within $200/month budget for 10K users  
-**Scalability & Performance**: ✅ PASS - <500ms response targets align with <200ms constitution requirement  
-**User-Centric Design**: ✅ PASS - Accessibility features for hearing-impaired users, premium/free tier differentiation  
-**Safety & Privacy**: ✅ PASS - Anonymized training data, 30-day deletion, encrypted communications  
-**Adaptability & Learning**: ✅ PASS - Weekly AI model retraining improves accuracy over time  
-**Data Ethics & Transparency**: ✅ PASS - User consent for data collection, opt-out capability, clear AI feedback  
-**Existing Code Integration**: ✅ PASS - Extends existing entity models (User, WorkoutEntry) and Convex infrastructure
+[Gates determined based on constitution file]
 
 ## Project Structure
 
@@ -105,7 +99,7 @@ ios/ or android/
 └── [platform-specific structure]
 ```
 
-**Structure Decision**: Option 2 (Web application) - Frontend SvelteKit app with Convex backend for AI training pipeline and voice synthesis
+**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -128,67 +122,38 @@ ios/ or android/
 
 **Output**: research.md with all NEEDS CLARIFICATION resolved
 
-## Phase 1: Design & Contracts ✅
+## Phase 1: Design & Contracts
 *Prerequisites: research.md complete*
 
-**Status**: Complete  
-**Completed**: September 30, 2025
+1. **Extract entities from feature spec** → `data-model.md`:
+   - Entity name, fields, relationships
+   - Validation rules from requirements
+   - State transitions if applicable
 
-### Completed Tasks:
+2. **Generate API contracts** from functional requirements:
+   - For each user action → endpoint
+   - Use standard REST/GraphQL patterns
+   - Output OpenAPI/GraphQL schema to `/contracts/`
 
-1. **✅ Extract entities from feature spec** → `data-model.md`:
-   - Entity name, fields, relationships: 2 extended entities (User, WorkoutEntry), 6 new entities
-   - Validation rules from requirements: Constitutional compliance, privacy protection
-   - State transitions if applicable: Training pipeline, voice cache lifecycle
+3. **Generate contract tests** from contracts:
+   - One test file per endpoint
+   - Assert request/response schemas
+   - Tests must fail (no implementation yet)
 
-2. **✅ Generate API contracts** from functional requirements:
-   - For each user action → endpoint: AI training and voice synthesis APIs
-   - Use standard REST/GraphQL patterns: OpenAPI 3.0.3 specification
-   - Output OpenAPI/GraphQL schema to `/contracts/`: 2 complete API specifications
+4. **Extract test scenarios** from user stories:
+   - Each story → integration test scenario
+   - Quickstart test = story validation steps
 
-3. **✅ Generate contract tests** from contracts:
-   - One test file per endpoint: ai-training-api.test.ts, voice-synthesis-api.test.ts
-   - Assert request/response schemas: Comprehensive test coverage
-   - Tests must fail (no implementation yet): ✅ Intentionally failing for TDD
+5. **Update agent file incrementally** (O(1) operation):
+   - Run `.specify/scripts/powershell/update-agent-context.ps1 -AgentType copilot`
+     **IMPORTANT**: Execute it exactly as specified above. Do not add or remove any arguments.
+   - If exists: Add only NEW tech from current plan
+   - Preserve manual additions between markers
+   - Update recent changes (keep last 3)
+   - Keep under 150 lines for token efficiency
+   - Output to repository root
 
-4. **✅ Extract test scenarios** from user stories:
-   - Each story → integration test scenario: 5 detailed scenarios in quickstart.md
-   - Quickstart test = story validation steps: Complete with performance targets
-
-5. **✅ Update agent file incrementally** (Complete):
-   - Ran `.specify/scripts/powershell/update-agent-context.ps1 -AgentType copilot`
-   - Added new tech stack to `.github/copilot-instructions.md`
-   - Preserved manual additions, updated recent changes
-
-### Artifacts Generated:
-
-#### Data Model Design
-- **File**: `data-model.md` (219 lines)
-- **Content**: Complete entity definitions with extended User/WorkoutEntry entities and 6 new entities
-- **Entities**: AITrainingData, VoiceCache, VoicePreferences, AIModel, TrainingSession, VoiceInteraction
-- **Features**: Anonymization, voice caching, training pipeline, constitutional compliance
-
-#### API Contracts
-- **Files**: 
-  - `contracts/ai-training-api.openapi.yaml` (574 lines) - AI training and model management
-  - `contracts/voice-synthesis-api.openapi.yaml` (687 lines) - Voice synthesis and cache management
-- **Coverage**: 15 endpoints total with comprehensive request/response schemas
-- **Validation**: Complete error handling, rate limiting, premium user verification
-
-#### Contract Tests (TDD Approach)
-- **Files**:
-  - `contracts/ai-training-api.test.ts` (382 lines) - 25 failing tests for AI training
-  - `contracts/voice-synthesis-api.test.ts` (567 lines) - 30 failing tests for voice synthesis
-- **Coverage**: Happy paths, error cases, validation, constitutional compliance, performance
-- **Status**: Intentionally failing to drive implementation (TDD approach)
-
-#### Integration Guide
-- **File**: `quickstart.md` (570 lines)
-- **Content**: 5 complete integration scenarios with code examples
-- **Scenarios**: Data collection, voice synthesis, training pipeline, cache management, compliance
-- **Includes**: Performance targets, troubleshooting guide, implementation checklist
-
-**Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file (pending)
+**Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file
 
 ## Phase 2: Task Planning Approach
 *This section describes what the /tasks command will do - DO NOT execute during /plan*
@@ -230,18 +195,18 @@ ios/ or android/
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [x] Phase 0: Research complete (/plan command) ✅ September 30, 2025
-- [x] Phase 1: Design complete (/plan command) ✅ September 30, 2025
+- [ ] Phase 0: Research complete (/plan command)
+- [ ] Phase 1: Design complete (/plan command)
 - [ ] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-- [x] Initial Constitution Check: PASS ✅
-- [x] Post-Design Constitution Check: PASS ✅
-- [x] All NEEDS CLARIFICATION resolved ✅
-- [x] Complexity deviations documented ✅ (None required)
+- [ ] Initial Constitution Check: PASS
+- [ ] Post-Design Constitution Check: PASS
+- [ ] All NEEDS CLARIFICATION resolved
+- [ ] Complexity deviations documented
 
 ---
 *Based on Constitution v2.1.1 - See `/memory/constitution.md`*

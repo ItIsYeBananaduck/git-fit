@@ -127,7 +127,7 @@
 						<input
 							id="dateOfBirth"
 							type="date"
-							bind:value={(editedUser.profile as ClientProfile).dateOfBirth}
+							bind:value={editedUser.profile as ClientProfile).dateOfBirth}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						/>
 					</div>
@@ -177,7 +177,7 @@
 							<input
 								id="height"
 								type="number"
-								bind:value={(editedUser.profile as ClientProfile).height}
+								bind:value={editedUser.profile as ClientProfile).height}
 								class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 							/>
 						</div>
@@ -188,7 +188,7 @@
 							<input
 								id="weight"
 								type="number"
-								bind:value={(editedUser.profile as ClientProfile).weight}
+								bind:value={editedUser.profile as ClientProfile).weight}
 								class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 							/>
 						</div>
@@ -199,7 +199,7 @@
 						>
 						<select
 							id="fitnessLevel"
-							bind:value={(editedUser.profile as ClientProfile).fitnessLevel}
+							bind:value={editedUser.profile as ClientProfile).fitnessLevel}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 						>
 							{#each fitnessLevels as level}

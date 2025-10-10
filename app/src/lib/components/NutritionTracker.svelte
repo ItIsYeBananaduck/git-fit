@@ -2,7 +2,7 @@
 
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api } from '$lib/convex/_generated/api';
+	import { api } from '../../../convex/_generated/api.js';
 	import type { Id } from '../../../convex/_generated/dataModel.js';
 
 	import { NutritionCalculator } from '../nutrition/nutritionCalculator.js';
