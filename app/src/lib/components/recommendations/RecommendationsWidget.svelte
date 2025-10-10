@@ -3,6 +3,7 @@
 	import { fade } from 'svelte/transition';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '$lib/convex';
+	import { aliceNavigationActions } from '$lib/stores/workoutStore';
 
 	/**
 	 * @typedef {Object} RecommendationAction
@@ -61,11 +62,11 @@
 	}
 
 	$: typeIcons = {
-		workout: '💪',
+		workout: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>',
 		nutrition: '🥗',
 		recovery: '😴',
-		progression: '📈',
-		plateau_buster: '🚀'
+		progression: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>',
+		plateau_buster: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>'
 	};
 
 	$: priorityColors = {
@@ -80,8 +81,8 @@
 	});
 
 	function handleViewAll() {
-		// Navigate to full recommendations page
-		window.location.href = '/recommendations';
+		// Navigate through Alice to full recommendations page
+		aliceNavigationActions.quickActions.viewRecommendations();
 	}
 
 	function handleApplyRecommendation(/** @type {AdaptiveRecommendation} */ recommendation) {
@@ -128,7 +129,9 @@
 	{#if !loading && !error}
 		{#if recommendations.length === 0}
 			<div class="text-center py-8">
-				<div class="text-4xl mb-2">🎯</div>
+				<svg class="w-12 h-12 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6zM12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+				</svg>
 				<p class="text-sm text-gray-600">No recommendations available</p>
 				<p class="text-xs text-gray-500 mt-1">Check back later for personalized suggestions</p>
 			</div>
@@ -173,7 +176,10 @@
 						{#if recommendation.actions && recommendation.actions.length > 0}
 							<div class="bg-blue-50 rounded-md p-2">
 								<p class="text-xs text-blue-800 font-medium">
-									💡 {recommendation.actions[0].description}
+									<svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+									</svg>
+									{recommendation.actions[0].description}
 								</p>
 							</div>
 						{/if}
