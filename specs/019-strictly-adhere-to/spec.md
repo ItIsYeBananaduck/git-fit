@@ -1,4 +1,4 @@
-Strictly adhere to the project constitution: Adaptive Fit is a fitness app by Lone Star Cajun Technologies, built with Svelte/Capacitor frontend and Fly.io backend, supporting 1–10,000 concurrent users. Use HealthKit/Whoop for workout data, PubMed for guidelines (e.g., intensity thresholds, macros), and Llama 3.1 8B (4-bit, local on iOS/Android) for all AI features, replacing distilled GPT-2 across all tasks. Constraints: $10–15/month Fly.io cost, weekly/bi-weekly updates, low-end device support (canvas fallbacks, lightweight animations), scalable APIs, secure data/privacy. PowerShell is allowed for backend scripts. Ensure no duplicates or conflicts—e.g., marketplace payments (Task 10) are one-time with 20% fee, subscriptions (Task 12) are recurring with 10–30% fee; Alice’s avatar (Task 2) integrates with workout card (Task 6) and trainer grid (Task 13) without overlap. If conflicts arise, comment them and prioritize task details. Generate code, snippets, and configs for all 15 tasks, ensuring Llama 3.1 replaces GPT-2 for all AI features (e.g., expressions, suggestions, plan tweaks).
+Strictly adhere to the project constitution: Adaptive Fit is a fitness app by Lone Star Cajun Technologies, built with Svelte/Capacitor frontend and Fly.io backend, supporting 1–10,000 concurrent users. Use HealthKit/Whoop for workout data, PubMed for guidelines (e.g., intensity thresholds, macros), and Llama 3.1 8B (4-bit, local on iOS/Android via Capacitor plugin with llama.cpp) for all AI features, replacing distilled GPT-2 across all tasks. Constraints: $10–15/month Fly.io cost, weekly/bi-weekly updates, low-end device support (iPhone 7, Android API 19; canvas fallbacks, lightweight animations), performance targets (latency <500ms for API calls, animations at 30 FPS), scalable APIs, secure data/privacy. PowerShell is allowed for backend scripts. Ensure no duplicates or conflicts—e.g., marketplace payments (Task 10) are one-time with 20% fee, subscriptions (Task 12) are recurring with 10–30% fee; Alice's avatar (Task 2) integrates with workout card (Task 6) and trainer grid (Task 13) without overlap. If conflicts arise, comment them and prioritize task details. Generate code, snippets, and configs for all 15 tasks, ensuring Llama 3.1 replaces GPT-2 for all AI features (e.g., expressions, suggestions, plan tweaks).
 
 ## Task List and Implementation Details
 
@@ -42,7 +42,7 @@ Implement all 15 tasks below. Generate Svelte components with code snippets, Fly
   - _Fly.io Endpoint Example:_ `POST /like/:postId/:type` to update likes.
 
 - **Task 2: Alice's Color-Customizable Avatar**
-  - _Details:_ Alice as a fixed puffy humanoid with user-customizable color (via settings, no fixed purple), featuring glowing effect and floating animation tied to workout metrics (e.g., strain, calories) and mood (e.g., brighter glow for high intensity). Future extension: accessories (e.g., headbands, wristbands).
+  - _Details:_ Alice as a fixed puffy humanoid with user-customizable color (via settings, no fixed purple), featuring glowing effect and floating animation tied to workout metrics (e.g., strain, calories) and mood (e.g., brighter glow for high intensity). Future extension: accessories (schema: type, color, position, style; e.g., headbands, wristbands).
   - _Implementation:_ Svelte/Capacitor for rendering (CSS/WebGL animations, canvas fallback for low-end devices), HealthKit/Whoop for metric sync, Llama 3.1 8B (4-bit, local) for dynamic expressions (replacing GPT-2). Fly.io for storing user color preferences. Follow these detailed instructions:
     - _Core Structure_: Create an HTML document with a main `<div class="avatar-container">`. Nest divs for body, head, and limbs (arms, legs) as distinct elements for shaping/positioning. Use a `.accessories` div or pseudo-elements for future accessory support.
     - _CSS Variables_: Declare at `:root` or `.avatar-container`: `--body-color` (avatar body color), `--glow-color` (softer glow), `--eye-color` (white eye glow), `--body-blur` (filter for body blur).
@@ -296,7 +296,7 @@ Implement all 15 tasks below. Generate Svelte components with code snippets, Fly
     ```
 
 - **Task 15: OTP Strength Plan CSV Delivery and Import**
-  - _Details:_ OTP strength plans sent via encrypted chat in CSV; CSV import scans for workout data, converts to JSON for in-app plans.
+  - _Details:_ OTP strength plans sent via encrypted chat in CSV (columns: exercise,sets,reps,weight,rest); CSV import scans for workout data, converts to JSON for in-app plans.
   - _Implementation:_ Svelte for CSV upload UI and chat, Fly.io for parsing (PowerShell or Node.js), Llama 3.1 for validation (replacing GPT-2), HealthKit/Whoop for integration.
   - _Example Svelte Snippet:_
     ```svelte
@@ -332,3 +332,13 @@ Generate code, snippets, and configs for all tasks. Start with Task 2's avatar u
 - **Next Steps:** Copy-paste this into Copilot to kickstart code generation. Want tweaks (e.g., specific CSV columns for Task 15, accessory schema for Task 2)? Or share what's already built to trim the manual list?
 
 Alice's ready to glow in any color your users pick—let's get Copilot coding that puffy humanoid vibe!
+
+## Clarifications
+
+### Session 2025-10-09
+
+- Q: How is Llama 3.1 8B (4-bit) integrated locally on iOS/Android? → A: Capacitor plugin with llama.cpp
+- Q: What specific low-end devices are targeted? → A: iPhone 7, Android API 19
+- Q: What are the exact CSV columns for Task 15? → A: exercise,sets,reps,weight,rest
+- Q: What is the accessory schema for Task 2? → A: type, color, position, style
+- Q: What are the performance targets? → A: Latency <500ms, animations 30 FPS

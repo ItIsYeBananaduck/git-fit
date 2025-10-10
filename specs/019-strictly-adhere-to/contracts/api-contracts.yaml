@@ -1,0 +1,235 @@
+openapi: 3.0.0
+info:
+  title: Adaptive Fit API
+  version: 1.0.0
+paths:
+  /avatar/{userId}:
+    post:
+      summary: Save user avatar preferences
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                color:
+                  type: string
+                glowIntensity:
+                  type: number
+      responses:
+        '200':
+          description: Success
+  /intensity:
+    get:
+      summary: Get current intensity score
+      responses:
+        '200':
+          description: Intensity score
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  score:
+                    type: number
+  /rest-periods:
+    post:
+      summary: Calculate rest periods
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                strain:
+                  type: number
+      responses:
+        '200':
+          description: Rest period
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rest:
+                    type: number
+  /metrics:
+    get:
+      summary: Get user metrics
+      parameters:
+        - name: role
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Metrics data
+  /strain-sync:
+    post:
+      summary: Sync strain with music
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                songs:
+                  type: array
+                  items:
+                    type: string
+                hr:
+                  type: number
+      responses:
+        '200':
+          description: Suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+  /suggest-food:
+    post:
+      summary: Suggest food macros
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                carbs:
+                  type: number
+                protein:
+                  type: number
+                fats:
+                  type: number
+      responses:
+        '200':
+          description: Suggested macros
+  /purchase:
+    post:
+      summary: Purchase marketplace plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plan:
+                  type: object
+      responses:
+        '200':
+          description: CSV data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csv:
+                    type: string
+  /activity:
+    get:
+      summary: Check activity status
+      responses:
+        '200':
+          description: Activity status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isActive:
+                    type: boolean
+  /chat:
+    post:
+      summary: Send chat message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+      responses:
+        '200':
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+  /clients:
+    get:
+      summary: Get trainer clients
+      responses:
+        '200':
+          description: Clients list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+  /import-training:
+    post:
+      summary: Import training data
+      responses:
+        '200':
+          description: Success
+  /csv-import:
+    post:
+      summary: Import CSV plan
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                csv:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Parsed plan
+  /posts:
+    get:
+      summary: Get social feed posts
+      responses:
+        '200':
+          description: Posts list
+  /like/{postId}/{type}:
+    post:
+      summary: Like a post element
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liked
