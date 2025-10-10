@@ -135,7 +135,17 @@
 
 		dispatch('strainChange', strainContext);
 
-		// anime.js morphing animation
+		// anime.js morphing animation - only run in browser with anime loaded
+		if (!browser || !anime) {
+			// Fallback for SSR or when anime isn't loaded
+			currentShape = targetShape;
+			isAnimating = false;
+			morphProgress = 1;
+			aliceActions.completeMorph();
+			dispatch('morphComplete', { shape: targetShape });
+			return;
+		}
+
 		const timeline = anime.timeline({
 			easing: 'easeOutCubic',
 			duration: toShape.animationDuration,
@@ -250,16 +260,24 @@
 
 	onMount(async () => {
 		if (browser) {
-			// Use CSS-based animations as fallback for now
-			anime = {
-				timeline: () => ({ 
-					add: () => console.log('Animation timeline add'), 
-					pause: () => console.log('Animation pause'), 
-					play: () => console.log('Animation play') 
-				}),
-				set: () => console.log('Animation set'),
-				remove: () => console.log('Animation remove')
-			};
+			try {
+				// Dynamically import anime.js
+				const animeModule = await import('animejs');
+				anime = animeModule;
+				console.log('Anime.js loaded successfully');
+			} catch (error) {
+				console.warn('Failed to load anime.js, using fallback animations:', error);
+				// Use CSS-based animations as fallback
+				anime = {
+					timeline: () => ({ 
+						add: () => console.log('Animation timeline add'), 
+						pause: () => console.log('Animation pause'), 
+						play: () => console.log('Animation play') 
+					}),
+					set: () => console.log('Animation set'),
+					remove: () => console.log('Animation remove')
+				};
+			}
 
 			// Subscribe to Alice store
 			unsubscribeStore = aliceStore.subscribe((state) => {
@@ -286,10 +304,12 @@
 			unsubscribeStore();
 		}
 
-		// Stop any running animations
-		anime.remove(pathElement);
-		anime.remove(svgElement);
-		anime.remove(eyeElement);
+		// Stop any running animations (only if anime is loaded)
+		if (anime && anime.remove) {
+			if (pathElement) anime.remove(pathElement);
+			if (svgElement) anime.remove(svgElement);
+			if (eyeElement) anime.remove(eyeElement);
+		}
 	});
 </script>
 

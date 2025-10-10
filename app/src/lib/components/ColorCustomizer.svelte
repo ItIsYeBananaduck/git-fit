@@ -13,7 +13,7 @@
 	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 	import { browser } from '$app/environment';
 	import { hslToRgb, hslToHex, normalizeHue } from '$lib/utils/colorUtils.js';
-	import AliceOrb from './AliceOrb.svelte';
+	import AliceUnified from './AliceUnified.svelte';
 
 	// Props
 	export let initialHue: number = 240; // Default blue
@@ -299,14 +299,13 @@
 	{#if showPreview}
 		<div class="preview-section">
 			<div class="preview-container">
-				<AliceOrb
-					baseColor={currentColorHex}
-					strain={0}
-					isResting={false}
+				<AliceUnified
+					customColor={currentColorHex}
+					intensity={0}
 					size={120}
-					earbudsConnected={false}
-					musicActive={false}
-					on:colorChange
+					isInteractive={false}
+					mode="idle"
+					on:alice-tapped={colorChange}
 				/>
 
 				<div class="color-info">

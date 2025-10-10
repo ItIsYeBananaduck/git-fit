@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { authStore, user, isAuthenticated } from '../stores/auth.js';
 	import { goto } from '$app/navigation';
+	import { aliceNavigationActions } from '../stores/workoutStore.js';
 	import ThemeToggle from './ThemeToggle.svelte';
 
 	// Lucide icon imports
@@ -87,6 +88,29 @@
 	async function handleLogout() {
 		await authStore.logout();
 		goto('/auth/login');
+	}
+
+	function handleAliceNavigation(route: string) {
+		// Map routes to Alice navigation targets
+		const routeMap: Record<string, any> = {
+			'/': 'home',
+			'/workouts': 'workouts',
+			'/nutrition': 'nutrition',
+			'/programs': 'programs',
+			'/marketplace': 'marketplace',
+			'/recommendations': 'recommendations',
+			'/settings': 'settings',
+			'/profile': 'profile',
+			'/fitness-data': 'progress'
+		};
+
+		const target = routeMap[route];
+		if (target) {
+			aliceNavigationActions.navigateTo(target);
+		} else {
+			// Fallback to direct navigation for routes Alice doesn't handle
+			goto(route);
+		}
 	}
 
 	function toggleMobileMenu() {
@@ -226,6 +250,13 @@
 		],
 		utility: [
 			{
+				href: '/settings',
+				label: 'Settings',
+				icon: '⚙️',
+				description: 'App settings & preferences',
+				badge: null
+			},
+			{
 				href: '/exercise-demo',
 				label: 'Equipment Demo',
 				icon: '⚙️',
@@ -270,7 +301,11 @@
 		<div class="flex justify-between items-center h-16">
 			<!-- Logo & Brand -->
 			<div class="flex items-center space-x-3">
-				<a href="/" aria-label="Adaptive fIt - Home" class="flex items-center space-x-3">
+				<button
+					on:click={() => handleAliceNavigation('/')}
+					aria-label="Adaptive fIt - Home"
+					class="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+				>
 					<div
 						class="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-sm"
 					>
@@ -284,7 +319,7 @@
 						</div>
 						<div class="text-xs text-muted -mt-1">AI-Powered Fitness</div>
 					</div>
-				</a>
+				</button>
 			</div>
 
 			<!-- Desktop Navigation -->
@@ -292,8 +327,8 @@
 				<!-- Main Navigation -->
 				{#each navigationSections.main as item}
 					{@const IconComponent = getIconComponent(item.icon)}
-					<a
-						href={item.href}
+					<button
+						on:click={() => handleAliceNavigation(item.href)}
 						class="nav-item
 							{$page.url.pathname === item.href ? 'nav-item-active' : 'nav-item-inactive'}"
 						title={item.description}
@@ -306,15 +341,15 @@
 								{item.badge}
 							</span>
 						{/if}
-					</a>
+					</button>
 				{/each}
 
 				<!-- AI Section -->
 				<div class="h-6 w-px bg-border mx-2" aria-hidden="true"></div>
 				{#each navigationSections.ai as item}
 					{@const IconComponent = getIconComponent(item.icon)}
-					<a
-						href={item.href}
+					<button
+						on:click={() => handleAliceNavigation(item.href)}
 						class="nav-item
 							{$page.url.pathname === item.href ? 'nav-item-secondary-active' : 'nav-item-secondary-inactive'}"
 						title={item.description}
@@ -327,15 +362,15 @@
 								{item.badge}
 							</span>
 						{/if}
-					</a>
+					</button>
 				{/each}
 
 				<!-- Tools Section -->
 				<div class="h-6 w-px bg-border mx-2" aria-hidden="true"></div>
 				{#each navigationSections.tools as item}
 					{@const IconComponent = getIconComponent(item.icon)}
-					<a
-						href={item.href}
+					<button
+						on:click={() => handleAliceNavigation(item.href)}
 						class="nav-item
 							{$page.url.pathname === item.href ? 'nav-item-accent-active' : 'nav-item-accent-inactive'}"
 						title={item.description}
@@ -343,7 +378,7 @@
 					>
 						<IconComponent class="w-5 h-5" />
 						<span>{item.label}</span>
-					</a>
+					</button>
 				{/each}
 			</div>
 
@@ -420,18 +455,30 @@
 									<div class="text-sm text-muted capitalize">{$user.role}</div>
 								</div>
 								<div class="dropdown-section">
-									<a href="/profile" class="dropdown-item" role="menuitem">
+									<button
+										on:click={() => handleAliceNavigation('/profile')}
+										class="dropdown-item"
+										role="menuitem"
+									>
 										<User class="w-4 h-4" />
 										<span>Profile Settings</span>
-									</a>
-									<a href="/achievements" class="dropdown-item" role="menuitem">
+									</button>
+									<button
+										on:click={() => handleAliceNavigation('/achievements')}
+										class="dropdown-item"
+										role="menuitem"
+									>
 										<Sparkles class="w-4 h-4" />
 										<span>Achievements</span>
-									</a>
-									<a href="/recommendations" class="dropdown-item" role="menuitem">
+									</button>
+									<button
+										on:click={() => handleAliceNavigation('/recommendations')}
+										class="dropdown-item"
+										role="menuitem"
+									>
 										<Lightbulb class="w-4 h-4" />
 										<span>Recommendations</span>
-									</a>
+									</button>
 								</div>
 								<div class="dropdown-section border-t border-border pt-2">
 									<button
@@ -449,12 +496,20 @@
 				{:else}
 					<!-- Auth Buttons -->
 					<div class="hidden sm:flex items-center space-x-2">
-						<a href="/auth/login" class="btn-ghost" aria-label="Sign in to your account">
+						<button
+							on:click={() => handleAliceNavigation('/auth/login')}
+							class="btn-ghost"
+							aria-label="Sign in to your account"
+						>
 							Sign in
-						</a>
-						<a href="/auth/register" class="btn-primary" aria-label="Create a new account">
+						</button>
+						<button
+							on:click={() => handleAliceNavigation('/auth/register')}
+							class="btn-primary"
+							aria-label="Create a new account"
+						>
 							Get Started
-						</a>
+						</button>
 					</div>
 				{/if}
 
@@ -485,16 +540,18 @@
 					<div class="space-y-2">
 						{#each filteredNavItems as item}
 							{@const IconComponent = getIconComponent(item.icon)}
-							<a
-								href={item.href}
+							<button
+								on:click={() => {
+									handleAliceNavigation(item.href);
+									mobileMenuOpen = false;
+								}}
 								class="mobile-nav-item
 									{$page.url.pathname === item.href ? 'mobile-nav-item-active' : 'mobile-nav-item-inactive'}"
-								on:click={() => (mobileMenuOpen = false)}
 								aria-current={$page.url.pathname === item.href ? 'page' : undefined}
 							>
 								<IconComponent class="w-5 h-5" />
 								<span>{item.label}</span>
-							</a>
+							</button>
 						{/each}
 
 						<!-- Mobile Logout -->

@@ -4,7 +4,7 @@
  * Handles real-time data subscription and transformation for Alice AI companion
  */
 
-import { api } from '$lib/convex/index.js';
+import { api } from '$lib/convex/_generated/api';
 import type { 
   AliceAIState, 
   AlicePreferences, 

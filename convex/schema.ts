@@ -2102,4 +2102,230 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_timestamp", ["userId", "timestamp"])
     .index("by_type", ["interactionType"]),
+
+  // Build Adaptive Fit - Enhanced Alice Tables
+  alice_enhanced_states: defineTable({
+    userId: v.string(),
+    subscriptionTier: v.union(v.literal("free"), v.literal("trial"), v.literal("paid"), v.literal("trainer")),
+    appearance: v.object({
+      bodyPattern: v.union(v.literal("solid"), v.literal("stripes"), v.literal("spots"), v.literal("leopard"), v.literal("chrome"), v.literal("glitch")),
+      bodyColor: v.string(), // hex color for pattern
+      ringColor: v.optional(v.string()), // for trainers only
+      eyeState: v.union(v.literal("normal"), v.literal("wink"), v.literal("droop"), v.literal("excited")),
+    }),
+    currentMode: v.union(v.literal("workout"), v.literal("nutrition"), v.literal("analytics"), v.literal("radio"), v.literal("zen"), v.literal("play")),
+    isVisible: v.boolean(),
+    lastInteraction: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_subscription_tier", ["subscriptionTier"])
+    .index("by_last_interaction", ["lastInteraction"]),
+
+  // Enhanced User Profiles for Adaptive Fit
+  adaptive_user_profiles: defineTable({
+    userId: v.string(),
+    subscriptionTier: v.union(v.literal("free"), v.literal("trial"), v.literal("paid"), v.literal("trainer")),
+    subscriptionStart: v.optional(v.number()),
+    subscriptionEnd: v.optional(v.number()),
+    aliceCustomization: v.object({
+      bodyPattern: v.string(),
+      bodyColor: v.string(),
+      ringColor: v.optional(v.string()),
+    }),
+    preferences: v.object({
+      voiceFrequency: v.number(), // 0-100 for radio mode
+      zenModeEnabled: v.boolean(),
+      backgroundMonitoring: v.boolean(),
+    }),
+    performanceBaseline: v.object({
+      calibrationDate: v.number(),
+      exerciseMetrics: v.object({}), // Record<string, number>
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_subscription_tier", ["subscriptionTier"])
+    .index("by_trial_expiry", ["subscriptionEnd"]),
+
+  // Exercise Library and Community Features
+  adaptive_exercises: defineTable({
+    name: v.string(),
+    muscleGroups: v.array(v.string()),
+    equipment: v.array(v.string()),
+    description: v.string(),
+    createdBy: v.string(), // userId
+    createdByType: v.union(v.literal("user"), v.literal("trainer")),
+    status: v.union(v.literal("local"), v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    approvalVotes: v.object({
+      likes: v.number(),
+      dislikes: v.number(),
+      voterIds: v.array(v.string()),
+    }),
+    lastUsed: v.optional(v.number()),
+    isStale: v.boolean(), // >2 weeks unused
+    monthlyPollResult: v.optional(v.union(v.literal("keep"), v.literal("remove"))),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_creator", ["createdBy"])
+    .index("by_status", ["status"])
+    .index("by_creator_type", ["createdByType"])
+    .index("by_approval_likes", ["approvalVotes.likes"])
+    .index("by_is_stale", ["isStale"])
+    .index("by_last_used", ["lastUsed"]),
+
+  // Enhanced Workout Sessions
+  adaptive_workout_sessions: defineTable({
+    userId: v.string(),
+    mode: v.union(v.literal("workout"), v.literal("play")),
+    startTime: v.number(),
+    endTime: v.optional(v.number()),
+    exercises: v.array(v.object({
+      exerciseId: v.string(),
+      sets: v.array(v.object({
+        reps: v.optional(v.number()),
+        weight: v.optional(v.number()),
+        duration: v.optional(v.number()),
+        heartRate: v.optional(v.number()),
+        strain: v.optional(v.number()),
+      })),
+    })),
+    intensityScore: v.number(), // 0-100+
+    heartRateData: v.array(v.object({
+      timestamp: v.number(),
+      bpm: v.number(),
+    })),
+    adaptations: v.array(v.object({
+      timestamp: v.number(),
+      reason: v.string(),
+      change: v.string(),
+    })),
+    teamPost: v.optional(v.object({
+      posted: v.boolean(),
+      likes: v.number(),
+      likedBy: v.array(v.string()),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_mode", ["userId", "mode"])
+    .index("by_intensity", ["intensityScore"])
+    .index("by_start_time", ["startTime"]),
+
+  // Team Community Features
+  team_posts: defineTable({
+    userId: v.string(),
+    type: v.union(v.literal("workout"), v.literal("exercise"), v.literal("streak")),
+    content: v.object({
+      workoutIcon: v.string(),
+      intensity: v.number(),
+      heartIcon: v.union(v.literal("pulsing"), v.literal("static")),
+    }),
+    likes: v.number(),
+    likedBy: v.array(v.string()),
+    queuedForMetaCycle: v.optional(v.boolean()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_type", ["type"])
+    .index("by_likes", ["likes"])
+    .index("by_meta_cycle", ["queuedForMetaCycle"])
+    .index("by_created", ["createdAt"]),
+
+  active_streaks: defineTable({
+    userId: v.string(),
+    type: v.union(v.literal("play"), v.literal("workout")),
+    count: v.number(),
+    lastActivity: v.number(),
+    badgeAwarded: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "type"])
+    .index("by_count", ["count"])
+    .index("by_last_activity", ["lastActivity"]),
+
+  // Performance Data with Retention Management
+  adaptive_performance_data: defineTable({
+    userId: v.string(),
+    sessionId: v.string(),
+    dataType: v.union(v.literal("raw"), v.literal("monthly"), v.literal("yearly")),
+    period: v.number(), // session date, month start, year start
+    metrics: v.object({
+      heartRate: v.array(v.number()),
+      strain: v.array(v.number()),
+      intensity: v.number(),
+      duration: v.number(),
+    }),
+    retentionPolicy: v.object({
+      tier: v.union(v.literal("free"), v.literal("paid")),
+      expiresAt: v.number(),
+    }),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_session", ["userId", "sessionId"])
+    .index("by_data_type", ["dataType"])
+    .index("by_expires_at", ["retentionPolicy.expiresAt"])
+    .index("by_tier", ["retentionPolicy.tier"]),
+
+  // Marketplace Content
+  marketplace_videos: defineTable({
+    sellerId: v.string(),
+    title: v.string(),
+    description: v.string(),
+    price: v.number(), // in cents
+    externalVideoUrl: v.string(), // seller's server
+    previewUrl: v.optional(v.string()),
+    tags: v.array(v.string()),
+    performanceMetrics: v.object({
+      totalPurchases: v.number(),
+      highIntensityUsers: v.number(), // users who hit high intensity
+      averageIntensityScore: v.number(),
+    }),
+    badges: v.array(v.string()), // e.g., "90% hit high intensity"
+    isActive: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_seller", ["sellerId"])
+    .index("by_is_active", ["isActive"])
+    .index("by_price", ["price"])
+    .index("by_total_purchases", ["performanceMetrics.totalPurchases"])
+    .index("by_created", ["createdAt"]),
+
+  video_purchases: defineTable({
+    buyerId: v.string(),
+    videoId: v.id("marketplace_videos"),
+    amount: v.number(), // price paid
+    platformFee: v.number(), // 30% commission
+    downloadPath: v.string(), // local AdaptiveFitDownloads path
+    purchaseDate: v.number(),
+    accessibleIndefinitely: v.boolean(), // always true per clarification
+    createdAt: v.number(),
+  })
+    .index("by_buyer", ["buyerId"])
+    .index("by_video", ["videoId"])
+    .index("by_purchase_date", ["purchaseDate"]),
+
+  // Background Monitoring
+  heart_rate_monitoring: defineTable({
+    userId: v.string(),
+    timestamp: v.number(),
+    heartRate: v.number(),
+    elevatedDuration: v.optional(v.number()), // minutes sustained > threshold
+    promptShown: v.optional(v.boolean()),
+    userResponse: v.optional(v.union(v.literal("workout"), v.literal("play"), v.literal("ignore"))),
+    responseTime: v.optional(v.number()), // seconds to respond
+    autoAction: v.optional(v.union(v.literal("timeout_ignore"), v.literal("timeout_rest"))),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_timestamp", ["userId", "timestamp"])
+    .index("by_heart_rate", ["heartRate"])
+    .index("by_prompt_shown", ["promptShown"]),
 });

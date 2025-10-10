@@ -11,7 +11,7 @@
 	import { goto } from '$app/navigation';
 	import { fade } from 'svelte/transition';
 	import { Haptics, ImpactStyle } from '@capacitor/haptics';
-	import AliceOrb from './AliceOrb.svelte';
+	import AliceOrbNew from './AliceOrbNew.svelte';
 	import { aliceStore, aliceActions, aliceInteractionMode } from '$lib/stores/aliceStore.js';
 	import { aliceDataService, initializeAliceData } from '$lib/services/aliceDataService.js';
 	import { aliceVoiceService } from '$lib/services/aliceVoiceService.js';
@@ -37,6 +37,7 @@
 	let lastStrainValue = 0;
 	let voiceCoachingEnabled = true;
 	let dataServiceActive = false;
+	let currentEyeState: 'normal' | 'wink' | 'droop' | 'excited' = 'normal';
 
 	// Store subscriptions
 	$: aliceState = $aliceStore;
@@ -113,7 +114,23 @@
 		if (WORKOUT_PAGES.includes(currentPath)) {
 			return Math.random() * 100; // Simulated workout strain
 		}
-		return 0;
+		return lastStrainValue || 0;
+	}
+
+	// Alice eye state control functions
+	function completeSet() {
+		currentEyeState = 'wink';
+		setTimeout(() => currentEyeState = 'normal', 500);
+	}
+	
+	function skipSet() {
+		currentEyeState = 'droop';
+		setTimeout(() => currentEyeState = 'normal', 1200);
+	}
+	
+	function exciteAlice() {
+		currentEyeState = 'excited';
+		setTimeout(() => currentEyeState = 'normal', 900);
 	}
 
 	// Enhanced touch/mouse event handlers
@@ -187,12 +204,18 @@
 
 		triggerHaptic(ImpactStyle.Medium);
 
-		// Cycle through shapes manually
-		const shapes = ['neutral', 'rhythmic', 'intense'] as const;
-		const currentIndex = shapes.indexOf(aliceState.currentShape);
-		const nextShape = shapes[(currentIndex + 1) % shapes.length];
+		// Simulate different interaction types
+		const interactionType = Math.random();
+		if (interactionType < 0.3) {
+			completeSet();
+		} else if (interactionType < 0.6) {
+			exciteAlice();
+		} else {
+			skipSet();
+		}
 
-		aliceActions.startMorphing(nextShape);
+		// Update strain for visual feedback
+		lastStrainValue = Math.random() * 100;
 
 		// Trigger a sample voice coaching message
 		if (shouldEnableVoiceCoaching) {
@@ -251,17 +274,17 @@
 			on:click={handleAliceTap}
 			on:keydown={(e) => e.key === 'Enter' && handleAliceTap()}
 			role={isInteractive ? 'button' : 'img'}
-			tabindex={isInteractive ? 0 : -1}
+			tabindex={isInteractive ? 0 : undefined}
 			aria-label={isInteractive
 				? 'Alice AI - Tap to interact, swipe to navigate'
 				: 'Alice AI companion'}
 		>
-			<AliceOrb 
+			<AliceOrbNew 
 				size={aliceSize}
-				on:morphComplete={(e) => {
-					console.log('Alice morph complete:', e.detail);
-					triggerHaptic(ImpactStyle.Light);
-				}}
+				strain={getCurrentStrain()}
+				isInteractive={isInteractive}
+				eyeState={isAliceSpeaking ? 'excited' : currentEyeState}
+				on:click={handleAliceTap}
 			/>			<!-- Voice coaching indicator -->
 			{#if isAliceSpeaking && aliceState.currentMessage}
 				<div class="voice-indicator" transition:fade={{ duration: 300 }}>

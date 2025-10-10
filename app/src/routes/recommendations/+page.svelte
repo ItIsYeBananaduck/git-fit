@@ -52,7 +52,9 @@
 
 			<div class="bg-white rounded-lg shadow-sm border p-6">
 				<div class="flex items-center">
-					<div class="text-3xl mr-4">🎯</div>
+					<svg class="w-8 h-8 text-primary mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6zM12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+					</svg>
 					<div>
 						<h3 class="text-lg font-semibold text-gray-900">Goal-Aligned</h3>
 						<p class="text-sm text-gray-600">Tailored to your fitness goals</p>
@@ -67,7 +69,9 @@
 		<!-- Recommendation Categories Info -->
 		<div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			<div class="bg-white rounded-lg shadow-sm border p-6">
-				<div class="text-2xl mb-3">💪</div>
+				<svg class="w-6 h-6 text-primary mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+				</svg>
 				<h3 class="text-lg font-semibold text-gray-900 mb-2">Workout Optimization</h3>
 				<p class="text-sm text-gray-600">
 					Adjust training frequency, intensity, and exercise selection based on your progress and
@@ -93,7 +97,9 @@
 			</div>
 
 			<div class="bg-white rounded-lg shadow-sm border p-6">
-				<div class="text-2xl mb-3">📈</div>
+				<svg class="w-6 h-6 text-primary mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+				</svg>
 				<h3 class="text-lg font-semibold text-gray-900 mb-2">Progress Acceleration</h3>
 				<p class="text-sm text-gray-600">
 					Implement progressive overload and periodization strategies to break through plateaus.
@@ -101,7 +107,9 @@
 			</div>
 
 			<div class="bg-white rounded-lg shadow-sm border p-6">
-				<div class="text-2xl mb-3">🚀</div>
+				<svg class="w-6 h-6 text-primary mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+				</svg>
 				<h3 class="text-lg font-semibold text-gray-900 mb-2">Plateau Busters</h3>
 				<p class="text-sm text-gray-600">
 					Strategic interventions to overcome training stagnation and reignite progress.
@@ -109,7 +117,9 @@
 			</div>
 
 			<div class="bg-white rounded-lg shadow-sm border p-6">
-				<div class="text-2xl mb-3">🎯</div>
+				<svg class="w-6 h-6 text-primary mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6zM12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+				</svg>
 				<h3 class="text-lg font-semibold text-gray-900 mb-2">Goal Alignment</h3>
 				<p class="text-sm text-gray-600">
 					Ensure your training and nutrition align with your specific fitness objectives.

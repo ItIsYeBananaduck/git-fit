@@ -53,7 +53,7 @@
 		on:click={handleClick}
 		on:keydown={(e) => e.key === 'Enter' && handleClick()}
 		role={isInteractive ? 'button' : 'img'}
-		tabindex={isInteractive ? 0 : -1}
+		tabindex={isInteractive ? 0 : undefined}
 		aria-label="Alice AI companion - strain level {strain}%"
 	>
 		<!-- Ferrofluid blob -->
