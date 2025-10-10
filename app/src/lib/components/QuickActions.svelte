@@ -1,5 +1,6 @@
 <script lang="ts">
         import { Play, BookOpen, TrendingUp, Plus, Users, BarChart3 } from 'lucide-svelte';
+        import { aliceNavigationActions } from '$lib/stores/workoutStore';
         
         export let userRole: string;
 

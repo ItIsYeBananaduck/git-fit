@@ -357,17 +357,23 @@
 				<h3 class="card-title">Active Workout</h3>
 				<div class="flex items-center gap-4 mb-4">
 					<div class="flex items-center gap-2">
-						<div class="icon-sm text-primary">🎯</div>
+						<svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6zM12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+						</svg>
 						<span class="text-sm"
 							>Set {currentWorkout.currentSet}/{currentWorkout.sets} × {currentWorkout.reps} reps</span
 						>
 					</div>
 					<div class="flex items-center gap-2">
-						<div class="icon-sm text-success">💪</div>
+						<svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+						</svg>
 						<span class="text-sm">{currentWorkout.volume} lbs</span>
 					</div>
 					<div class="flex items-center gap-2">
-						<div class="icon-sm text-warning">⏱️</div>
+						<svg class="w-4 h-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
 						<span class="text-sm">
 							{Math.round((Date.now() - currentWorkout.startTime.getTime()) / 60000)} min
 						</span>
@@ -420,14 +426,14 @@
 					{/if}
 
 					<!-- User Feedback Buttons -->
-					<button class="btn btn-sm btn-success" on:click={() => handleUserFeedback('easy killer')}>
-						Easy Killer
+					<button class="btn btn-sm btn-success" on:click={() => handleUserFeedback('easy_killer')}>
+						What was that!!
 					</button>
-					<button class="btn btn-sm btn-warning" on:click={() => handleUserFeedback('good pump')}>
-						Good Pump
+					<button class="btn btn-sm btn-warning" on:click={() => handleUserFeedback('neutral')}>
+						Not bad
 					</button>
-					<button class="btn btn-sm btn-error" on:click={() => handleUserFeedback('struggle city')}>
-						Struggle City
+					<button class="btn btn-sm btn-error" on:click={() => handleUserFeedback('flag_review')}>
+						Easy Killa
 					</button>
 				</div>
 

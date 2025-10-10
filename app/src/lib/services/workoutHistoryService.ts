@@ -1,4 +1,5 @@
 import { api } from '$lib/convex/_generated/api';
+import type { MondayWorkoutData } from '$lib/stores/mondayWorkoutData.js';
 
 export interface WorkoutHistoryEntry {
   id: string;
@@ -19,7 +20,7 @@ export interface WorkoutHistoryEntry {
     avg: number;
     min: number;
   };
-  userFeedback: 'easy killer' | 'good pump' | 'struggle city' | null;
+  userFeedback: MondayWorkoutData['userFeedback'] | null;
   aiAdjustments: {
     action: string;
     reason: string;
@@ -133,7 +134,7 @@ export class WorkoutHistoryService {
     const exerciseCounts: Record<string, number> = {};
     
     history.forEach(workout => {
-      const success = workout.userFeedback !== 'struggle city' ? 1 : 0;
+      const success = workout.userFeedback !== 'flag_review' ? 1 : 0;
       exercisePreferences[workout.exerciseId] = (exercisePreferences[workout.exerciseId] || 0) + success;
       exerciseCounts[workout.exerciseId] = (exerciseCounts[workout.exerciseId] || 0) + 1;
     });
@@ -307,7 +308,7 @@ export class WorkoutHistoryService {
     return {
       preferredWeightJumps: [2.5, 5], // Default, could be calculated from history
       setVolumePreference: preferredProgression,
-      difficultyTolerance: history.filter(w => w.userFeedback === 'struggle city').length / history.length
+      difficultyTolerance: history.filter(w => w.userFeedback === 'flag_review').length / history.length
     };
   }
 
@@ -321,8 +322,8 @@ export class WorkoutHistoryService {
     }
 
     const successRates = recentHistory.map(w => 
-      w.userFeedback === 'struggle city' ? 0 : 
-      w.userFeedback === 'good pump' ? 0.7 : 1
+      w.userFeedback === 'flag_review' ? 0 :
+      w.userFeedback === 'neutral' ? 0.7 : 1
     );
 
     const avgSuccessRate = successRates.reduce((a, b) => a + b, 0) / successRates.length;

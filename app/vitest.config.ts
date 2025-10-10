@@ -32,6 +32,7 @@ export default defineConfig({
       'src/lib/stores/__tests__/**/*.test.ts',
       'tests/contract/**/*.ts',
       'tests/integration/**/*.ts',
+      'tests/performance/**/*.ts',
       'tests/e2e/**/*.ts'
     ],
     testTimeout: 10000, // 10s timeout for health data tests
