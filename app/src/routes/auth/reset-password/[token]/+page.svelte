@@ -6,7 +6,7 @@
 	import { checkPasswordStrength } from '$lib/utils/password';
 	import type { PasswordStrength } from '$lib/utils/password';
 	import { convex } from '$lib/convex';
-	import { api } from '$lib/convex/_generated/api';
+	import { api } from '$lib/api/convex';
 
 	let password = '';
 	let confirmPassword = '';

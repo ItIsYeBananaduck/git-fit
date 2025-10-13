@@ -1,155 +1,91 @@
-# 🏋️ Adaptive fIt - AI Fitness Coach API
+# Adaptive Fit - Implementation of 15 Tasks
 
-A FastAPI-based AI fitness service that provides personalized workout tweaks and training recommendations using fine-tuned language models.
+This repository implements the 15 tasks for the Adaptive Fit fitness app, adhering to the project constitution.
 
-## Features
+## Project Structure
 
-- 🚀 **Event-Driven API**: RESTful endpoints for app integrations
-- 🤖 **AI-Powered Tweaks**: Smart workout modifications based on user events
-- 💪 **Safety Rules**: No rep drops below 80%, progressive overload maintained
-- 🎯 **Context-Aware**: Considers user fitness level, goals, and current program
-- 🔒 **Privacy-First**: Designed for fitness app integrations with data protection
+- `app/src/components/` - Svelte components
+- `api/` - Fly.io backend (Node.js)
+- `scripts/` - PowerShell scripts for backend tasks
+- `specs/` - Feature specifications
 
-## API Endpoints
+## Setup
 
-### POST /event
+### Prerequisites
 
-Handle app events and return AI-powered workout tweaks.
+- Node.js 18+
+- PowerShell 7+
+- Fly.io CLI (`flyctl`)
+- Capacitor CLI
+- Llama 3.1 8B (4-bit) model for local AI (download and set path)
 
-**Request Body:**
+### Backend Setup (Fly.io)
 
-```json
-{
-  "event": "skip_set|complete_workout|struggle_set",
-  "user_id": "string",
-  "context": {
-    "exercise": "bench_press",
-    "set_number": 3
-  },
-  "user_data": {
-    "fitness_level": "beginner|intermediate|advanced",
-    "current_program": { "planned_reps": 10 },
-    "goals": ["build_muscle", "increase_strength"]
-  }
-}
-```
+1. Navigate to `api/`:
 
-**Response:**
+   ```bash
+   cd api
+   npm install
+   ```
 
-```json
-{
-  "success": true,
-  "tweak": {
-    "action": "reduce_volume|progress_weight|reduce_reps",
-    "reason": "Explanation of the tweak",
-    "modifications": { "sets": -1, "weight": 2.5 }
-  },
-  "user_id": "string",
-  "event": "string"
-}
-```
+2. Set environment variables in `.env`:
 
-### GET /health
+   ```
+   PORT=3000
+   STRIPE_SECRET_KEY=your_stripe_key
+   YOUTUBE_API_KEY=your_youtube_key
+   PUBMED_API_KEY=your_pubmed_key
+   LLAMA_MODEL_PATH=/path/to/llama-3.1-8b-4bit.bin
+   ```
 
-Health check endpoint.
+3. Deploy to Fly.io:
+   ```bash
+   flyctl launch
+   flyctl deploy
+   ```
 
-### GET /
+### Frontend Setup (SvelteKit + Capacitor)
 
-API information and available endpoints.
+1. Navigate to `app/`:
 
-## Model Details
+   ```bash
+   cd app
+   npm install
+   ```
 
-- **Base Model**: DistilGPT-2 fine-tuned on fitness knowledge
-- **Source**: Private Hugging Face repo (PhilmoLSC/philmoLSC)
-- **Safety Rules**: 80% minimum rep retention, progressive overload
-- **Memory Usage**: ~150MB RAM (CPU optimized)
+2. Configure Capacitor:
+   - Add platforms: `npx cap add ios` and `npx cap add android`
+   - Sync: `npx cap sync`
 
-## Deployment
+3. For Llama integration on mobile:
+   - Use Capacitor plugin for local ML (e.g., custom plugin for llama.cpp)
 
-### Local Development
+4. Run development:
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
+   ```bash
+   npm run dev
+   ```
 
-# Run locally
-python app.py
-```
+5. Build for mobile:
+   ```bash
+   npm run build
+   npx cap sync
+   npx cap open ios  # or android
+   ```
 
-### Fly.io Deployment
+### Testing
 
-```bash
-# 1. Download flyctl (Windows)
-# Go to: https://github.com/superfly/flyctl/releases/latest
-# Download: flyctl.exe
-# Save to project directory
+- Unit tests: `npm test` in `app/`
+- API tests: Use Supertest in `api/`
+- Low-end device testing: Use browser dev tools to simulate slow devices
 
-# 2. Authenticate
-flyctl.exe auth login
+### Llama 3.1 Integration
 
-# 3. Deploy
-flyctl.exe deploy
+Replace mock functions in `api/server.js` and `app/src/components/AliceAvatar.svelte` with actual Llama calls using llama.cpp or similar library.
 
-# 4. Set Hugging Face token
-flyctl.exe secrets set HF_TOKEN=your_actual_huggingface_token_here
+### Notes
 
-# 5. Get app URL
-flyctl.exe status
-
-# 6. Test deployment
-python test_deployment.py https://your-app.fly.dev
-```
-
-### Testing Endpoints
-
-```bash
-# Health check
-curl https://your-app.fly.dev/health
-
-# Event endpoint
-curl -X POST https://your-app.fly.dev/event \
-  -H "Content-Type: application/json" \
-  -d '{
-    "event": "skip_set",
-    "user_id": "test123",
-    "context": {"exercise": "bench_press"},
-    "user_data": {"fitness_level": "intermediate"}
-  }'
-```
-
-## Technical Stack
-
-- **Framework**: FastAPI with Pydantic validation
-- **Model**: Transformers library with PyTorch
-- **Hosting**: Fly.io (cost-effective, scalable)
-- **Container**: Python buildpack with optimized runtime
-
-## Safety & Rules
-
-- ✅ **No rep drops below 80%** of planned reps
-- ✅ **Progressive overload** principles maintained
-- ✅ **User fitness level** consideration
-- ✅ **Goal alignment** for all recommendations
-- ✅ **Fallback responses** when AI unavailable
-
-## Privacy & Security
-
-- 🔒 **Event-based**: No persistent user data storage
-- 🛡️ **Minimal data**: Only current context processed
-- 🔐 **Secure**: HTTPS-only endpoints
-- 📊 **No tracking**: Anonymous event processing
-
-## Cost Optimization
-
-- 💰 **Fly.io**: $0-10/month based on usage
-- ⚡ **CPU optimized**: No GPU required
-- 📦 **Lightweight**: ~150MB memory footprint
-- 🔄 **Scalable**: Auto-scaling for 100-1000 users
-
-## Integration
-
-Designed for integration with fitness apps like Adaptive fIt mobile app. Supports real-time workout adjustments and personalized coaching through event-driven architecture.
-
----
-
-Powered by FastAPI, Transformers, and hosted on Fly.io
+- All AI features use Llama 3.1 8B (4-bit, local) instead of GPT-2.
+- Payments via Stripe/Apple with specified fees.
+- No duplicates/conflicts as per constitution.
+- Canvas fallbacks for low-end devices.

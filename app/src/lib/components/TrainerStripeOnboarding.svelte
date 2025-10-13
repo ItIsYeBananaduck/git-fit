@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { api } from '$lib/convex/_generated/api';
+	import { api } from '$lib/api/convex';
 	import { onMount } from 'svelte';
 	let onboardingUrl = '';
 	let onboardingStatus = '';

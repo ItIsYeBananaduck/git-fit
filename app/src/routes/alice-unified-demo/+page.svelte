@@ -5,7 +5,7 @@
 
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import AliceUnified from '../../lib/components/AliceUnified.svelte';
+	import AliceAvatar from '../../lib/components/AliceAvatar.svelte';
 
 	// Demo state
 	let subscriptionTier: 'free' | 'trial' | 'paid' | 'trainer' = $state('paid');
@@ -44,22 +44,24 @@
 				isBackgroundMonitoring,
 				eyeState
 			};
-			
+
 			// Trigger a custom event to notify layout
-			window.dispatchEvent(new CustomEvent('alice-demo-update', {
-				detail: {
-					subscriptionTier,
-					customPattern,
-					customColor,
-					mode,
-					zenMode,
-					playMode,
-					heartRate,
-					intensity,
-					isBackgroundMonitoring,
-					eyeState
-				}
-			}));
+			window.dispatchEvent(
+				new CustomEvent('alice-demo-update', {
+					detail: {
+						subscriptionTier,
+						customPattern,
+						customColor,
+						mode,
+						zenMode,
+						playMode,
+						heartRate,
+						intensity,
+						isBackgroundMonitoring,
+						eyeState
+					}
+				})
+			);
 		}
 	});
 
@@ -80,7 +82,7 @@
 	function handlePlayModeActivated() {
 		console.log('Play mode activated');
 		playMode = true;
-		setTimeout(() => playMode = false, 3000); // Auto exit play mode for demo
+		setTimeout(() => (playMode = false), 3000); // Auto exit play mode for demo
 	}
 
 	// Demo automation
@@ -162,22 +164,23 @@
 </script>
 
 <svelte:head>
-	<title>Alice Unified Demo - Build Adaptive Fit</title>
+	<title>Alice Avatar Demo - Build Adaptive Fit</title>
 </svelte:head>
 
 <div class="alice-demo">
 	<header class="demo-header">
-		<h1>🖤 Alice Unified Demo</h1>
-		<p>Complete Build Adaptive Fit specification implementation</p>
+		<h1>🖤 Alice Avatar Demo</h1>
+		<p>Complete Build Adaptive Fit humanoid specification implementation</p>
 		<p class="spec-note">
-			Matte black body • Electric blue eye • Breathing animation • 3D effects • Tap to bloom • Subscription tiers • Fixed position (scrolls independently)
+			Matte black body • Electric blue eye • Breathing animation • 3D effects • Tap to bloom •
+			Subscription tiers • Fixed position (scrolls independently)
 		</p>
 	</header>
 
 	<!-- Alice Container -->
 	<div class="alice-container">
 		<p style="color: #00bfff; text-align: center; font-style: italic;">
-			Alice is controlled globally from this demo page.<br>
+			Alice is controlled globally from this demo page.<br />
 			Look for her fixed in the center of your screen!
 		</p>
 	</div>
@@ -185,7 +188,7 @@
 	<!-- Demo Controls -->
 	<div class="controls-panel">
 		<h2>🎮 Demo Controls</h2>
-		
+
 		<div class="control-group">
 			<h3>Subscription Tier</h3>
 			<div class="radio-group">
@@ -206,7 +209,8 @@
 						<label>Pattern:</label>
 						<select bind:value={customPattern}>
 							{#each patterns as pattern}
-								<option value={pattern}>{pattern.charAt(0).toUpperCase() + pattern.slice(1)}</option>
+								<option value={pattern}>{pattern.charAt(0).toUpperCase() + pattern.slice(1)}</option
+								>
 							{/each}
 						</select>
 					</div>
@@ -254,12 +258,8 @@
 			<div class="control-group">
 				<h3>Zen Mode Triggers</h3>
 				<div class="zen-controls">
-					<button class="zen-btn pr-btn" onclick={triggerPR}>
-						🏆 Trigger PR (Blink)
-					</button>
-					<button class="zen-btn quit-btn" onclick={triggerQuit}>
-						😔 Trigger Quit (Droop)
-					</button>
+					<button class="zen-btn pr-btn" onclick={triggerPR}> 🏆 Trigger PR (Blink) </button>
+					<button class="zen-btn quit-btn" onclick={triggerQuit}> 😔 Trigger Quit (Droop) </button>
 				</div>
 			</div>
 		{/if}
@@ -267,18 +267,10 @@
 		<div class="control-group">
 			<h3>Eye Animation Tests</h3>
 			<div class="eye-test-controls">
-				<button class="eye-btn" onclick={() => testEyeState('droop')}>
-					😴 Test Droop
-				</button>
-				<button class="eye-btn" onclick={() => testEyeState('excited')}>
-					🤩 Test Excited
-				</button>
-				<button class="eye-btn" onclick={() => testEyeState('wink')}>
-					😉 Test Wink
-				</button>
-				<button class="eye-btn" onclick={() => testEyeState('blink')}>
-					😑 Test Blink
-				</button>
+				<button class="eye-btn" onclick={() => testEyeState('droop')}> 😴 Test Droop </button>
+				<button class="eye-btn" onclick={() => testEyeState('excited')}> 🤩 Test Excited </button>
+				<button class="eye-btn" onclick={() => testEyeState('wink')}> 😉 Test Wink </button>
+				<button class="eye-btn" onclick={() => testEyeState('blink')}> 😑 Test Blink </button>
 			</div>
 		</div>
 
@@ -286,13 +278,9 @@
 			<h3>Auto Demo</h3>
 			<div class="demo-controls">
 				{#if !autoDemo}
-					<button class="demo-btn start-btn" onclick={startAutoDemo}>
-						▶️ Start Auto Demo
-					</button>
+					<button class="demo-btn start-btn" onclick={startAutoDemo}> ▶️ Start Auto Demo </button>
 				{:else}
-					<button class="demo-btn stop-btn" onclick={stopAutoDemo}>
-						⏹️ Stop Auto Demo
-					</button>
+					<button class="demo-btn stop-btn" onclick={stopAutoDemo}> ⏹️ Stop Auto Demo </button>
 				{/if}
 			</div>
 		</div>
@@ -350,7 +338,10 @@
 		background: linear-gradient(135deg, #1a1a1a 0%, #0d1117 100%);
 		min-height: 200vh; /* Make it scrollable */
 		color: white;
-		font-family: system-ui, -apple-system, sans-serif;
+		font-family:
+			system-ui,
+			-apple-system,
+			sans-serif;
 	}
 
 	.demo-header {
@@ -443,10 +434,18 @@
 		background: rgba(0, 191, 255, 0.1);
 	}
 
-	.tier-free { color: #888; }
-	.tier-trial { color: #ffa500; }
-	.tier-paid { color: #00bfff; }
-	.tier-trainer { color: #50fa7b; }
+	.tier-free {
+		color: #888;
+	}
+	.tier-trial {
+		color: #ffa500;
+	}
+	.tier-paid {
+		color: #00bfff;
+	}
+	.tier-trainer {
+		color: #50fa7b;
+	}
 
 	.customization-controls {
 		display: flex;
@@ -454,13 +453,15 @@
 		align-items: center;
 	}
 
-	.pattern-selector, .color-selector {
+	.pattern-selector,
+	.color-selector {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 	}
 
-	.pattern-selector select, .color-selector input {
+	.pattern-selector select,
+	.color-selector input {
 		padding: 0.5rem;
 		border-radius: 5px;
 		border: 1px solid rgba(255, 255, 255, 0.3);
@@ -493,7 +494,7 @@
 		gap: 0.5rem;
 	}
 
-	.slider-control input[type="range"] {
+	.slider-control input[type='range'] {
 		width: 100%;
 		max-width: 300px;
 	}

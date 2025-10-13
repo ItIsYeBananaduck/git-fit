@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { getAuthUser } from '$lib/stores/auth';
-	import { api } from '$lib/convex/_generated/api';
+	import { api } from '$lib/api/convex';
 	import TrainingSplitCard from '$lib/components/onboarding/TrainingSplitCard.svelte';
 	import SplitComparison from '$lib/components/onboarding/SplitComparison.svelte';
 

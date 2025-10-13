@@ -4,7 +4,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import AliceUnified from '../../lib/components/AliceUnified.svelte';
+	import AliceAvatar from '../../lib/components/AliceAvatar.svelte';
 	import ColorCustomizer from '../../lib/components/ColorCustomizer.svelte';
 
 	// Demo state
@@ -14,7 +14,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 	let musicActive = true; // Start with music active to show sync
 	let earbudsConnected = true; // Start with earbuds to show effects
 	let orbSize = 180; // Increased default size for better visibility
-		let baseColor = '#0a0a0a'; // Dark blob center to match reference
+	let baseColor = '#0a0a0a'; // Dark blob center to match reference
 
 	// Animation demo
 	let autoDemo = false;
@@ -25,7 +25,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 		demoInterval = setInterval(() => {
 			// Cycle through different strain levels
 			strain = 20 + Math.sin(Date.now() * 0.001) * 40 + 40; // 20-100 range
-			
+
 			// Randomly toggle music and earbuds
 			if (Math.random() > 0.8) {
 				musicActive = !musicActive;
@@ -33,7 +33,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 			if (Math.random() > 0.9) {
 				earbudsConnected = !earbudsConnected;
 			}
-			
+
 			// Simulate rest periods
 			if (Math.random() > 0.85) {
 				isResting = !isResting;
@@ -78,30 +78,28 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 
 <svelte:head>
 	<title>AliceOrb Demo - GitFit</title>
-	<meta name="description" content="Interactive demo of the refined ferrofluid AliceOrb component" />
+	<meta
+		name="description"
+		content="Interactive demo of the refined ferrofluid AliceOrb component"
+	/>
 </svelte:head>
 
 <div class="demo-container">
 	<div class="demo-header">
 		<h1>Alice AI - Liquid Metal Orb Demo</h1>
-		<p>Experience Alice's sophisticated ferrofluid form with realistic liquid metal aesthetics, organic movement, and musical synchronization</p>
+		<p>
+			Experience Alice's sophisticated ferrofluid form with realistic liquid metal aesthetics,
+			organic movement, and musical synchronization
+		</p>
 	</div>
 
 	<div class="demo-layout">
 		<!-- Orb Display -->
 		<div class="orb-section">
 			<div class="orb-display">
-				<AliceUnified
-					intensity={strain}
-					{size}
-					customColor={baseColor}
-					isInteractive={true}
-					mode={isResting ? 'idle' : 'workout'}
-					heartRate={75 + strain}
-					on:alice-tapped={handleMorphComplete}
-				/>
+				<AliceAvatar {strain} {size} color={baseColor} heartRate={75 + strain} />
 			</div>
-			
+
 			<div class="orb-info">
 				<h3>Current State</h3>
 				<div class="state-grid">
@@ -129,14 +127,14 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 		<div class="controls-section">
 			<div class="control-group">
 				<h3>Manual Controls</h3>
-				
+
 				<div class="control-item">
 					<label for="strain-slider">Strain Level: {Math.round(strain)}%</label>
-					<input 
+					<input
 						id="strain-slider"
-						type="range" 
-						min="0" 
-						max="120" 
+						type="range"
+						min="0"
+						max="120"
 						bind:value={strain}
 						disabled={autoDemo}
 					/>
@@ -144,22 +142,16 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 
 				<div class="control-item">
 					<label for="orb-size">Orb Size: {orbSize}px</label>
-					<input 
-						id="orb-size"
-						type="range" 
-						min="80" 
-						max="200" 
-						bind:value={orbSize}
-					/>
+					<input id="orb-size" type="range" min="80" max="200" bind:value={orbSize} />
 				</div>
 
 				<div class="control-item">
 					<label for="rest-time">Rest Time: {Math.round(restTime)}s</label>
-					<input 
+					<input
 						id="rest-time"
-						type="range" 
-						min="5" 
-						max="60" 
+						type="range"
+						min="5"
+						max="60"
 						bind:value={restTime}
 						disabled={!isResting}
 					/>
@@ -182,13 +174,9 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 
 				<div class="demo-controls">
 					{#if !autoDemo}
-						<button class="demo-btn primary" on:click={startAutoDemo}>
-							Start Auto Demo
-						</button>
+						<button class="demo-btn primary" on:click={startAutoDemo}> Start Auto Demo </button>
 					{:else}
-						<button class="demo-btn secondary" on:click={stopAutoDemo}>
-							Stop Auto Demo
-						</button>
+						<button class="demo-btn secondary" on:click={stopAutoDemo}> Stop Auto Demo </button>
 					{/if}
 				</div>
 			</div>
@@ -196,11 +184,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 			<!-- Color Customizer -->
 			<div class="color-section">
 				<h3>Color Customization</h3>
-				<ColorCustomizer
-					initialHue={200}
-					disabled={false}
-					on:colorChange={handleColorChange}
-				/>
+				<ColorCustomizer initialHue={200} disabled={false} on:colorChange={handleColorChange} />
 			</div>
 		</div>
 	</div>
@@ -210,38 +194,71 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 		<div class="features-grid">
 			<div class="feature">
 				<h4>🌊 Liquid Metal Aesthetics</h4>
-				<p>Alice now matches her sophisticated logo design with glossy metallic surfaces, dark cores, bright edge highlights, and realistic depth shadows</p>
+				<p>
+					Alice now matches her sophisticated logo design with glossy metallic surfaces, dark cores,
+					bright edge highlights, and realistic depth shadows
+				</p>
 			</div>
 			<div class="feature">
 				<h4>
 					<svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+						/>
 					</svg>
 					Continuous Organic Movement
 				</h4>
-				<p>Always subtly moving like real ferrofluid with organic shape variations. Alice breathes and flows naturally, creating a living presence</p>
+				<p>
+					Always subtly moving like real ferrofluid with organic shape variations. Alice breathes
+					and flows naturally, creating a living presence
+				</p>
 			</div>
 			<div class="feature">
 				<h4>🎵 Musical Synchronization</h4>
-				<p>When music is active, Alice syncs her movement to rhythmic beats with larger amplitude distortions and eye size pulsing</p>
+				<p>
+					When music is active, Alice syncs her movement to rhythmic beats with larger amplitude
+					distortions and eye size pulsing
+				</p>
 			</div>
 			<div class="feature">
 				<h4>� Multi-Layer Rendering</h4>
-				<p>Dark metallic core, main liquid body, and glossy highlight layers create authentic 3D depth like the logo design</p>
+				<p>
+					Dark metallic core, main liquid body, and glossy highlight layers create authentic 3D
+					depth like the logo design
+				</p>
 			</div>
 			<div class="feature">
 				<h4>
 					<svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+						/>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+						/>
 					</svg>
 					Bright Eye Display
 				</h4>
-				<p>White text with glowing shadows displays capped strain percentage or rest timer, matching the logo's bright contrast</p>
+				<p>
+					White text with glowing shadows displays capped strain percentage or rest timer, matching
+					the logo's bright contrast
+				</p>
 			</div>
 			<div class="feature">
 				<h4>🎨 Sophisticated Gradients</h4>
-				<p>Complex radial gradients create metallic shine with highlights, mid-tones, and deep shadows for realistic liquid metal appearance</p>
+				<p>
+					Complex radial gradients create metallic shine with highlights, mid-tones, and deep
+					shadows for realistic liquid metal appearance
+				</p>
 			</div>
 			<div class="feature">
 				<h4>♿ Accessibility</h4>
@@ -273,7 +290,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 	.demo-header h1 {
 		font-size: 3rem;
 		margin-bottom: 10px;
-		background: linear-gradient(135deg, #00BFFF, #1E90FF);
+		background: linear-gradient(135deg, #00bfff, #1e90ff);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
@@ -313,7 +330,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 	.orb-info h3 {
 		margin-bottom: 20px;
 		color: #333;
-		border-bottom: 2px solid #00BFFF;
+		border-bottom: 2px solid #00bfff;
 		padding-bottom: 10px;
 	}
 
@@ -339,7 +356,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 
 	.state-item .value {
 		font-weight: 700;
-		color: #00BFFF;
+		color: #00bfff;
 	}
 
 	.controls-section {
@@ -358,7 +375,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 	.control-group h3 {
 		margin-bottom: 20px;
 		color: #333;
-		border-bottom: 2px solid #00BFFF;
+		border-bottom: 2px solid #00bfff;
 		padding-bottom: 10px;
 	}
 
@@ -373,7 +390,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 		color: #555;
 	}
 
-	.control-item input[type="range"] {
+	.control-item input[type='range'] {
 		width: 100%;
 		height: 6px;
 		background: #ddd;
@@ -383,12 +400,12 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 		appearance: none;
 	}
 
-	.control-item input[type="range"]::-webkit-slider-thumb {
+	.control-item input[type='range']::-webkit-slider-thumb {
 		-webkit-appearance: none;
 		appearance: none;
 		width: 20px;
 		height: 20px;
-		background: #00BFFF;
+		background: #00bfff;
 		border-radius: 50%;
 		cursor: pointer;
 	}
@@ -414,10 +431,10 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 		background: #f8f9fa;
 	}
 
-	.toggle input[type="checkbox"] {
+	.toggle input[type='checkbox'] {
 		width: 18px;
 		height: 18px;
-		accent-color: #00BFFF;
+		accent-color: #00bfff;
 	}
 
 	.demo-controls {
@@ -435,12 +452,12 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 	}
 
 	.demo-btn.primary {
-		background: #00BFFF;
+		background: #00bfff;
 		color: white;
 	}
 
 	.demo-btn.primary:hover {
-		background: #0099CC;
+		background: #0099cc;
 		transform: translateY(-2px);
 	}
 
@@ -464,7 +481,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 	.color-section h3 {
 		margin-bottom: 20px;
 		color: #333;
-		border-bottom: 2px solid #00BFFF;
+		border-bottom: 2px solid #00bfff;
 		padding-bottom: 10px;
 	}
 
@@ -478,7 +495,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 	.features-section h3 {
 		margin-bottom: 30px;
 		color: #333;
-		border-bottom: 2px solid #00BFFF;
+		border-bottom: 2px solid #00bfff;
 		padding-bottom: 10px;
 		font-size: 1.5rem;
 	}
@@ -493,7 +510,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 		padding: 20px;
 		background: #f8f9fa;
 		border-radius: 12px;
-		border-left: 4px solid #00BFFF;
+		border-left: 4px solid #00bfff;
 	}
 
 	.feature h4 {
@@ -512,7 +529,7 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 		.demo-layout {
 			grid-template-columns: 1fr;
 		}
-		
+
 		.features-grid {
 			grid-template-columns: 1fr;
 		}
@@ -522,11 +539,11 @@ This page demonstrates the refined ferrofluid AliceOrb with all its features
 		.demo-container {
 			padding: 15px;
 		}
-		
+
 		.demo-header h1 {
 			font-size: 2rem;
 		}
-		
+
 		.state-grid {
 			grid-template-columns: 1fr;
 		}

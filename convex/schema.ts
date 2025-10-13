@@ -2328,4 +2328,158 @@ export default defineSchema({
     .index("by_user_timestamp", ["userId", "timestamp"])
     .index("by_heart_rate", ["heartRate"])
     .index("by_prompt_shown", ["promptShown"]),
+
+  // Audit System Tables
+
+  auditReports: defineTable({
+    sessionId: v.string(),
+    timestamp: v.number(),
+    version: v.string(),
+    status: v.union(v.literal("in_progress"), v.literal("completed"), v.literal("failed")),
+
+    // Executive Summary
+    summary: v.object({
+      totalFeatures: v.number(),
+      implemented: v.number(),
+      needsRefinement: v.number(),
+      missing: v.number(),
+      constitutionViolations: v.number(),
+      criticalIssues: v.array(v.string()),
+    }),
+
+    // Constitution Compliance
+    constitutionCompliance: v.object({
+      overallScore: v.number(),
+      principleBreakdown: v.any(), // Using v.any() for flexible record structure
+    }),
+
+    // Metadata
+    metadata: v.object({
+      auditDuration: v.number(), // minutes
+      codebaseSize: v.number(), // files
+      aiModelsFound: v.array(v.string()),
+      technologiesUsed: v.array(v.string()),
+    }),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_status", ["status"])
+    .index("by_timestamp", ["timestamp"]),
+
+  featureTasks: defineTable({
+    auditReportId: v.id("auditReports"),
+    name: v.string(),
+    category: v.union(v.literal("core_fitness"), v.literal("ai_personalization"), v.literal("platform_features"), v.literal("advanced_features")),
+    description: v.string(),
+    implementationStatus: v.union(v.literal("implemented"), v.literal("needs_refinement"), v.literal("missing")),
+    constitutionPrinciples: v.array(v.string()),
+    evidence: v.array(v.string()),
+    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("critical")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_audit_report", ["auditReportId"])
+    .index("by_category", ["category"])
+    .index("by_status", ["implementationStatus"])
+    .index("by_priority", ["priority"]),
+
+  constitutionViolations: defineTable({
+    auditReportId: v.id("auditReports"),
+    featureTaskId: v.optional(v.id("featureTasks")),
+    principle: v.string(),
+    severity: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("critical")),
+    description: v.string(),
+    evidence: v.string(),
+    recommendation: v.string(),
+    status: v.union(v.literal("open"), v.literal("addressed"), v.literal("dismissed")),
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+  })
+    .index("by_audit_report", ["auditReportId"])
+    .index("by_feature_task", ["featureTaskId"])
+    .index("by_principle", ["principle"])
+    .index("by_severity", ["severity"])
+    .index("by_status", ["status"]),
+
+  implementationGaps: defineTable({
+    auditReportId: v.id("auditReports"),
+    featureTaskId: v.optional(v.id("featureTasks")),
+    gapType: v.union(v.literal("missing_functionality"), v.literal("incomplete_implementation"), v.literal("architecture_issue"), v.literal("performance_issue")),
+    description: v.string(),
+    impact: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("critical")),
+    estimatedEffort: v.string(),
+    dependencies: v.array(v.string()),
+    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("critical")),
+    createdAt: v.number(),
+  })
+    .index("by_audit_report", ["auditReportId"])
+    .index("by_feature_task", ["featureTaskId"])
+    .index("by_gap_type", ["gapType"])
+    .index("by_impact", ["impact"])
+    .index("by_priority", ["priority"]),
+
+  conflicts: defineTable({
+    auditReportId: v.id("auditReports"),
+    type: v.union(v.literal("architecture_conflict"), v.literal("principle_conflict"), v.literal("implementation_conflict"), v.literal("requirement_conflict")),
+    description: v.string(),
+    affectedFeatures: v.array(v.string()),
+    severity: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("critical")),
+    resolution: v.optional(v.string()),
+    status: v.union(v.literal("open"), v.literal("resolved"), v.literal("accepted")),
+    createdAt: v.number(),
+  })
+    .index("by_audit_report", ["auditReportId"])
+    .index("by_type", ["type"])
+    .index("by_severity", ["severity"])
+    .index("by_status", ["status"]),
+
+  recommendations: defineTable({
+    auditReportId: v.id("auditReports"),
+    featureTaskId: v.optional(v.id("featureTasks")),
+    type: v.union(v.literal("implementation"), v.literal("refinement"), v.literal("architecture"), v.literal("compliance"), v.literal("optimization")),
+    title: v.string(),
+    description: v.string(),
+    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("critical")),
+    effort: v.string(),
+    benefits: v.array(v.string()),
+    risks: v.array(v.string()),
+    dependencies: v.array(v.string()),
+    status: v.union(v.literal("pending"), v.literal("in_progress"), v.literal("completed"), v.literal("cancelled")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_audit_report", ["auditReportId"])
+    .index("by_feature_task", ["featureTaskId"])
+    .index("by_type", ["type"])
+    .index("by_priority", ["priority"])
+    .index("by_status", ["status"]),
+
+  auditSessions: defineTable({
+    userId: v.string(),
+    startTime: v.number(),
+    endTime: v.optional(v.number()),
+    status: v.union(v.literal("active"), v.literal("completed"), v.literal("failed")),
+    workspacePath: v.string(),
+    constitutionVersion: v.string(),
+    progress: v.object({
+      currentPhase: v.string(),
+      completedTasks: v.number(),
+      totalTasks: v.number(),
+      currentTask: v.optional(v.string()),
+    }),
+    configuration: v.object({
+      includeTests: v.boolean(),
+      includeDocumentation: v.boolean(),
+      deepAnalysis: v.boolean(),
+      parallelProcessing: v.boolean(),
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_start_time", ["startTime"])
+    .index("by_constitution_version", ["constitutionVersion"]),
 });

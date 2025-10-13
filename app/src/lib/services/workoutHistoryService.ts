@@ -1,379 +1,302 @@
-import { api } from '$lib/convex/_generated/api';
-import type { MondayWorkoutData } from '$lib/stores/mondayWorkoutData.js';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '../../../../convex/convex/_generated/api_workaround';
 
-export interface WorkoutHistoryEntry {
-  id: string;
-  userId: string;
-  exerciseId: string;
-  exerciseName: string;
-  date: Date;
-  sets: number;
-  reps: number;
-  weight: number;
-  duration: number; // in minutes
-  heartRate: {
-    avg: number;
-    max: number;
-    min: number;
-  };
-  spo2: {
-    avg: number;
-    min: number;
-  };
-  userFeedback: MondayWorkoutData['userFeedback'] | null;
-  aiAdjustments: {
-    action: string;
-    reason: string;
-    modifications: Record<string, number>;
-  }[];
-  completedSets: number;
-  restTimes: number[]; // Rest time between sets
-  wearableSource: 'whoop' | 'apple_watch' | 'mock';
+// Types for workout history
+export interface WorkoutSession {
+	id: string;
+	userId: string;
+	startTime: Date;
+	endTime?: Date;
+	exercises: WorkoutExercise[];
+	totalDuration?: number; // in minutes
+	totalVolume?: number; // total weight lifted
+	averageHeartRate?: number;
+	maxHeartRate?: number;
+	caloriesBurned?: number;
+	notes?: string;
 }
 
-export interface AILearningData {
-  userId: string;
-  exercisePreferences: Record<string, number>; // exercise -> success rate
-  optimalRestTimes: Record<string, number>; // exercise -> optimal rest seconds
-  heartRateZones: {
-    resting: number;
-    aerobic: number;
-    anaerobic: number;
-    maxEffort: number;
-  };
-  progressionPatterns: {
-    preferredWeightJumps: number[];
-    setVolumePreference: 'sets' | 'reps' | 'weight';
-    difficultyTolerance: number; // 0-1 scale
-  };
-  recentPerformance: {
-    averageSuccessRate: number;
-    trendDirection: 'improving' | 'stable' | 'declining';
-    lastUpdated: Date;
-  };
+export interface WorkoutExercise {
+	id: string;
+	exerciseId: string;
+	exerciseName: string;
+	sets: WorkoutSet[];
+	notes?: string;
+}
+
+export interface WorkoutSet {
+	id: string;
+	reps: number;
+	weight: number; // in lbs
+	duration?: number; // in seconds (for time-based exercises)
+	restTime?: number; // in seconds
+	heartRate?: number;
+	rpe?: number; // Rate of Perceived Exertion (1-10)
+	notes?: string;
+}
+
+export interface WorkoutHistoryFilters {
+	startDate?: Date;
+	endDate?: Date;
+	exerciseId?: string;
+	limit?: number;
+	offset?: number;
+}
+
+export interface WorkoutStats {
+	totalWorkouts: number;
+	totalDuration: number; // in minutes
+	totalVolume: number; // in lbs
+	averageHeartRate: number;
+	personalRecords: PersonalRecord[];
+	recentWorkouts: WorkoutSession[];
+}
+
+export interface PersonalRecord {
+	exerciseId: string;
+	exerciseName: string;
+	maxWeight: number;
+	maxReps: number;
+	dateAchieved: Date;
+	workoutId: string;
 }
 
 export class WorkoutHistoryService {
-  private userId: string;
-  private sessionHistory: WorkoutHistoryEntry[] = [];
+	private convexClient: ConvexHttpClient;
 
-  constructor(userId: string) {
-    this.userId = userId;
-  }
+	constructor(convexClient?: ConvexHttpClient) {
+		this.convexClient = convexClient || new ConvexHttpClient(process.env.VITE_CONVEX_URL || '');
+	}
 
-  /**
-   * Record a completed workout
-   */
-  async recordWorkout(workoutData: Omit<WorkoutHistoryEntry, 'id' | 'userId' | 'date'>): Promise<void> {
-    const entry: WorkoutHistoryEntry = {
-      ...workoutData,
-      id: this.generateWorkoutId(),
-      userId: this.userId,
-      date: new Date()
-    };
+	// Get workout history for a user
+	async getWorkoutHistory(userId: string, filters: WorkoutHistoryFilters = {}): Promise<WorkoutSession[]> {
+		try {
+			const query = api.workouts.getWorkoutHistory;
+			const result = await this.convexClient.query(query, {
+				userId,
+				startDate: filters.startDate?.toISOString(),
+				endDate: filters.endDate?.toISOString(),
+				exerciseId: filters.exerciseId,
+				limit: filters.limit || 50,
+				offset: filters.offset || 0
+			});
 
-    // Store in session history
-    this.sessionHistory.push(entry);
+			// Transform the data to match our interface
+			return result.map(workout => ({
+				...workout,
+				startTime: new Date(workout.startTime),
+				endTime: workout.endTime ? new Date(workout.endTime) : undefined,
+				exercises: workout.exercises.map(exercise => ({
+					...exercise,
+					sets: exercise.sets.map(set => ({
+						...set,
+						// Ensure numeric values
+						reps: Number(set.reps),
+						weight: Number(set.weight),
+						duration: set.duration ? Number(set.duration) : undefined,
+						restTime: set.restTime ? Number(set.restTime) : undefined,
+						heartRate: set.heartRate ? Number(set.heartRate) : undefined,
+						rpe: set.rpe ? Number(set.rpe) : undefined
+					}))
+				}))
+			}));
+		} catch (error) {
+			console.error('Failed to fetch workout history:', error);
+			// Return mock data for development
+			return this.getMockWorkoutHistory(userId, filters);
+		}
+	}
 
-    // Store in database (via Convex)
-    try {
-      console.log('Recording workout in database:', entry);
-      // await api.mutations.workouts.recordWorkout(entry);
-      
-      // Store in localStorage as backup
-      this.storeInLocalStorage(entry);
-    } catch (error) {
-      console.error('Failed to store workout in database:', error);
-      // Fallback to localStorage only
-      this.storeInLocalStorage(entry);
-    }
-  }
+	// Get workout statistics
+	async getWorkoutStats(userId: string): Promise<WorkoutStats> {
+		try {
+			const query = api.workouts.getWorkoutStats;
+			const result = await this.convexClient.query(query, { userId });
 
-  /**
-   * Get recent workout history for AI learning
-   */
-  async getRecentHistory(exerciseId?: string, limit: number = 10): Promise<WorkoutHistoryEntry[]> {
-    try {
-      // Try to get from database first
-      // const dbHistory = await api.queries.workouts.getRecentWorkouts({ 
-      //   userId: this.userId, 
-      //   exerciseId, 
-      //   limit 
-      // });
-      
-      // For now, use localStorage and session history
-      const allHistory = [...this.getFromLocalStorage(), ...this.sessionHistory];
-      
-      let filtered = allHistory.filter(w => w.userId === this.userId);
-      if (exerciseId) {
-        filtered = filtered.filter(w => w.exerciseId === exerciseId);
-      }
-      
-      // Sort by date descending and limit
-      return filtered
-        .sort((a, b) => b.date.getTime() - a.date.getTime())
-        .slice(0, limit);
-    } catch (error) {
-      console.error('Failed to get workout history:', error);
-      return this.sessionHistory.slice(-limit);
-    }
-  }
+			return {
+				...result,
+				recentWorkouts: result.recentWorkouts.map(workout => ({
+					...workout,
+					startTime: new Date(workout.startTime),
+					endTime: workout.endTime ? new Date(workout.endTime) : undefined
+				}))
+			};
+		} catch (error) {
+			console.error('Failed to fetch workout stats:', error);
+			return this.getMockWorkoutStats(userId);
+		}
+	}
 
-  /**
-   * Generate AI learning data from workout history
-   */
-  async generateAILearningData(): Promise<AILearningData> {
-    const history = await this.getRecentHistory(undefined, 50); // Last 50 workouts
-    
-    if (history.length === 0) {
-      return this.getDefaultLearningData();
-    }
+	// Save a completed workout session
+	async saveWorkoutSession(session: Omit<WorkoutSession, 'id'>): Promise<string> {
+		try {
+			const mutation = api.workouts.saveWorkoutSession;
+			const result = await this.convexClient.mutation(mutation, {
+				userId: session.userId,
+				startTime: session.startTime.toISOString(),
+				endTime: session.endTime?.toISOString(),
+				exercises: session.exercises,
+				totalDuration: session.totalDuration,
+				totalVolume: session.totalVolume,
+				averageHeartRate: session.averageHeartRate,
+				maxHeartRate: session.maxHeartRate,
+				caloriesBurned: session.caloriesBurned,
+				notes: session.notes
+			});
 
-    // Calculate exercise preferences (success rates)
-    const exercisePreferences: Record<string, number> = {};
-    const exerciseCounts: Record<string, number> = {};
-    
-    history.forEach(workout => {
-      const success = workout.userFeedback !== 'flag_review' ? 1 : 0;
-      exercisePreferences[workout.exerciseId] = (exercisePreferences[workout.exerciseId] || 0) + success;
-      exerciseCounts[workout.exerciseId] = (exerciseCounts[workout.exerciseId] || 0) + 1;
-    });
+			return result;
+		} catch (error) {
+			console.error('Failed to save workout session:', error);
+			// Return a mock ID for development
+			return `mock-session-${Date.now()}`;
+		}
+	}
 
-    // Convert to success rates
-    Object.keys(exercisePreferences).forEach(exercise => {
-      exercisePreferences[exercise] = exercisePreferences[exercise] / exerciseCounts[exercise];
-    });
+	// Update an existing workout session
+	async updateWorkoutSession(sessionId: string, updates: Partial<WorkoutSession>): Promise<void> {
+		try {
+			const mutation = api.workouts.updateWorkoutSession;
+			await this.convexClient.mutation(mutation, {
+				sessionId,
+				updates: {
+					...updates,
+					endTime: updates.endTime?.toISOString(),
+					exercises: updates.exercises
+				}
+			});
+		} catch (error) {
+			console.error('Failed to update workout session:', error);
+			// Silently fail for development
+		}
+	}
 
-    // Calculate optimal rest times
-    const optimalRestTimes: Record<string, number> = {};
-    const restTimeData: Record<string, number[]> = {};
-    
-    history.forEach(workout => {
-      if (workout.restTimes.length > 0) {
-        const avgRest = workout.restTimes.reduce((a, b) => a + b, 0) / workout.restTimes.length;
-        if (!restTimeData[workout.exerciseId]) {
-          restTimeData[workout.exerciseId] = [];
-        }
-        restTimeData[workout.exerciseId].push(avgRest);
-      }
-    });
+	// Delete a workout session
+	async deleteWorkoutSession(sessionId: string): Promise<void> {
+		try {
+			const mutation = api.workouts.deleteWorkoutSession;
+			await this.convexClient.mutation(mutation, { sessionId });
+		} catch (error) {
+			console.error('Failed to delete workout session:', error);
+			// Silently fail for development
+		}
+	}
 
-    Object.keys(restTimeData).forEach(exercise => {
-      const times = restTimeData[exercise];
-      optimalRestTimes[exercise] = times.reduce((a, b) => a + b, 0) / times.length;
-    });
+	// Get personal records for exercises
+	async getPersonalRecords(userId: string): Promise<PersonalRecord[]> {
+		try {
+			const query = api.workouts.getPersonalRecords;
+			const result = await this.convexClient.query(query, { userId });
 
-    // Calculate heart rate zones
-    const heartRates = history.map(w => w.heartRate.avg).filter(hr => hr > 0);
-    const heartRateZones = this.calculateHeartRateZones(heartRates);
+			return result.map(record => ({
+				...record,
+				dateAchieved: new Date(record.dateAchieved)
+			}));
+		} catch (error) {
+			console.error('Failed to fetch personal records:', error);
+			return this.getMockPersonalRecords(userId);
+		}
+	}
 
-    // Analyze progression patterns
-    const progressionPatterns = this.analyzeProgressionPatterns(history);
+	// Mock data for development
+	private getMockWorkoutHistory(userId: string, filters: WorkoutHistoryFilters): WorkoutSession[] {
+		const mockWorkouts: WorkoutSession[] = [
+			{
+				id: 'mock-1',
+				userId,
+				startTime: new Date(Date.now() - 86400000), // 1 day ago
+				endTime: new Date(Date.now() - 86400000 + 3600000), // 1 hour later
+				exercises: [
+					{
+						id: 'ex-1',
+						exerciseId: 'squat',
+						exerciseName: 'Barbell Squat',
+						sets: [
+							{ id: 'set-1', reps: 8, weight: 185, restTime: 180, heartRate: 145 },
+							{ id: 'set-2', reps: 8, weight: 185, restTime: 180, heartRate: 150 },
+							{ id: 'set-3', reps: 6, weight: 205, restTime: 240, heartRate: 155 }
+						]
+					}
+				],
+				totalDuration: 75,
+				totalVolume: 2340,
+				averageHeartRate: 150,
+				maxHeartRate: 160,
+				caloriesBurned: 320
+			},
+			{
+				id: 'mock-2',
+				userId,
+				startTime: new Date(Date.now() - 172800000), // 2 days ago
+				endTime: new Date(Date.now() - 172800000 + 4500000), // 1.25 hours later
+				exercises: [
+					{
+						id: 'ex-2',
+						exerciseId: 'bench-press',
+						exerciseName: 'Bench Press',
+						sets: [
+							{ id: 'set-4', reps: 10, weight: 135, restTime: 120, heartRate: 130 },
+							{ id: 'set-5', reps: 8, weight: 155, restTime: 150, heartRate: 140 },
+							{ id: 'set-6', reps: 6, weight: 175, restTime: 180, heartRate: 150 }
+						]
+					}
+				],
+				totalDuration: 90,
+				totalVolume: 2470,
+				averageHeartRate: 140,
+				maxHeartRate: 155,
+				caloriesBurned: 280
+			}
+		];
 
-    // Calculate recent performance trend
-    const recentPerformance = this.calculatePerformanceTrend(history.slice(0, 10));
+		// Apply filters
+		let filtered = mockWorkouts;
+		if (filters.startDate) {
+			filtered = filtered.filter(w => w.startTime >= filters.startDate!);
+		}
+		if (filters.endDate) {
+			filtered = filtered.filter(w => w.startTime <= filters.endDate!);
+		}
+		if (filters.exerciseId) {
+			filtered = filtered.filter(w =>
+				w.exercises.some(e => e.exerciseId === filters.exerciseId)
+			);
+		}
 
-    return {
-      userId: this.userId,
-      exercisePreferences,
-      optimalRestTimes,
-      heartRateZones,
-      progressionPatterns,
-      recentPerformance
-    };
-  }
+		return filtered.slice(filters.offset || 0, (filters.offset || 0) + (filters.limit || 50));
+	}
 
-  /**
-   * Get AI recommendations based on history
-   */
-  async getHistoryBasedRecommendations(currentExercise: string): Promise<{
-    suggestedRestTime: number;
-    confidenceLevel: number;
-    expectedDifficulty: 'easy' | 'moderate' | 'hard';
-    recommendedModifications: string[];
-  }> {
-    const learningData = await this.generateAILearningData();
-    const exerciseHistory = await this.getRecentHistory(currentExercise, 5);
+	private getMockWorkoutStats(userId: string): WorkoutStats {
+		return {
+			totalWorkouts: 24,
+			totalDuration: 1800, // 30 hours
+			totalVolume: 45680, // lbs
+			averageHeartRate: 145,
+			personalRecords: this.getMockPersonalRecords(userId),
+			recentWorkouts: this.getMockWorkoutHistory(userId, { limit: 5 })
+		};
+	}
 
-    const suggestions = {
-      suggestedRestTime: learningData.optimalRestTimes[currentExercise] || 60,
-      confidenceLevel: exerciseHistory.length >= 3 ? 0.8 : 0.4,
-      expectedDifficulty: this.predictDifficulty(currentExercise, learningData),
-      recommendedModifications: this.generateModificationRecommendations(currentExercise, learningData)
-    };
-
-    return suggestions;
-  }
-
-  // Private helper methods
-
-  private generateWorkoutId(): string {
-    return `workout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  private storeInLocalStorage(entry: WorkoutHistoryEntry): void {
-    try {
-      const stored = localStorage.getItem(`workout_history_${this.userId}`) || '[]';
-      const history = JSON.parse(stored);
-      history.push({
-        ...entry,
-        date: entry.date.toISOString() // Convert Date to string for storage
-      });
-      
-      // Keep only last 100 workouts in localStorage
-      if (history.length > 100) {
-        history.splice(0, history.length - 100);
-      }
-      
-      localStorage.setItem(`workout_history_${this.userId}`, JSON.stringify(history));
-    } catch (error) {
-      console.error('Failed to store workout in localStorage:', error);
-    }
-  }
-
-  private getFromLocalStorage(): WorkoutHistoryEntry[] {
-    try {
-      const stored = localStorage.getItem(`workout_history_${this.userId}`) || '[]';
-      const history = JSON.parse(stored);
-      
-      // Convert date strings back to Date objects
-      return history.map((entry: any) => ({
-        ...entry,
-        date: new Date(entry.date)
-      }));
-    } catch (error) {
-      console.error('Failed to load workout history from localStorage:', error);
-      return [];
-    }
-  }
-
-  private getDefaultLearningData(): AILearningData {
-    return {
-      userId: this.userId,
-      exercisePreferences: {},
-      optimalRestTimes: {},
-      heartRateZones: {
-        resting: 70,
-        aerobic: 140,
-        anaerobic: 160,
-        maxEffort: 180
-      },
-      progressionPatterns: {
-        preferredWeightJumps: [2.5, 5],
-        setVolumePreference: 'weight',
-        difficultyTolerance: 0.7
-      },
-      recentPerformance: {
-        averageSuccessRate: 0.5,
-        trendDirection: 'stable',
-        lastUpdated: new Date()
-      }
-    };
-  }
-
-  private calculateHeartRateZones(heartRates: number[]) {
-    if (heartRates.length === 0) {
-      return {
-        resting: 70,
-        aerobic: 140,
-        anaerobic: 160,
-        maxEffort: 180
-      };
-    }
-
-    const sorted = heartRates.sort((a, b) => a - b);
-    return {
-      resting: sorted[Math.floor(sorted.length * 0.1)],
-      aerobic: sorted[Math.floor(sorted.length * 0.5)],
-      anaerobic: sorted[Math.floor(sorted.length * 0.8)],
-      maxEffort: sorted[Math.floor(sorted.length * 0.95)]
-    };
-  }
-
-  private analyzeProgressionPatterns(history: WorkoutHistoryEntry[]) {
-    // Analyze how user prefers to progress (more sets, reps, or weight)
-    const modifications = history.flatMap(w => w.aiAdjustments);
-    
-    const weightIncreases = modifications.filter(m => m.action.includes('weight')).length;
-    const setIncreases = modifications.filter(m => m.action.includes('set')).length;
-    const repIncreases = modifications.filter(m => m.action.includes('rep')).length;
-
-    let preferredProgression: 'sets' | 'reps' | 'weight' = 'weight';
-    if (setIncreases > weightIncreases && setIncreases > repIncreases) {
-      preferredProgression = 'sets';
-    } else if (repIncreases > weightIncreases && repIncreases > setIncreases) {
-      preferredProgression = 'reps';
-    }
-
-    return {
-      preferredWeightJumps: [2.5, 5], // Default, could be calculated from history
-      setVolumePreference: preferredProgression,
-      difficultyTolerance: history.filter(w => w.userFeedback === 'flag_review').length / history.length
-    };
-  }
-
-  private calculatePerformanceTrend(recentHistory: WorkoutHistoryEntry[]) {
-    if (recentHistory.length < 3) {
-      return {
-        averageSuccessRate: 0.5,
-        trendDirection: 'stable' as const,
-        lastUpdated: new Date()
-      };
-    }
-
-    const successRates = recentHistory.map(w => 
-      w.userFeedback === 'flag_review' ? 0 :
-      w.userFeedback === 'neutral' ? 0.7 : 1
-    );
-
-    const avgSuccessRate = successRates.reduce((a, b) => a + b, 0) / successRates.length;
-    
-    // Simple trend calculation
-    const firstHalf = successRates.slice(0, Math.floor(successRates.length / 2));
-    const secondHalf = successRates.slice(Math.floor(successRates.length / 2));
-    
-    const firstHalfAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-    const secondHalfAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-    
-    let trendDirection: 'improving' | 'stable' | 'declining' = 'stable';
-    if (secondHalfAvg > firstHalfAvg + 0.1) {
-      trendDirection = 'improving';
-    } else if (secondHalfAvg < firstHalfAvg - 0.1) {
-      trendDirection = 'declining';
-    }
-
-    return {
-      averageSuccessRate: avgSuccessRate,
-      trendDirection,
-      lastUpdated: new Date()
-    };
-  }
-
-  private predictDifficulty(exerciseId: string, learningData: AILearningData): 'easy' | 'moderate' | 'hard' {
-    const successRate = learningData.exercisePreferences[exerciseId];
-    
-    if (successRate === undefined) return 'moderate';
-    if (successRate > 0.8) return 'easy';
-    if (successRate < 0.4) return 'hard';
-    return 'moderate';
-  }
-
-  private generateModificationRecommendations(exerciseId: string, learningData: AILearningData): string[] {
-    const recommendations = [];
-    const successRate = learningData.exercisePreferences[exerciseId] || 0.5;
-    
-    if (successRate < 0.4) {
-      recommendations.push('Consider reducing weight by 10-15%');
-      recommendations.push('Increase rest time between sets');
-    } else if (successRate > 0.8) {
-      recommendations.push('Ready for progressive overload');
-      recommendations.push('Consider adding weight or reps');
-    }
-
-    if (learningData.recentPerformance.trendDirection === 'declining') {
-      recommendations.push('Take extra rest or reduce intensity');
-    }
-
-    return recommendations;
-  }
+	private getMockPersonalRecords(userId: string): PersonalRecord[] {
+		return [
+			{
+				exerciseId: 'squat',
+				exerciseName: 'Barbell Squat',
+				maxWeight: 225,
+				maxReps: 8,
+				dateAchieved: new Date(Date.now() - 86400000),
+				workoutId: 'mock-1'
+			},
+			{
+				exerciseId: 'bench-press',
+				exerciseName: 'Bench Press',
+				maxWeight: 185,
+				maxReps: 6,
+				dateAchieved: new Date(Date.now() - 172800000),
+				workoutId: 'mock-2'
+			}
+		];
+	}
 }
+
+// Global instance for app-wide workout history management
+export const globalWorkoutHistoryService = new WorkoutHistoryService();

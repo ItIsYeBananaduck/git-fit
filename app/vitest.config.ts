@@ -33,7 +33,8 @@ export default defineConfig({
       'tests/contract/**/*.ts',
       'tests/integration/**/*.ts',
       'tests/performance/**/*.ts',
-      'tests/e2e/**/*.ts'
+      'tests/e2e/**/*.ts',
+      'tests/unit/**/*.test.ts'
     ],
     testTimeout: 10000, // 10s timeout for health data tests
     coverage: {
