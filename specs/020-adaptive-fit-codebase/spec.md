@@ -5,6 +5,16 @@
 **Status**: Draft  
 **Input**: User description: "Adaptive Fit: Codebase Audit and Refactor Spec Kit for Feature Implementation"
 
+## Clarifications
+
+### Session 2025-10-11
+
+- Q: What specific criteria define "constitution alignment" for each of the 18 tasks? → A: Strict compliance with all 7 core principles (user-centric, adaptability, cost-effectiveness, scalability, safety/privacy, engagement, data ethics)
+- Q: What specific criteria determine if a feature is "implemented" vs "needs refinement" in the audit? → A: Code exists, runs without errors, meets functional requirements, and aligns with constitution principles
+- Q: How should conflicts between existing implementations and constitution requirements be prioritized for resolution? → A: Prioritize safety, privacy, scalability
+- Q: What is the required structure and format for the comprehensive audit report? → A: Markdown document with sections for each of the 18 tasks, implementation status, conflicts, and recommendations
+- Q: What are the success criteria and timeline for completing the codebase audit and refactor? → A: Audit complete in 1 week
+
 ## Execution Flow (main)
 
 ```
@@ -69,6 +79,7 @@ As a solo developer maintaining the Adaptive Fit fitness application, I need to 
 2. **Given** identified conflicts in the codebase (e.g., fee mismatches, backend overlaps), **When** I review the audit report, **Then** all conflicts are flagged with clarification requests
 3. **Given** missing features from the 18-task list, **When** I implement them, **Then** they align with the constitution and existing specs
 4. **Given** Llama 3.1 8B integration requirements, **When** I replace DistilGPT-2 instances, **Then** all AI features use local, privacy-preserving processing
+5. **Given** the audit process timeline requirement, **When** 1 week has passed, **Then** the comprehensive audit report is complete with all 18 tasks reviewed
 
 ### Edge Cases
 
@@ -80,11 +91,11 @@ As a solo developer maintaining the Adaptive Fit fitness application, I need to 
 
 ### Functional Requirements
 
-- **FR-001**: System MUST audit existing codebase for all 18 identified tasks and determine implementation status (implemented, missing, or needs refinement)
-- **FR-002**: System MUST identify conflicts between existing implementations and constitution requirements
-- **FR-003**: System MUST flag all conflicts with specific clarification requests for resolution
-- **FR-004**: System MUST generate comprehensive audit report with implemented, refined, missing, and conflicting features
-- **FR-005**: System MUST ensure all features align with constitution principles (user-centric, adaptability, cost-effectiveness, scalability, safety/privacy, engagement, data ethics)
+- **FR-001**: System MUST audit existing codebase for all 18 identified tasks and determine implementation status (implemented: code exists, runs without errors, meets functional requirements, and aligns with constitution principles; needs refinement: partial implementation or misaligned; missing: not implemented)
+- **FR-002**: System MUST identify conflicts between existing implementations and constitution requirements, prioritizing by safety, privacy, and scalability impact
+- **FR-003**: System MUST flag all conflicts with specific clarification requests for resolution, ordered by priority (safety/privacy first, then scalability, then other constitution principles)
+- **FR-004**: System MUST generate comprehensive audit report as a Markdown document with sections for each of the 18 tasks, implementation status, conflicts, and recommendations
+- **FR-005**: System MUST ensure all features align with constitution principles (user-centric, adaptability, cost-effectiveness, scalability, safety/privacy, engagement, data ethics) through strict compliance with all 7 core principles
 - **FR-006**: System MUST replace all DistilGPT-2 instances with Llama 3.1 8B (4-bit, local via Capacitor/llama.cpp)
 - **FR-007**: System MUST implement missing features from the 18-task audit with proper spec alignment
 - **FR-008**: System MUST refine out-of-line implementations to match specs and constitution

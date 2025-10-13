@@ -5,19 +5,21 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import Navigation from '$lib/components/Navigation.svelte';
 	import AccessibilityUtils from '$lib/components/AccessibilityUtils.svelte';
-	import AliceUnified from '$lib/components/AliceUnified.svelte';
+	import AliceAvatar from '$lib/components/AliceAvatar.svelte';
 	import '../app.css';
 
 	let { children } = $props();
 
 	// Page class for styling
-	const pageClass = $derived((() => {
-		const path = $page.url?.pathname || '/';
-		if (path === '/') return 'page-home';
-		if (path.startsWith('/workouts')) return 'page-workout';
-		if (path.startsWith('/nutrition')) return 'page-nutrition';
-		return 'page-other';
-	})());
+	const pageClass = $derived(
+		(() => {
+			const path = $page.url?.pathname || '/';
+			if (path === '/') return 'page-home';
+			if (path.startsWith('/workouts')) return 'page-workout';
+			if (path.startsWith('/nutrition')) return 'page-nutrition';
+			return 'page-other';
+		})()
+	);
 
 	// Alice state management
 	let aliceSubscriptionTier: 'free' | 'trial' | 'paid' | 'trainer' = $state('trial'); // Demo with trial
@@ -59,7 +61,8 @@
 				rogueEye,
 				showWorkoutCard,
 				workoutData
-			} = customEvent.detail;			aliceSubscriptionTier = subscriptionTier;
+			} = customEvent.detail;
+			aliceSubscriptionTier = subscriptionTier;
 			aliceCustomPattern = customPattern;
 			aliceCustomColor = customColor;
 			aliceIrisColor = irisColor;
@@ -81,21 +84,21 @@
 		function handleWorkoutStarted(event: Event) {
 			const customEvent = event as CustomEvent;
 			const { showWorkoutCard, workoutData, mode } = customEvent.detail;
-			
+
 			console.log('🎯 Layout received workout-started event:', workoutData?.name);
 			aliceShowWorkoutCard = showWorkoutCard;
 			aliceWorkoutData = workoutData;
 			aliceMode = mode;
-			
+
 			// Set workout-appropriate Alice appearance
 			intensity = workoutData?.intensityScore || 0;
-			heartRate = 75 + (intensity * 0.5); // Simulate heart rate based on intensity
+			heartRate = 75 + intensity * 0.5; // Simulate heart rate based on intensity
 		}
 
 		function handleWorkoutEnded(event: Event) {
 			const customEvent = event as CustomEvent;
 			const { showWorkoutCard, workoutData, mode } = customEvent.detail;
-			
+
 			console.log('🏁 Layout received workout-ended event');
 			aliceShowWorkoutCard = showWorkoutCard;
 			aliceWorkoutData = workoutData;
@@ -107,7 +110,7 @@
 		function handleWorkoutUpdated(event: Event) {
 			const customEvent = event as CustomEvent;
 			const { workoutData } = customEvent.detail;
-			
+
 			console.log('📊 Layout received workout-updated event');
 			aliceWorkoutData = workoutData;
 			intensity = workoutData?.intensityScore || 0;
@@ -116,7 +119,7 @@
 		function handleWorkoutCardToggled(event: Event) {
 			const customEvent = event as CustomEvent;
 			const { showWorkoutCard, workoutData } = customEvent.detail;
-			
+
 			console.log('🔄 Layout received workout-card-toggled event');
 			aliceShowWorkoutCard = showWorkoutCard;
 			aliceWorkoutData = workoutData;
@@ -149,7 +152,7 @@
 		aliceMode = mode;
 		console.log('🎯 Alice mode selected:', mode);
 		console.log('🧭 Navigating to mode:', mode);
-		
+
 		// Navigate based on mode
 		switch (mode) {
 			case 'workout':
@@ -174,7 +177,7 @@
 				console.log('❌ Unknown mode:', mode);
 				goto('/');
 		}
-		
+
 		console.log('✅ Navigation completed for mode:', mode);
 	}
 
@@ -206,30 +209,24 @@
 <div class="app-container">
 	<!-- Navigation at the very top -->
 	<Navigation />
-	
+
 	<!-- Alice section after navigation -->
 	<div class="alice-section">
 		<!-- Alice AI companion -->
-		<AliceUnified 
-			subscriptionTier={aliceSubscriptionTier}
-			customColor={aliceCustomColor}
-			irisColor={aliceIrisColor}
-			irisPattern={aliceIrisPattern}
-			mode={aliceMode}
-			eyeState={aliceEyeState}
-			twoEyes={aliceTwoEyes}
-			rogueEye={aliceRogueEye}
+		<AliceAvatar
+			color={aliceCustomColor}
+			strain={intensity}
+			calories={0}
 			{heartRate}
-			{intensity}
+			expression={aliceEyeState === 'excited'
+				? 'energetic'
+				: aliceEyeState === 'droop'
+					? 'focused'
+					: 'calm'}
 			size={200}
-			showWorkoutCard={aliceShowWorkoutCard}
-			workoutData={aliceWorkoutData}
-			on:aliceTapped={handleAliceTapped}
-			on:modeSelected={handleModeSelected}
-			on:playModeActivated={handlePlayModeActivated}
 		/>
 	</div>
-	
+
 	<!-- Scrollable content section -->
 	<div class="content-section {pageClass}">
 		<main id="main-content" class="container mx-auto px-safe py-6" tabindex="-1">
@@ -247,7 +244,7 @@
 		display: flex;
 		flex-direction: column;
 	}
-	
+
 	.alice-section {
 		position: fixed;
 		top: 60px; /* Position after typical navigation height */
@@ -261,23 +258,23 @@
 		border-bottom: 1px solid rgba(0, 191, 255, 0.2);
 		z-index: 1000;
 	}
-	
+
 	.content-section {
 		margin-top: 260px; /* Navigation height (60px) + Alice height (200px) */
 		flex: 1;
 		overflow-y: auto;
 		background: var(--background, #ffffff);
 	}
-	
+
 	/* Page-specific backgrounds for content section */
 	.content-section.page-home {
 		background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 	}
-	
+
 	.content-section.page-workout {
 		background: linear-gradient(135deg, #fef3c7 0%, #f59e0b 100%);
 	}
-	
+
 	.content-section.page-nutrition {
 		background: linear-gradient(135deg, #dcfce7 0%, #16a34a 100%);
 	}

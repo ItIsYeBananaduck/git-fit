@@ -13,7 +13,7 @@
 	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 	import { browser } from '$app/environment';
 	import { hslToRgb, hslToHex, normalizeHue } from '$lib/utils/colorUtils.js';
-	import AliceUnified from './AliceUnified.svelte';
+	import AliceAvatar from './AliceAvatar.svelte';
 
 	// Props
 	export let initialHue: number = 240; // Default blue
@@ -299,14 +299,7 @@
 	{#if showPreview}
 		<div class="preview-section">
 			<div class="preview-container">
-				<AliceUnified
-					customColor={currentColorHex}
-					intensity={0}
-					size={120}
-					isInteractive={false}
-					mode="idle"
-					on:alice-tapped={colorChange}
-				/>
+				<AliceAvatar color={currentColorHex} size={120} />
 
 				<div class="color-info">
 					<div class="color-value">

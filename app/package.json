@@ -45,7 +45,6 @@
 		"@capacitor/ios": "^7.4.3",
 		"@capacitor/watch": "^0.1.12",
 		"@capawesome/capacitor-background-task": "^7.0.1",
-		"@convex-dev/auth": "^0.0.90",
 		"@felix-health/capacitor-health-data": "^1.0.9",
 		"@stripe/stripe-js": "^7.9.0",
 		"@tailwindcss/forms": "^0.5.10",
