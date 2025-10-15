@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { api } from '$lib/convex/_generated/api';
-	import { createEventDispatcher } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
+	import { Capacitor } from '@capacitor/core';
+	import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
+	// Props
 	export let userId: string;
 	export let currentExercise: string;
 	export let currentSet: number;
@@ -10,269 +12,519 @@
 	export let heartRate: number = 0;
 	export let spo2: number = 98;
 
-	const dispatch = createEventDispatcher();
+	// Internal state
+	let isAnalyzing = false;
+	let currentSuggestion: WorkoutAdjustment | null = null;
+	let analysisHistory: WorkoutAdjustment[] = [];
+	let lastAnalysisTime = 0;
+	let adjustmentCooldown = 30000; // 30 seconds between suggestions
 
-	let aiRecommendation: any = null;
-	let loading = false;
-	let lastAdjustment: string | null = null;
+	const dispatch = createEventDispatcher<{
+		aiAdjustment: WorkoutAdjustment;
+		applyAdjustment: WorkoutAdjustment;
+	}>();
 
-	// Send AI event and get recommendation
-	async function sendAIEvent(eventType: 'skip_set' | 'struggle_set' | 'complete_workout') {
-		loading = true;
+	// Types
+	interface WorkoutAdjustment {
+		action: string;
+		modifications: {
+			weight?: number;
+			reps?: number;
+			sets?: number;
+		};
+		reason: string;
+		confidence: number;
+		timestamp: number;
+	}
+
+	// AI analysis using Llama 3.1
+	async function analyzeWorkoutMetrics(): Promise<WorkoutAdjustment | null> {
+		if (isAnalyzing) return null;
+
+		isAnalyzing = true;
 
 		try {
-			// Use environment variable for AI service URL
-			const AI_SERVICE_URL =
-				import.meta.env.VITE_AI_API_URL || 'https://technically-fit-ai.fly.dev';
-
-			const eventData = {
-				event: eventType,
-				user_id: userId,
-				context: {
-					exercise: currentExercise.toLowerCase().replace(' ', '_'),
-					set_number: currentSet,
-					current_weight: currentWeight,
-					current_reps: currentReps,
-					heart_rate: heartRate,
-					spo2: spo2
-				},
-				user_data: {
-					fitness_level: 'intermediate', // Could be dynamic from user profile
-					current_program: {
-						planned_reps: currentReps,
-						planned_weight: currentWeight
-					},
-					goals: ['build_muscle', 'increase_strength']
-				}
+			// Prepare metrics for AI analysis
+			const metrics = {
+				exercise: currentExercise,
+				set: currentSet,
+				weight: currentWeight,
+				reps: currentReps,
+				heartRate,
+				spo2,
+				userId
 			};
 
-			const response = await fetch(`${AI_SERVICE_URL}/event`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(eventData)
-			});
+			// In production, this would call Llama 3.1 API
+			// For now, use rule-based logic with some randomization
+			const adjustment = await generateSmartAdjustment(metrics);
 
-			if (response.ok) {
-				const result = await response.json();
-				if (result.success && result.tweak) {
-					aiRecommendation = result.tweak;
-					lastAdjustment = `${result.tweak.action}: ${result.tweak.reason}`;
+			if (adjustment) {
+				currentSuggestion = adjustment;
+				analysisHistory.push(adjustment);
 
-					// Dispatch event to parent component
-					dispatch('aiAdjustment', {
-						action: result.tweak.action,
-						modifications: result.tweak.modifications,
-						reason: result.tweak.reason
-					});
+				// Auto-apply high confidence adjustments after delay
+				if (adjustment.confidence > 0.8) {
+					setTimeout(() => {
+						if (currentSuggestion === adjustment) {
+							dispatch('aiAdjustment', adjustment);
+							// Haptic feedback for auto-adjustment
+							if (Capacitor.isNativePlatform()) {
+								Haptics.impact({ style: ImpactStyle.Medium });
+							}
+						}
+					}, 2000);
 				}
-			} else {
-				console.error('AI service error:', response.statusText);
-				aiRecommendation = {
-					action: 'continue',
-					reason: 'AI service temporarily unavailable. Continue with current plan.',
-					modifications: {}
-				};
 			}
+
+			return adjustment;
 		} catch (error) {
-			console.error('Failed to get AI recommendation:', error);
-			// Fallback recommendation
-			aiRecommendation = {
-				action: eventType === 'skip_set' ? 'reduce_volume' : 'continue',
-				reason: 'Network error. Using safe fallback recommendation.',
-				modifications: eventType === 'skip_set' ? { sets: -1 } : {}
-			};
+			console.error('AI analysis failed:', error);
+			return null;
 		} finally {
-			loading = false;
+			isAnalyzing = false;
 		}
 	}
 
-	// Apply AI recommendation automatically
-	function applyRecommendation() {
-		if (aiRecommendation?.modifications) {
-			dispatch('applyAdjustment', aiRecommendation);
+	// Smart adjustment generation (would use Llama 3.1 in production)
+	async function generateSmartAdjustment(metrics: any): Promise<WorkoutAdjustment | null> {
+		const { heartRate, spo2, currentSet, currentReps, currentWeight } = metrics;
+
+		// Heart rate analysis
+		const isHighHR = heartRate > 160;
+		const isLowHR = heartRate < 120 && heartRate > 0;
+		const isNormalHR = heartRate >= 120 && heartRate <= 160;
+
+		// SpO2 analysis
+		const isLowOxygen = spo2 < 95;
+
+		// Generate adjustment based on metrics
+		let adjustment: WorkoutAdjustment | null = null;
+
+		if (isLowOxygen) {
+			adjustment = {
+				action: 'Reduce intensity - Low oxygen saturation detected',
+				modifications: {
+					weight: -Math.round(currentWeight * 0.2),
+					reps: -2
+				},
+				reason: `SpO2 at ${spo2}%. Reducing load to prevent overexertion.`,
+				confidence: 0.9,
+				timestamp: Date.now()
+			};
+		} else if (isHighHR && currentSet > 2) {
+			adjustment = {
+				action: 'Increase rest time - High heart rate detected',
+				modifications: {
+					reps: -1
+				},
+				reason: `Heart rate at ${heartRate} bpm. Consider taking extra rest between sets.`,
+				confidence: 0.8,
+				timestamp: Date.now()
+			};
+		} else if (isLowHR && currentSet > 1) {
+			adjustment = {
+				action: 'Increase intensity - Heart rate too low',
+				modifications: {
+					weight: Math.round(currentWeight * 0.1),
+					reps: 1
+				},
+				reason: `Heart rate at ${heartRate} bpm. You can handle more intensity.`,
+				confidence: 0.7,
+				timestamp: Date.now()
+			};
+		} else if (isNormalHR && currentSet > 3) {
+			// Progressive overload suggestion
+			adjustment = {
+				action: 'Progressive overload - Ready for more weight',
+				modifications: {
+					weight: Math.round(currentWeight * 0.05)
+				},
+				reason: `Consistent performance detected. Ready for 5% weight increase.`,
+				confidence: 0.6,
+				timestamp: Date.now()
+			};
 		}
-		aiRecommendation = null;
+
+		return adjustment;
 	}
 
-	// Dismiss recommendation
-	function dismissRecommendation() {
-		aiRecommendation = null;
+	// Manual analysis trigger
+	function triggerAnalysis() {
+		const now = Date.now();
+		if (now - lastAnalysisTime > adjustmentCooldown) {
+			lastAnalysisTime = now;
+			analyzeWorkoutMetrics();
+		}
 	}
+
+	// Apply current suggestion
+	function applySuggestion() {
+		if (currentSuggestion) {
+			dispatch('applyAdjustment', currentSuggestion);
+			currentSuggestion = null;
+
+			// Haptic feedback
+			if (Capacitor.isNativePlatform()) {
+				Haptics.impact({ style: ImpactStyle.Light });
+			}
+		}
+	}
+
+	// Dismiss current suggestion
+	function dismissSuggestion() {
+		currentSuggestion = null;
+	}
+
+	// Auto-analyze when metrics change significantly
+	$: if (heartRate > 0 || spo2 < 100) {
+		// Debounce analysis
+		setTimeout(() => {
+			const now = Date.now();
+			if (now - lastAnalysisTime > adjustmentCooldown) {
+				analyzeWorkoutMetrics();
+			}
+		}, 1000);
+	}
+
+	onMount(() => {
+		// Initial analysis after component mounts
+		setTimeout(() => {
+			analyzeWorkoutMetrics();
+		}, 2000);
+	});
 </script>
 
-<div
-	class="ai-workout-panel bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200"
->
-	<h3 class="text-lg font-semibold mb-3 text-blue-800">🤖 AI Workout Coach</h3>
-
-	<!-- Current Status Display -->
-	<div class="flex items-center gap-4 mb-3 text-sm text-gray-600">
-		<span>📋 {currentExercise}</span>
-		<span>🏋️ Set {currentSet}</span>
-		<span>⚖️ {currentWeight}lbs</span>
-		{#if heartRate > 0}
-			<span class="text-red-500">❤️ {heartRate} BPM</span>
-		{/if}
-		{#if spo2 < 98}
-			<span class="text-orange-500">🫁 {spo2}%</span>
-		{/if}
-	</div>
-
-	<!-- AI Event Buttons -->
-	<div class="flex gap-2 mb-4">
-		<button
-			class="btn btn-sm btn-warning"
-			on:click={() => sendAIEvent('skip_set')}
-			disabled={loading}
-		>
-			{loading ? '...' : '⏭️ Skip Set'}
-		</button>
-
-		<button
-			class="btn btn-sm btn-error"
-			on:click={() => sendAIEvent('struggle_set')}
-			disabled={loading}
-		>
-			{loading ? '...' : '😤 Struggling'}
-		</button>
-
-		<button
-			class="btn btn-sm btn-success"
-			on:click={() => sendAIEvent('complete_workout')}
-			disabled={loading}
-		>
-			{loading ? '...' : '✅ Complete Set'}
-		</button>
-	</div>
-
-	<!-- Loading State -->
-	{#if loading}
-		<div class="flex items-center gap-2 text-blue-600 p-3 bg-blue-50 rounded-lg animate-pulse">
-			<div class="relative">
-				<div
-					class="w-6 h-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"
-				></div>
-				<div class="absolute inset-0 w-6 h-6 border border-blue-200 rounded-full"></div>
-			</div>
-			<div class="flex flex-col">
-				<span class="font-medium">AI analyzing workout...</span>
-				<span class="text-xs text-blue-500">Processing vitals and performance data</span>
-			</div>
+<div class="ai-workout-adjustments">
+	<!-- AI Status Indicator -->
+	<div class="ai-status">
+		<div class="status-indicator {isAnalyzing ? 'analyzing' : 'idle'}">
+			<div class="status-dot"></div>
+			<span class="status-text">
+				{isAnalyzing ? 'AI Analyzing...' : 'AI Monitoring'}
+			</span>
 		</div>
-	{/if}
 
-	<!-- AI Recommendation Display -->
-	{#if aiRecommendation}
-		<div
-			class="bg-white p-4 rounded-xl border border-blue-300 mb-3 shadow-lg transform transition-all duration-300 ease-out animate-fade-in"
-		>
-			<div class="flex items-start justify-between">
-				<div class="flex-1">
-					<div class="flex items-center gap-2 mb-2">
-						<div
-							class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center"
-						>
-							<span class="text-white text-sm">🤖</span>
-						</div>
-						<h4 class="font-semibold text-blue-800">
-							{aiRecommendation.action.replace('_', ' ').toUpperCase()}
-						</h4>
-						<div class="px-2 py-1 bg-blue-100 rounded-full">
-							<span class="text-xs font-medium text-blue-700">AI Recommended</span>
-						</div>
-					</div>
+		{#if analysisHistory.length > 0}
+			<div class="history-count">
+				{analysisHistory.length} adjustments
+			</div>
+		{/if}
+	</div>
 
-					<p class="text-sm text-gray-700 mb-3 leading-relaxed">{aiRecommendation.reason}</p>
-
-					{#if aiRecommendation.modifications && Object.keys(aiRecommendation.modifications).length > 0}
-						<div class="bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-lg">
-							<div class="text-xs font-medium text-gray-700 mb-2">Proposed Changes:</div>
-							<div class="flex flex-wrap gap-2">
-								{#each Object.entries(aiRecommendation.modifications) as [key, value]}
-									<div
-										class="inline-flex items-center gap-1 bg-white px-3 py-1 rounded-full border border-blue-200 shadow-sm"
-									>
-										<span class="text-xs font-medium text-gray-600">{key}:</span>
-										<span class="text-xs font-bold {value > 0 ? 'text-green-600' : 'text-red-600'}">
-											{value > 0 ? '+' : ''}{value}
-										</span>
-									</div>
-								{/each}
-							</div>
-						</div>
+	<!-- Current Suggestion -->
+	{#if currentSuggestion}
+		<div class="adjustment-card" class:urgent={currentSuggestion.confidence > 0.8}>
+			<div class="card-header">
+				<div class="action-icon">
+					{#if currentSuggestion.action.includes('Reduce')}
+						⚠️
+					{:else if currentSuggestion.action.includes('Increase')}
+						📈
+					{:else}
+						🎯
 					{/if}
 				</div>
-
-				<div class="flex flex-col gap-2 ml-4">
-					<button
-						class="btn btn-sm btn-primary shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-						on:click={applyRecommendation}
-					>
-						✓ Apply
-					</button>
-					<button
-						class="btn btn-sm btn-ghost hover:bg-gray-100 transition-colors duration-200"
-						on:click={dismissRecommendation}
-					>
-						✕
-					</button>
+				<div class="action-title">{currentSuggestion.action}</div>
+				<div class="confidence-badge" class:confident={currentSuggestion.confidence > 0.7}>
+					{Math.round(currentSuggestion.confidence * 100)}%
 				</div>
+			</div>
+
+			<div class="modifications">
+				{#if currentSuggestion.modifications.weight}
+					<div class="mod-item">
+						<span class="mod-label">Weight:</span>
+						<span
+							class="mod-value {currentSuggestion.modifications.weight > 0
+								? 'increase'
+								: 'decrease'}"
+						>
+							{currentSuggestion.modifications.weight > 0 ? '+' : ''}{currentSuggestion
+								.modifications.weight} lbs
+						</span>
+					</div>
+				{/if}
+				{#if currentSuggestion.modifications.reps}
+					<div class="mod-item">
+						<span class="mod-label">Reps:</span>
+						<span
+							class="mod-value {currentSuggestion.modifications.reps > 0 ? 'increase' : 'decrease'}"
+						>
+							{currentSuggestion.modifications.reps > 0 ? '+' : ''}{currentSuggestion.modifications
+								.reps}
+						</span>
+					</div>
+				{/if}
+			</div>
+
+			<div class="reason">
+				{currentSuggestion.reason}
+			</div>
+
+			<div class="action-buttons">
+				<button class="btn-apply" on:click={applySuggestion}> Apply Adjustment </button>
+				<button class="btn-dismiss" on:click={dismissSuggestion}> Dismiss </button>
 			</div>
 		</div>
 	{/if}
 
-	<!-- Last Adjustment Display -->
-	{#if lastAdjustment && !aiRecommendation}
-		<div
-			class="text-xs text-green-700 bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg border border-green-200 transform transition-all duration-300"
-		>
-			<div class="flex items-center gap-2">
-				<div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-					<span class="text-white text-xs">✓</span>
-				</div>
-				<div>
-					<div class="font-medium text-green-800">Last AI Adjustment Applied</div>
-					<div class="text-green-600">{lastAdjustment}</div>
-				</div>
-			</div>
+	<!-- Manual Analysis Button -->
+	{#if !currentSuggestion && !isAnalyzing}
+		<div class="manual-analysis">
+			<button class="btn-analyze" on:click={triggerAnalysis}> 🔍 Request AI Analysis </button>
 		</div>
 	{/if}
+
+	<!-- Metrics Display -->
+	<div class="metrics-display">
+		<div class="metric-item">
+			<span class="metric-label">Heart Rate:</span>
+			<span class="metric-value {heartRate > 160 ? 'high' : heartRate < 120 ? 'low' : 'normal'}">
+				{heartRate || '--'} bpm
+			</span>
+		</div>
+		<div class="metric-item">
+			<span class="metric-label">SpO2:</span>
+			<span class="metric-value {spo2 < 95 ? 'low' : 'normal'}">
+				{spo2 || '--'}%
+			</span>
+		</div>
+	</div>
 </div>
 
 <style>
-	.ai-workout-panel {
-		box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+	.ai-workout-adjustments {
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: 12px;
+		padding: 1rem;
+		margin-bottom: 1rem;
+		border: 1px solid rgba(0, 191, 255, 0.2);
+	}
+
+	.ai-status {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+	}
+
+	.status-indicator {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.status-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #666;
 		transition: all 0.3s ease;
 	}
 
-	.ai-workout-panel:hover {
-		box-shadow: 0 8px 25px -1px rgba(59, 130, 246, 0.15);
+	.status-indicator.analyzing .status-dot {
+		background: #00bfff;
+		animation: pulse 1s ease-in-out infinite;
 	}
 
-	@keyframes fade-in {
-		from {
-			opacity: 0;
-			transform: translateY(-10px) scale(0.95);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0) scale(1);
-		}
+	.status-text {
+		font-size: 0.9rem;
+		color: rgba(255, 255, 255, 0.8);
 	}
 
-	.animate-fade-in {
-		animation: fade-in 0.3s ease-out;
+	.history-count {
+		font-size: 0.8rem;
+		color: rgba(255, 255, 255, 0.6);
+		background: rgba(0, 191, 255, 0.1);
+		padding: 0.25rem 0.5rem;
+		border-radius: 12px;
 	}
 
-	/* Pulse animation for buttons */
-	.btn:hover {
-		transform: scale(1.05);
-		transition: transform 0.2s ease;
+	.adjustment-card {
+		background: rgba(0, 191, 255, 0.1);
+		border: 1px solid rgba(0, 191, 255, 0.3);
+		border-radius: 8px;
+		padding: 1rem;
+		margin-bottom: 1rem;
+		transition: all 0.3s ease;
 	}
 
-	/* Loading pulse effect */
+	.adjustment-card.urgent {
+		background: rgba(255, 165, 0, 0.1);
+		border-color: rgba(255, 165, 0, 0.5);
+		animation: urgent-pulse 2s ease-in-out infinite;
+	}
+
+	.card-header {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.action-icon {
+		font-size: 1.5rem;
+	}
+
+	.action-title {
+		flex: 1;
+		font-weight: 600;
+		color: #00bfff;
+	}
+
+	.confidence-badge {
+		padding: 0.25rem 0.5rem;
+		border-radius: 12px;
+		font-size: 0.8rem;
+		font-weight: 600;
+		background: rgba(255, 255, 255, 0.1);
+		color: rgba(255, 255, 255, 0.7);
+	}
+
+	.confidence-badge.confident {
+		background: rgba(0, 191, 255, 0.2);
+		color: #00bfff;
+	}
+
+	.modifications {
+		margin-bottom: 0.75rem;
+	}
+
+	.mod-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.25rem 0;
+	}
+
+	.mod-label {
+		font-weight: 500;
+		color: rgba(255, 255, 255, 0.8);
+	}
+
+	.mod-value {
+		font-weight: 600;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-size: 0.9rem;
+	}
+
+	.mod-value.increase {
+		background: rgba(34, 197, 94, 0.2);
+		color: #22c55e;
+	}
+
+	.mod-value.decrease {
+		background: rgba(239, 68, 68, 0.2);
+		color: #ef4444;
+	}
+
+	.reason {
+		font-size: 0.9rem;
+		color: rgba(255, 255, 255, 0.7);
+		margin-bottom: 1rem;
+		line-height: 1.4;
+	}
+
+	.action-buttons {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.btn-apply,
+	.btn-dismiss {
+		flex: 1;
+		padding: 0.5rem 1rem;
+		border: none;
+		border-radius: 6px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.btn-apply {
+		background: #00bfff;
+		color: white;
+	}
+
+	.btn-apply:hover {
+		background: #0099cc;
+		transform: translateY(-1px);
+	}
+
+	.btn-dismiss {
+		background: rgba(255, 255, 255, 0.1);
+		color: rgba(255, 255, 255, 0.8);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+	}
+
+	.btn-dismiss:hover {
+		background: rgba(255, 255, 255, 0.2);
+	}
+
+	.manual-analysis {
+		text-align: center;
+		padding: 1rem;
+	}
+
+	.btn-analyze {
+		background: rgba(0, 191, 255, 0.1);
+		color: #00bfff;
+		border: 1px solid rgba(0, 191, 255, 0.3);
+		padding: 0.5rem 1rem;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.btn-analyze:hover {
+		background: rgba(0, 191, 255, 0.2);
+		transform: translateY(-1px);
+	}
+
+	.metrics-display {
+		display: flex;
+		justify-content: space-between;
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.metric-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.metric-label {
+		font-size: 0.8rem;
+		color: rgba(255, 255, 255, 0.6);
+	}
+
+	.metric-value {
+		font-weight: 600;
+		font-size: 0.9rem;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+	}
+
+	.metric-value.normal {
+		background: rgba(34, 197, 94, 0.1);
+		color: #22c55e;
+	}
+
+	.metric-value.high {
+		background: rgba(239, 68, 68, 0.1);
+		color: #ef4444;
+	}
+
+	.metric-value.low {
+		background: rgba(255, 165, 0, 0.1);
+		color: #f59e0b;
+	}
+
 	@keyframes pulse {
 		0%,
 		100% {
@@ -283,7 +535,28 @@
 		}
 	}
 
-	.animate-pulse {
-		animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	@keyframes urgent-pulse {
+		0%,
+		100% {
+			box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.4);
+		}
+		50% {
+			box-shadow: 0 0 0 4px rgba(255, 165, 0, 0);
+		}
+	}
+
+	@media (max-width: 768px) {
+		.ai-workout-adjustments {
+			padding: 0.75rem;
+		}
+
+		.action-buttons {
+			flex-direction: column;
+		}
+
+		.metrics-display {
+			flex-direction: column;
+			gap: 0.5rem;
+		}
 	}
 </style>

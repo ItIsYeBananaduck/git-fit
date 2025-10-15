@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Create project structure",
+			"type": "shell",
+			"command": "mkdir -p frontend/src/components backend/src/services backend/src/middleware tests/integration tests/unit tests/performance docs scripts",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Initialize TypeScript project",
+			"type": "shell",
+			"command": "pnpm init && pnpm add sveltekit convex capacitor",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Configure linting and formatting tools",
+			"type": "shell",
+			"command": "pnpm add eslint prettier eslint-config-prettier eslint-plugin-svelte",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

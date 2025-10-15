@@ -18,8 +18,12 @@
     "@capacitor/ios": "^7.4.3",
     "convex": "^1.27.3",
     "cordova-plugin-music-controls2": "^3.0.7",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-svelte": "^3.12.4",
     "lucide-svelte": "^0.542.0",
     "papaparse": "^5.5.3",
+    "prettier": "^3.6.2",
     "stripe": "^18.5.0",
     "xlsx": "^0.18.5"
   },

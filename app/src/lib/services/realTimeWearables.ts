@@ -1,234 +1,334 @@
-import { WHOOPClient, getWHOOPTokens, isTokenExpired } from '$lib/api/whoop';
-import { whoopActions } from '$lib/stores/whoop';
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
+// Types
 export interface RealTimeVitals {
-  heartRate: number;
-  spo2: number;
-  source: 'whoop' | 'apple_watch' | 'mock';
-  timestamp: number;
-  confidence: number; // 0-1, how reliable this reading is
+	heartRate: number;
+	spo2: number;
+	timestamp: number;
+	source: 'healthkit' | 'health-connect' | 'whoop' | 'fitbit' | 'mock';
 }
 
+export interface WearableConnection {
+	connected: boolean;
+	source: RealTimeVitals['source'];
+	lastSync: number;
+}
+
+type VitalsCallback = (vitals: RealTimeVitals) => void;
+
 export class RealTimeWearableService {
-  private userId: string;
-  private currentVitals: RealTimeVitals | null = null;
-  private vitalsCallbacks: ((vitals: RealTimeVitals) => void)[] = [];
-  private updateInterval: NodeJS.Timeout | null = null;
-  private whoopClient: WHOOPClient | null = null;
+	private userId: string;
+	private isMonitoring = false;
+	private vitalsCallbacks: VitalsCallback[] = [];
+	private monitoringInterval: ReturnType<typeof setInterval> | null = null;
+	private lastVitals: RealTimeVitals | null = null;
 
-  constructor(userId: string) {
-    this.userId = userId;
-    this.initializeWHOOP();
-  }
+	constructor(userId: string) {
+		this.userId = userId;
+	}
 
-  /**
-   * Initialize WHOOP client if tokens are available
-   */
-  private initializeWHOOP() {
-    const tokens = getWHOOPTokens(this.userId);
-    if (tokens && import.meta.env.VITE_WHOOP_CLIENT_ID) {
-      this.whoopClient = new WHOOPClient(
-        import.meta.env.VITE_WHOOP_CLIENT_ID,
-        import.meta.env.VITE_WHOOP_CLIENT_SECRET,
-        import.meta.env.VITE_WHOOP_REDIRECT_URI
-      );
-    }
-  }
+	// Start real-time monitoring
+	async startMonitoring(): Promise<void> {
+		if (this.isMonitoring) return;
 
-  /**
-   * Start monitoring real-time vitals
-   */
-  async startMonitoring(): Promise<void> {
-    // Try WHOOP first
-    if (await this.tryWHOOPData()) {
-      console.log('Using WHOOP for real-time vitals');
-      this.scheduleWHOOPUpdates();
-      return;
-    }
+		this.isMonitoring = true;
+		console.log('🩺 Starting real-time wearable monitoring for user:', this.userId);
 
-    // Try Apple HealthKit next (if on iOS)
-    if (await this.tryAppleHealthKit()) {
-      console.log('Using Apple HealthKit for real-time vitals');
-      this.scheduleHealthKitUpdates();
-      return;
-    }
+		// Check available wearable integrations
+		const availableSources = await this.getAvailableSources();
 
-    // Fallback to enhanced mock data
-    console.log('Using enhanced mock data for vitals');
-    this.scheduleEnhancedMockUpdates();
-  }
+		if (availableSources.length === 0) {
+			console.warn('No wearable sources available, using mock data');
+			this.startMockMonitoring();
+		} else {
+			// Use the first available source (in production, user preference)
+			const primarySource = availableSources[0];
+			await this.connectToSource(primarySource);
+		}
 
-  /**
-   * Stop monitoring vitals
-   */
-  stopMonitoring(): void {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-      this.updateInterval = null;
-    }
-  }
+		// Haptic feedback for starting monitoring
+		if (Capacitor.isNativePlatform()) {
+			Haptics.impact({ style: ImpactStyle.Light });
+		}
+	}
 
-  /**
-   * Subscribe to vitals updates
-   */
-  onVitalsUpdate(callback: (vitals: RealTimeVitals) => void): () => void {
-    this.vitalsCallbacks.push(callback);
-    
-    // Return unsubscribe function
-    return () => {
-      const index = this.vitalsCallbacks.indexOf(callback);
-      if (index > -1) {
-        this.vitalsCallbacks.splice(index, 1);
-      }
-    };
-  }
+	// Stop monitoring
+	async stopMonitoring(): Promise<void> {
+		if (!this.isMonitoring) return;
 
-  /**
-   * Get current vitals (sync)
-   */
-  getCurrentVitals(): RealTimeVitals | null {
-    return this.currentVitals;
-  }
+		this.isMonitoring = false;
+		console.log('🛑 Stopping wearable monitoring');
 
-  /**
-   * Try to get WHOOP data
-   */
-  private async tryWHOOPData(): Promise<boolean> {
-    if (!this.whoopClient) return false;
+		// Clear monitoring interval
+		if (this.monitoringInterval) {
+			clearInterval(this.monitoringInterval);
+			this.monitoringInterval = null;
+		}
 
-    try {
-      const tokens = getWHOOPTokens(this.userId);
-      if (!tokens) return false;
+		// Disconnect from sources
+		await this.disconnectFromSources();
 
-      // Check token expiry
-      const storedTime = parseInt(localStorage.getItem(`whoop_token_time_${this.userId}`) || '0');
-      let accessToken = tokens.access_token;
+		// Clear callbacks
+		this.vitalsCallbacks = [];
+	}
 
-      if (isTokenExpired(tokens, storedTime)) {
-        const newTokens = await this.whoopClient.refreshAccessToken(tokens.refresh_token);
-        accessToken = newTokens.access_token;
-      }
+	// Subscribe to vitals updates
+	onVitalsUpdate(callback: VitalsCallback): () => void {
+		this.vitalsCallbacks.push(callback);
 
-      // Get most recent recovery data (contains heart rate and SpO2)
-      const endDate = new Date().toISOString();
-      const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // Last 24 hours
+		// Return unsubscribe function
+		return () => {
+			const index = this.vitalsCallbacks.indexOf(callback);
+			if (index > -1) {
+				this.vitalsCallbacks.splice(index, 1);
+			}
+		};
+	}
 
-      const recoveryData = await this.whoopClient.getRecoveryData(accessToken, startDate, endDate);
-      
-      if (recoveryData && recoveryData.length > 0) {
-        const latest = recoveryData[recoveryData.length - 1];
-        if (latest.score_state === 'SCORED') {
-          this.updateVitals({
-            heartRate: latest.score.resting_heart_rate,
-            spo2: latest.score.spo2_percentage,
-            source: 'whoop',
-            timestamp: Date.now(),
-            confidence: 0.9
-          });
-          return true;
-        }
-      }
-    } catch (error) {
-      console.error('WHOOP data fetch failed:', error);
-    }
+	// Get current vitals
+	getCurrentVitals(): RealTimeVitals | null {
+		return this.lastVitals;
+	}
 
-    return false;
-  }
+	// Check available wearable sources
+	private async getAvailableSources(): Promise<RealTimeVitals['source'][]> {
+		const sources: RealTimeVitals['source'][] = [];
 
-  /**
-   * Try to get Apple HealthKit data (requires Capacitor)
-   */
-  private async tryAppleHealthKit(): Promise<boolean> {
-    if (typeof window === 'undefined') return false;
+		// Check HealthKit (iOS)
+		if (Capacitor.getPlatform() === 'ios') {
+			try {
+				// In production: check HealthKit availability
+				sources.push('healthkit');
+			} catch (error) {
+				console.log('HealthKit not available:', error);
+			}
+		}
 
-    try {
-      // Check if we're in a Capacitor app on iOS
-      if ((window as any).Capacitor?.isNativePlatform() && (window as any).Capacitor?.getPlatform() === 'ios') {
-        // This would use the Capacitor HealthKit plugin
-        // For now, we'll simulate this as it requires the actual plugin
-        console.log('HealthKit integration would go here');
-        
-        // Mock HealthKit data for iOS
-        this.updateVitals({
-          heartRate: Math.floor(Math.random() * 30) + 130, // 130-160 BPM
-          spo2: Math.floor(Math.random() * 3) + 97, // 97-99%
-          source: 'apple_watch',
-          timestamp: Date.now(),
-          confidence: 0.85
-        });
-        return true;
-      }
-    } catch (error) {
-      console.error('HealthKit check failed:', error);
-    }
+		// Check Health Connect (Android)
+		if (Capacitor.getPlatform() === 'android') {
+			try {
+				// In production: check Health Connect availability
+				sources.push('health-connect');
+			} catch (error) {
+				console.log('Health Connect not available:', error);
+			}
+		}
 
-    return false;
-  }
+		// Check Whoop API
+		try {
+			const whoopConnected = await this.checkWhoopConnection();
+			if (whoopConnected) sources.push('whoop');
+		} catch (error) {
+			console.log('Whoop not available:', error);
+		}
 
-  /**
-   * Schedule WHOOP updates (every 5 minutes, as WHOOP doesn't provide real-time data)
-   */
-  private scheduleWHOOPUpdates(): void {
-    this.updateInterval = setInterval(async () => {
-      await this.tryWHOOPData();
-    }, 5 * 60 * 1000); // 5 minutes
-  }
+		// Check Fitbit API
+		try {
+			const fitbitConnected = await this.checkFitbitConnection();
+			if (fitbitConnected) sources.push('fitbit');
+		} catch (error) {
+			console.log('Fitbit not available:', error);
+		}
 
-  /**
-   * Schedule HealthKit updates (every 30 seconds)
-   */
-  private scheduleHealthKitUpdates(): void {
-    this.updateInterval = setInterval(async () => {
-      await this.tryAppleHealthKit();
-    }, 30 * 1000); // 30 seconds
-  }
+		// Always include mock as fallback
+		sources.push('mock');
 
-  /**
-   * Schedule enhanced mock updates with realistic patterns
-   */
-  private scheduleEnhancedMockUpdates(): void {
-    let baseHeartRate = 140;
-    let baseSpo2 = 98;
-    let exerciseIntensity = 0.5; // 0-1 scale
-    
-    this.updateInterval = setInterval(() => {
-      // Simulate exercise intensity changes
-      exerciseIntensity += (Math.random() - 0.5) * 0.1;
-      exerciseIntensity = Math.max(0.2, Math.min(0.9, exerciseIntensity));
+		return sources;
+	}
 
-      // Heart rate responds to intensity
-      const targetHR = 120 + (exerciseIntensity * 60); // 120-180 BPM range
-      baseHeartRate += (targetHR - baseHeartRate) * 0.1 + (Math.random() - 0.5) * 5;
-      baseHeartRate = Math.max(100, Math.min(190, baseHeartRate));
+	// Connect to a specific source
+	private async connectToSource(source: RealTimeVitals['source']): Promise<void> {
+		console.log(`🔗 Connecting to ${source}`);
 
-      // SpO2 slightly decreases with high intensity
-      const targetSpo2 = 99 - (exerciseIntensity * 2); // 99-97% range
-      baseSpo2 += (targetSpo2 - baseSpo2) * 0.1 + (Math.random() - 0.5) * 0.5;
-      baseSpo2 = Math.max(95, Math.min(99, baseSpo2));
+		switch (source) {
+			case 'healthkit':
+				await this.connectHealthKit();
+				break;
+			case 'health-connect':
+				await this.connectHealthConnect();
+				break;
+			case 'whoop':
+				await this.connectWhoop();
+				break;
+			case 'fitbit':
+				await this.connectFitbit();
+				break;
+			case 'mock':
+				this.startMockMonitoring();
+				break;
+		}
+	}
 
-      this.updateVitals({
-        heartRate: Math.round(baseHeartRate),
-        spo2: Math.round(baseSpo2 * 10) / 10, // One decimal place
-        source: 'mock',
-        timestamp: Date.now(),
-        confidence: 0.7
-      });
-    }, 3000); // Every 3 seconds
-  }
+	// Disconnect from all sources
+	private async disconnectFromSources(): Promise<void> {
+		// In production: disconnect from actual APIs
+		console.log('🔌 Disconnecting from wearable sources');
+	}
 
-  /**
-   * Update vitals and notify subscribers
-   */
-  private updateVitals(vitals: RealTimeVitals): void {
-    this.currentVitals = vitals;
-    
-    // Notify all subscribers
-    this.vitalsCallbacks.forEach(callback => {
-      try {
-        callback(vitals);
-      } catch (error) {
-        console.error('Vitals callback error:', error);
-      }
-    });
-  }
+	// HealthKit integration (iOS)
+	private async connectHealthKit(): Promise<void> {
+		try {
+			// In production: use @felix-health/capacitor-health-data or similar
+			console.log('Connecting to HealthKit...');
+
+			// Start monitoring with 5-second intervals
+			this.monitoringInterval = setInterval(async () => {
+				const vitals = await this.getHealthKitVitals();
+				this.emitVitalsUpdate(vitals);
+			}, 5000);
+
+		} catch (error) {
+			console.error('HealthKit connection failed:', error);
+			// Fallback to mock
+			this.startMockMonitoring();
+		}
+	}
+
+	// Health Connect integration (Android)
+	private async connectHealthConnect(): Promise<void> {
+		try {
+			console.log('Connecting to Health Connect...');
+
+			// Start monitoring
+			this.monitoringInterval = setInterval(async () => {
+				const vitals = await this.getHealthConnectVitals();
+				this.emitVitalsUpdate(vitals);
+			}, 5000);
+
+		} catch (error) {
+			console.error('Health Connect connection failed:', error);
+			this.startMockMonitoring();
+		}
+	}
+
+	// Whoop API integration
+	private async connectWhoop(): Promise<void> {
+		try {
+			console.log('Connecting to Whoop API...');
+
+			this.monitoringInterval = setInterval(async () => {
+				const vitals = await this.getWhoopVitals();
+				this.emitVitalsUpdate(vitals);
+			}, 10000); // Whoop updates less frequently
+
+		} catch (error) {
+			console.error('Whoop connection failed:', error);
+			this.startMockMonitoring();
+		}
+	}
+
+	// Fitbit API integration
+	private async connectFitbit(): Promise<void> {
+		try {
+			console.log('Connecting to Fitbit API...');
+
+			this.monitoringInterval = setInterval(async () => {
+				const vitals = await this.getFitbitVitals();
+				this.emitVitalsUpdate(vitals);
+			}, 10000);
+
+		} catch (error) {
+			console.error('Fitbit connection failed:', error);
+			this.startMockMonitoring();
+		}
+	}
+
+	// Mock monitoring for development/demo
+	private startMockMonitoring(): void {
+		console.log('🎭 Starting mock wearable monitoring');
+
+		this.monitoringInterval = setInterval(() => {
+			// Generate realistic mock data
+			const baseHR = 70 + Math.random() * 40; // 70-110 bpm base
+			const activityVariation = Math.random() * 30; // 0-30 bpm activity variation
+			const heartRate = Math.round(baseHR + activityVariation);
+
+			const baseSpO2 = 97 + Math.random() * 3; // 97-100% base
+			const spo2 = Math.round(baseSpO2 - Math.random() * 2); // Sometimes dip slightly
+
+			const vitals: RealTimeVitals = {
+				heartRate,
+				spo2: Math.max(95, spo2), // Never below 95%
+				timestamp: Date.now(),
+				source: 'mock'
+			};
+
+			this.emitVitalsUpdate(vitals);
+		}, 3000); // Update every 3 seconds for demo
+	}
+
+	// Get vitals from different sources
+	private async getHealthKitVitals(): Promise<RealTimeVitals> {
+		// In production: use actual HealthKit API
+		return {
+			heartRate: 75 + Math.random() * 20,
+			spo2: 97 + Math.random() * 2,
+			timestamp: Date.now(),
+			source: 'healthkit'
+		};
+	}
+
+	private async getHealthConnectVitals(): Promise<RealTimeVitals> {
+		// In production: use actual Health Connect API
+		return {
+			heartRate: 75 + Math.random() * 20,
+			spo2: 97 + Math.random() * 2,
+			timestamp: Date.now(),
+			source: 'health-connect'
+		};
+	}
+
+	private async getWhoopVitals(): Promise<RealTimeVitals> {
+		// In production: use Whoop API
+		return {
+			heartRate: 75 + Math.random() * 20,
+			spo2: 97 + Math.random() * 2,
+			timestamp: Date.now(),
+			source: 'whoop'
+		};
+	}
+
+	private async getFitbitVitals(): Promise<RealTimeVitals> {
+		// In production: use Fitbit API
+		return {
+			heartRate: 75 + Math.random() * 20,
+			spo2: 97 + Math.random() * 2,
+			timestamp: Date.now(),
+			source: 'fitbit'
+		};
+	}
+
+	// Check API connections
+	private async checkWhoopConnection(): Promise<boolean> {
+		// In production: check Whoop API authentication
+		return false; // Mock: not connected
+	}
+
+	private async checkFitbitConnection(): Promise<boolean> {
+		// In production: check Fitbit API authentication
+		return false; // Mock: not connected
+	}
+
+	// Emit vitals update to all subscribers
+	private emitVitalsUpdate(vitals: RealTimeVitals): void {
+		this.lastVitals = vitals;
+
+		this.vitalsCallbacks.forEach(callback => {
+			try {
+				callback(vitals);
+			} catch (error) {
+				console.error('Error in vitals callback:', error);
+			}
+		});
+	}
+
+	// Get connection status
+	getConnectionStatus(): WearableConnection {
+		return {
+			connected: this.isMonitoring,
+			source: this.lastVitals?.source || 'mock',
+			lastSync: this.lastVitals?.timestamp || 0
+		};
+	}
 }

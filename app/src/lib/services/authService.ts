@@ -8,9 +8,8 @@ import type {
   RegisterData,
   LoginCredentials,
   AuthResult,
-} from '../../types/auth';
-import { api } from "$lib/convex/_generated/api";
-import { convex } from "$lib/convex";
+} from '../../types/auth.js';
+import { api } from "$lib/api/convex";
 import { browser } from '$app/environment';
 
 export class AuthService {
@@ -63,8 +62,8 @@ export class AuthService {
         };
       }
 
-      // Call Convex mutation
-      const result = await convex.mutation(api.functions.users.register, {
+      // Call API mutation
+      const result = await api.mutation('functions/users.register', {
         email: userData.email.toLowerCase().trim(),
         password: userData.password,
         name: userData.name.trim(),
@@ -114,8 +113,8 @@ export class AuthService {
         };
       }
 
-      // Call Convex mutation
-      const result = await convex.mutation(api.functions.users.login, {
+      // Call API mutation
+      const result = await api.mutation('functions/users.login', {
         email: credentials.email.toLowerCase().trim(),
         password: credentials.password,
         rememberMe: credentials.rememberMe || false
@@ -156,7 +155,7 @@ export class AuthService {
     try {
       if (this.authToken) {
         // Invalidate session on server
-        await convex.mutation(api.functions.users.logout, {
+        await api.mutation('functions/users.logout', {
           token: this.authToken
         });
       }
@@ -195,7 +194,7 @@ export class AuthService {
     try {
       if (!this.authToken) return false;
 
-      const result = await convex.query(api.functions.users.validateSession, {
+      const result = await api.query('functions/users.validateSession', {
         token: this.authToken
       }) as {
         valid: boolean;
@@ -230,7 +229,7 @@ export class AuthService {
         };
       }
 
-      await convex.mutation(api.functions.users.requestPasswordReset, {
+      await api.mutation('functions/users.requestPasswordReset', {
         email: email.toLowerCase().trim()
       });
 
@@ -258,7 +257,7 @@ export class AuthService {
         };
       }
 
-      const result = await convex.mutation(api.functions.users.resetPassword, {
+      const result = await api.mutation('functions/users.resetPassword', {
         token,
         newPassword
       }) as {
@@ -296,7 +295,7 @@ export class AuthService {
         };
       }
 
-      const result = await convex.mutation(api.functions.users.updateUserProfile, {
+      const result = await api.mutation('functions/users.updateUserProfile', {
         userId: this.currentUser!._id,
         updates
       }) as {
@@ -348,7 +347,7 @@ export class AuthService {
         };
       }
 
-      const result = await convex.mutation(api.functions.users.changePassword, {
+      const result = await api.mutation('functions/users.changePassword', {
         userId: this.currentUser!._id,
         currentPassword,
         newPassword
