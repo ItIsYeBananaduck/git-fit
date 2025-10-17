@@ -1,23 +1,14 @@
 {
-  "files.watcherExclude": {
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/node_modules/**": true,
-    "**/.svelte-kit/**": true,  // Exclude build outputs
-    "**/dist/**": true,
-    "**/build/**": true,
-    "**/.venv/**": true,  // Virtual env if using Python
-    "**/convex/_generated/**": true,  // Generated files
-    "**/tests/**": true,  // If tests are not needed during dev
-    "**/specs/**": true
-  },
-  "files.exclude": {
-    "**/node_modules": true,  // Also hide from explorer/search
-    "**/.svelte-kit": true
-  },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/bower_components": true,
-    "**/*.code-search": true
-  }
+    "chat.promptFilesRecommendations": {
+        "speckit.constitution": true,
+        "speckit.specify": true,
+        "speckit.plan": true,
+        "speckit.tasks": true,
+        "speckit.implement": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        ".specify/scripts/bash/": true,
+        ".specify/scripts/powershell/": true
+    }
 }
+

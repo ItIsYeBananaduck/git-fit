@@ -3,4 +3,4 @@
  * Provides ConvexTestingHelper for contract tests
  */
 
-export { ConvexTestingHelper } from '../ConvexTestingHelper.js';
+export { ConvexTestingHelper } from '../../ConvexTestingHelper.js';

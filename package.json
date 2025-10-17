@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "cd app && npm run dev",
     "build": "cd app && npm run build",
-    "test": "vitest"
+    "test": "vitest --config app/vitest.test.config.ts"
   },
   "keywords": [],
   "author": "",
@@ -29,7 +29,9 @@
   },
   "devDependencies": {
     "@sveltejs/kit": "^2.42.1",
+    "@testing-library/svelte": "^5.2.8",
     "@types/dotenv": "^8.2.3",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.4.0",
     "dotenv": "^17.2.2",
     "typescript": "5.9.2",

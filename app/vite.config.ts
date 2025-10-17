@@ -6,7 +6,7 @@ export default defineConfig({
     plugins: [sveltekit()],
     envDir: '../',
     optimizeDeps: {
-        include: ['animejs']
+        include: ['animejs', '@testing-library/svelte', '@testing-library/jest-dom']
     },
     ssr: {
         noExternal: ['animejs']
@@ -45,7 +45,7 @@ export default defineConfig({
                         provider: 'playwright',
                         instances: [{ browser: 'chromium' }]
                     },
-                    include: ['src/**/*.svelte.{test,spec}.{js,ts}', 'tests/integration/**/*.ts'],
+                    include: ['tests/mobile/components/**/*.test.ts'],
                     exclude: ['src/lib/server/**'],
                     setupFiles: ['./vitest-setup-client.ts']
                 }
